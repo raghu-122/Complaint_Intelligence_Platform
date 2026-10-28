@@ -46,7 +46,10 @@ export default function Complaints() {
       if (statusFilter) params.status = statusFilter;
       if (priorityFilter) params.priority = priorityFilter;
       if (categoryFilter) params.category_code = categoryFilter;
-      if (safetyOnly) params.safety_only = true;
+      if (safetyOnly) {
+        params.safety_only = true;
+        params.is_safety_incident = true;
+      }
       const res = await apiClient.getComplaints(params);
       setData(res.data);
       setError(null);

@@ -30,7 +30,10 @@ export default function Customers() {
       const params: Record<string, unknown> = { page, page_size: 20 };
       if (search) params.search = search;
       if (tierFilter) params.account_tier = tierFilter;
-      if (vulnerableOnly) params.vulnerable_only = true;
+      if (vulnerableOnly) {
+        params.vulnerable_only = true;
+        params.vulnerability_flag = true;
+      }
       const res = await apiClient.getCustomers(params);
       setData(res.data);
       setError(null);

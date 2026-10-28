@@ -1,14 +1,14 @@
 {
   "files": {
     "csv/agents.csv": {
-      "bytes": 1601,
-      "records": 12,
-      "sha256": "0b180736dcef88c27fb334d5e60e09e98dde787970cdcee2f69887d313d39d0b"
+      "bytes": 6150,
+      "records": 48,
+      "sha256": "97415e8bef446293651cdadb8b15c79bf78f8599191e03b321382172ed0bc6ac"
     },
     "csv/assignments.csv": {
-      "bytes": 8438,
-      "records": 50,
-      "sha256": "17afd759620e49e7a66be8625eba678d184012eaf295d798039fe4bb16f291c1"
+      "bytes": 332189,
+      "records": 2000,
+      "sha256": "e0ae312e5f67f52e99f79661d0d2795ce93a1709cc7dfc5203f8e3178decc176"
     },
     "csv/categories.csv": {
       "bytes": 2896,
@@ -16,29 +16,29 @@
       "sha256": "04802fc71ab47fa074f4a0df537818efd5c104c87a1aaa4dc54f3872e85b4fb4"
     },
     "csv/complaint_relationships.csv": {
-      "bytes": 0,
-      "records": 0,
-      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      "bytes": 1843,
+      "records": 14,
+      "sha256": "6c318c802067962ca63e61cb100553a69868790c5c71c4be18662b9d4b22d165"
     },
     "csv/complaints.csv": {
-      "bytes": 33091,
-      "records": 50,
-      "sha256": "fde4f88e661ad896af92187c313127b2886e2492f2ff6a9148081f6a8477e898"
+      "bytes": 1300962,
+      "records": 2000,
+      "sha256": "891526fed030123acb071e8f25fb45e62d71dadc008b0569600a7aa16d1d45d2"
     },
     "csv/customers.csv": {
-      "bytes": 10510,
-      "records": 50,
-      "sha256": "2400e8fa7c863ad798e66fd09806d2ca4cdeac372743a69280d27c1fcdc49236"
+      "bytes": 1032286,
+      "records": 5000,
+      "sha256": "afec027e58f40a3ff58afd6c160221c63609a0572997a0040e868696b8df156a"
     },
     "csv/messages.csv": {
-      "bytes": 36262,
-      "records": 150,
-      "sha256": "038101f2ea3124ea8bd1440a10e167b0dd3ae1f8f72da0513a5c4404f63b9eed"
+      "bytes": 1444998,
+      "records": 6000,
+      "sha256": "119194b1c0f9654b7794811a931c3e5e36480766c72b92b147f4c55b3b3bb2ff"
     },
     "csv/orders.csv": {
-      "bytes": 22395,
-      "records": 80,
-      "sha256": "4f69a74fe5902a350c9cf884427315efad17599d86a03762f0014f97129cf0fe"
+      "bytes": 2227057,
+      "records": 8000,
+      "sha256": "f3df257b8e30ab49fb3fc6e369ca3cc0b843a4d678f7f7f69de00b674046e5cc"
     },
     "csv/priority_rules.csv": {
       "bytes": 1085,
@@ -46,34 +46,34 @@
       "sha256": "9396028ecd2ee08a7058bba3cace8481895aa289c25130739ec07f0a4b921d69"
     },
     "csv/products.csv": {
-      "bytes": 5922,
-      "records": 30,
-      "sha256": "f09e53ab53163d458c1e97da53fac10c80f6e87b25134ec9f71776fae3f84856"
+      "bytes": 38647,
+      "records": 200,
+      "sha256": "a2b526e683786b59816c3b86284879fdf676188bf54293a9c035aae39b37b82b"
     },
     "csv/resolutions.csv": {
-      "bytes": 5613,
-      "records": 26,
-      "sha256": "8554bbf3ca9eff16a529b4b451febd3a50ef22e499b96ebafc11c9b384307452"
+      "bytes": 231681,
+      "records": 1102,
+      "sha256": "cdefe69e9314c287fe04af45de4784913a75624108e1a119c20d873af452f1c7"
     },
     "csv/sla_clocks.csv": {
-      "bytes": 14576,
-      "records": 50,
-      "sha256": "11014e2e03b5e2105d0d97c9669c2f5678a6c48a6820b62573cc6188bd77d4c0"
+      "bytes": 573867,
+      "records": 2000,
+      "sha256": "20fb01324f4feb97ec6bbc0058c94da4f93ab59364897724279862ca6b075336"
     },
     "csv/sla_events.csv": {
-      "bytes": 6824,
-      "records": 65,
-      "sha256": "7f9857ddf20811cad39bf94003ab62f6d109982fde6290157ad6a699603730f0"
+      "bytes": 276154,
+      "records": 2655,
+      "sha256": "8744cf752502fa6253486e2c50653ccdbe1ff3a09148d239dbb9b15bc1e4eb76"
     },
     "csv/status_events.csv": {
-      "bytes": 12767,
-      "records": 132,
-      "sha256": "f6f1d399eabfcee72d528da585c36e0624c2e111a8b058b49dfd92484793b2c6"
+      "bytes": 535506,
+      "records": 5542,
+      "sha256": "25cff0ab5cb57955dc4042287cd267c8398a8feb72f72e7178e16f806be0b629"
     },
     "csv/surveys.csv": {
-      "bytes": 1717,
-      "records": 10,
-      "sha256": "288bbcd15290663f423f361dabf8cd0b01e7242af797af60898eb0151287346e"
+      "bytes": 66252,
+      "records": 422,
+      "sha256": "e3d78ad7e2bab9ea6cb01e1b6673f9d3d56dcf6120d75678c518d4564bf3f369"
     },
     "csv/teams.csv": {
       "bytes": 1145,
@@ -81,14 +81,14 @@
       "sha256": "329def86b0042d96ef30d704bcd8063f1a02edfda9d253f16f7f00a5e044c09a"
     },
     "json/agents.json": {
-      "bytes": 4226,
-      "records": 12,
-      "sha256": "cb854199394cc96731fcffcfb33d476a3379b017aa257952f4815d78ef1f850a"
+      "bytes": 16983,
+      "records": 48,
+      "sha256": "3322b8e463f4f647d0e6273464490ac1dc28e8c29f0d7c17ff9ebadafb651525"
     },
     "json/assignments.json": {
-      "bytes": 21152,
-      "records": 50,
-      "sha256": "64a0eee3e4f70b3b130fce93c3cf56ed0088a37701065e2db1c42a3a0bfd3089"
+      "bytes": 846053,
+      "records": 2000,
+      "sha256": "ed740ccc79b1d183effd6585628df6a4438a87ee6725e026b20161ab4cec4c54"
     },
     "json/categories.json": {
       "bytes": 4315,
@@ -96,29 +96,29 @@
       "sha256": "0ab72474214f3ccfaead14c166e8fceb47ab44daae5d6045a90c2b1abe2a6a63"
     },
     "json/complaint_relationships.json": {
-      "bytes": 2,
-      "records": 0,
-      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      "bytes": 3965,
+      "records": 14,
+      "sha256": "e1311f5dc5f653b4940a000a7d59afcb9869ec242c4883aead656f9bbbe250b9"
     },
     "json/complaints.json": {
-      "bytes": 73760,
-      "records": 50,
-      "sha256": "b50e3003154a379690a0b1ccc560a85c71232f47930b46cc2dbb6ab45afe7b5d"
+      "bytes": 2945939,
+      "records": 2000,
+      "sha256": "7180c2904872d5de357c750d39edd78da39db0561b703ebf182aa9f5c76ba000"
     },
     "json/customers.json": {
-      "bytes": 31766,
-      "records": 50,
-      "sha256": "bece2c2accfdd6df9130e74a76175189397ddc3c5207da1929ce9c7eb0398918"
+      "bytes": 3178582,
+      "records": 5000,
+      "sha256": "881287d8e8324fca1db631c5e451059e6857e686babbc9785bc017ead75d3352"
     },
     "json/messages.json": {
-      "bytes": 86191,
-      "records": 150,
-      "sha256": "c55b7ed51e573aea8b2f687ca3db380af66784d5cb44a70d09b70dd0e007e875"
+      "bytes": 3448827,
+      "records": 6000,
+      "sha256": "050cf69ac9904fdfeb15e30377a64e525aa21b850ee2bee98d1955ee1c9cbe6f"
     },
     "json/orders.json": {
-      "bytes": 53097,
-      "records": 80,
-      "sha256": "337da67736318894f4c0a7146bca103e556a7ebc5fb37f1e585e066d01069e26"
+      "bytes": 5317271,
+      "records": 8000,
+      "sha256": "ef72ef19cb8be72f35dcf6b8e794f9dc23ef2b9df111a5abfbce000b1fc3997f"
     },
     "json/priority_rules.json": {
       "bytes": 2359,
@@ -126,39 +126,39 @@
       "sha256": "84e20655a2e567508d8359d46231d690abb457bf2e6fb8d5349be70c100240c2"
     },
     "json/products.json": {
-      "bytes": 14775,
-      "records": 30,
-      "sha256": "be09531b295bfcdc60ea2d72da9fab0da31b68a838459e408111aad8046af0ac"
+      "bytes": 98576,
+      "records": 200,
+      "sha256": "53989c165f85ba0216cc67354f0f8eeda6d4ff8a492beea70a2573f9e6c83324"
     },
     "json/resolutions.json": {
-      "bytes": 14925,
-      "records": 26,
-      "sha256": "1f8703efb2d77ed4961d9d5c49c85c86f0bd699dd306e89fc0f361d399c7a927"
+      "bytes": 634809,
+      "records": 1102,
+      "sha256": "9cc5f9fd3a406b53937a51bc4adc59936f611c016e0348202305bfc5f1e5dbbc"
     },
     "json/sla_clocks.json": {
-      "bytes": 38316,
-      "records": 50,
-      "sha256": "bb728438f0b14d737440548d017c18894d29a2c12da4375c0fab42eaa8a4ca48"
+      "bytes": 1534277,
+      "records": 2000,
+      "sha256": "ead58e6de2eecf7067be58b81d76e575cb20556624a947c264ea3e438c989db2"
     },
     "json/sla_events.json": {
-      "bytes": 16183,
-      "records": 65,
-      "sha256": "5a55ee64aca202a333227aeb11bce0b1855b96a3a25cb7f643d8659bfe6b0c66"
+      "bytes": 661063,
+      "records": 2655,
+      "sha256": "2b4b46f98c7f3d96db3383077e3080276f6ba4703b5a432a2eaac81c37a23771"
     },
     "json/status_events.json": {
-      "bytes": 32465,
-      "records": 132,
-      "sha256": "1faa43c9058fc5f0f5c106cb07a9421b123c2bf8116d620ad9c8b1fd08d5907b"
+      "bytes": 1365194,
+      "records": 5542,
+      "sha256": "e1cbd7e634dda3e7db5e0fe8cbfa20cce46686be8bd327cf8cb72b53aa7314f7"
     },
     "json/summary.json": {
-      "bytes": 470,
+      "bytes": 489,
       "records": 1,
-      "sha256": "bed15aef2a7e15b8968a6f7f3edee3fd8ac5d2f4faa08d381867641851615844"
+      "sha256": "66d64863b3507463197017488cf72fdf1f3b13188add5feeb4e8101b8e83ab50"
     },
     "json/surveys.json": {
-      "bytes": 3832,
-      "records": 10,
-      "sha256": "01f988cf0d764f129cdded63a39ffc89134fd718bdd92001502a9cfea7aa75b1"
+      "bytes": 160441,
+      "records": 422,
+      "sha256": "194655badb4ad889dfd226224c94c2b3991ef9decd99a386feeea2dde714670f"
     },
     "json/teams.json": {
       "bytes": 2243,
@@ -169,24 +169,24 @@
   "generator_version": "1.0.0",
   "manifest_version": "1.0.0",
   "record_counts": {
-    "agents": 12,
-    "assignments": 50,
+    "agents": 48,
+    "assignments": 2000,
     "categories": 10,
-    "complaint_relationships": 0,
-    "complaints": 50,
-    "customers": 50,
-    "messages": 150,
-    "orders": 80,
+    "complaint_relationships": 14,
+    "complaints": 2000,
+    "customers": 5000,
+    "messages": 6000,
+    "orders": 8000,
     "priority_rules": 6,
-    "products": 30,
-    "resolutions": 26,
-    "sla_clocks": 50,
-    "sla_events": 65,
-    "status_events": 132,
-    "surveys": 10,
+    "products": 200,
+    "resolutions": 1102,
+    "sla_clocks": 2000,
+    "sla_events": 2655,
+    "status_events": 5542,
+    "surveys": 422,
     "teams": 6
   },
-  "scale": "starter",
+  "scale": "full",
   "seed": 20261022,
-  "timestamp": "2026-10-28T06:07:19.646053+00:00"
+  "timestamp": "2026-10-28T07:46:28.373238+00:00"
 }

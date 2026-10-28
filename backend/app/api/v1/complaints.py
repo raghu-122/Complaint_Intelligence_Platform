@@ -68,6 +68,7 @@ def list_complaints(
     channel: Optional[str] = Query(default=None),
     category_code: Optional[str] = Query(default=None),
     is_safety_incident: Optional[bool] = Query(default=None),
+    safety_only: Optional[bool] = Query(default=None),
     is_escalated: Optional[bool] = Query(default=None),
     customer_id: Optional[str] = Query(default=None),
     search: Optional[str] = Query(default=None),
@@ -93,6 +94,8 @@ def list_complaints(
         query = query.where(Complaint.category_code == category_code)
     if is_safety_incident is not None:
         query = query.where(Complaint.is_safety_incident == is_safety_incident)
+    elif safety_only is not None:
+        query = query.where(Complaint.is_safety_incident == safety_only)
     if is_escalated is not None:
         query = query.where(Complaint.is_escalated == is_escalated)
     if customer_id:
@@ -163,6 +166,7 @@ def get_complaint(
 
     # Format assignments
     assignments_list = []
+    current_asn = None
     for a in c.assignments:
         assignments_list.append({
             "id": a.id,
@@ -178,6 +182,33 @@ def get_complaint(
             "is_current": a.is_current,
             "assigned_at": a.assigned_at,
         })
+        if a.is_current and not current_asn:
+            current_asn = {
+                "agent_name": a.agent.name if a.agent else (a.assigned_by or "System"),
+                "team_name": a.team.name if a.team else (a.team.code if a.team else "General Support"),
+                "assigned_at": a.assigned_at,
+            }
+
+    # Format customer summary for UI card
+    cust_data = None
+    if c.customer:
+        cust_data = {
+            "customer_id": c.customer.customer_id,
+            "name": c.customer.full_name or f"{c.customer.first_name} {c.customer.last_name}".strip(),
+            "email": c.customer.email,
+            "account_tier": c.customer.account_tier,
+            "vulnerability_flag": c.customer.vulnerability_flag,
+        }
+
+    # Format order summary for UI card
+    order_data = None
+    if c.order:
+        order_data = {
+            "order_id": c.order.order_id,
+            "total_amount": str(c.order.total_amount),
+            "status": c.order.status,
+            "ordered_at": c.order.ordered_at,
+        }
 
     # Relationships
     rel_query = select(ComplaintRelationship).where(
@@ -211,6 +242,9 @@ def get_complaint(
         priority_explanation=c.priority_explanation,
         anomaly_id=c.anomaly_id,
         anomaly_type=c.anomaly_type,
+        customer=cust_data,
+        order=order_data,
+        current_assignment=current_asn,
         status_events=c.status_events,
         messages=c.messages,
         assignments=assignments_list,

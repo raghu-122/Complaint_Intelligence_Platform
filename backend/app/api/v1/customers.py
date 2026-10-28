@@ -23,6 +23,7 @@ def list_customers(
     page_size: int = Query(default=20, ge=1, le=100),
     account_tier: Optional[str] = Query(default=None),
     vulnerability_flag: Optional[bool] = Query(default=None),
+    vulnerable_only: Optional[bool] = Query(default=None),
     search: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
 ):
@@ -36,6 +37,8 @@ def list_customers(
         query = query.where(Customer.account_tier == account_tier)
     if vulnerability_flag is not None:
         query = query.where(Customer.vulnerability_flag == vulnerability_flag)
+    elif vulnerable_only is not None:
+        query = query.where(Customer.vulnerability_flag == vulnerable_only)
     if search:
         search_filter = f"%{search}%"
         query = query.where(
@@ -73,6 +76,7 @@ def list_customers(
             loyalty_points=c.loyalty_points,
             created_at=c.created_at,
             complaints_count=len(c.complaints),
+            complaint_count=len(c.complaints),
             orders_count=len(c.orders),
         )
         for c in customers

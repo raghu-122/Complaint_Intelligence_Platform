@@ -132,6 +132,27 @@ class ComplaintListItem(BaseSchema):
     sla_breached: Optional[bool] = None
 
 
+class ComplaintCustomerSummary(BaseSchema):
+    customer_id: str
+    name: str
+    email: str
+    account_tier: str
+    vulnerability_flag: bool
+
+
+class ComplaintOrderSummary(BaseSchema):
+    order_id: str
+    total_amount: str
+    status: str
+    ordered_at: datetime
+
+
+class ComplaintCurrentAssignment(BaseSchema):
+    agent_name: str
+    team_name: str
+    assigned_at: datetime
+
+
 class ComplaintDetail(ComplaintListItem):
     classification_confidence: Optional[float] = None
     classification_evidence: Optional[str] = None
@@ -142,6 +163,11 @@ class ComplaintDetail(ComplaintListItem):
     anomaly_id: Optional[str] = None
     anomaly_type: Optional[str] = None
     
+    # Nested entity summaries for UI cards
+    customer: Optional[ComplaintCustomerSummary] = None
+    order: Optional[ComplaintOrderSummary] = None
+    current_assignment: Optional[ComplaintCurrentAssignment] = None
+
     # Related collections
     status_events: List[ComplaintStatusEventSchema] = []
     messages: List[ComplaintMessageSchema] = []

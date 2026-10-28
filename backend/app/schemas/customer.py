@@ -50,6 +50,7 @@ class CustomerListItem(BaseSchema):
     loyalty_points: int
     created_at: datetime
     complaints_count: int = 0
+    complaint_count: int = 0
     orders_count: int = 0
 
 
