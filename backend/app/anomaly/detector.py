@@ -26,7 +26,21 @@ from app.models.sla import SLAClock
 from app.models.resolution import Resolution
 from app.models.survey import Survey
 from app.models.agent import Agent
-from app.schemas.anomaly import AnomalyItem, AnomalyDetectionResult, InjectAnomalyResponse
+from app.schemas.anomaly import (
+    AnomalyItem,
+    AnomalyDetectionResult,
+    CategoryMetric,
+    InjectAnomalyResponse,
+)
+
+ALL_ANOMALY_CATEGORIES = [
+    "PRIORITY_MISMATCH",
+    "SLA_BACKDATED",
+    "SURVEY_BEFORE_CLOSURE",
+    "DUPLICATE_ASSIGNMENT",
+    "MISSING_STATUS_EVENT",
+    "REFUND_WITHOUT_RESOLUTION",
+]
 
 
 def _get_ground_truth_path() -> Path:
@@ -65,11 +79,13 @@ class AnomalyDetector:
         gt_path = _get_ground_truth_path()
         ground_truth_map: Dict[str, dict] = {}
         ground_truth_ids: Dict[str, dict] = {}
+        ground_truth_list: List[dict] = []
         if gt_path.exists():
             try:
                 with open(gt_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    for item in data.get("anomalies", []):
+                    ground_truth_list = data.get("anomalies", [])
+                    for item in ground_truth_list:
                         if item.get("complaint_id"):
                             ground_truth_map[item["complaint_id"]] = item
                         if item.get("anomaly_id"):
@@ -82,14 +98,59 @@ class AnomalyDetector:
             if (item.complaint_id and item.complaint_id in ground_truth_map) or (item.anomaly_id and item.anomaly_id in ground_truth_ids):
                 item.is_ground_truth = True
 
-        gt_count = max(len(ground_truth_map), len(ground_truth_ids))
+        gt_count = max(len(ground_truth_map), len(ground_truth_ids), len(ground_truth_list))
         detected_count = len(detected)
 
-        # Calculate metrics
+        # Calculate overall metrics
         tp = sum(1 for d in detected if d.is_ground_truth)
+        fp = detected_count - tp
+        fn = gt_count - tp
         precision = round(tp / detected_count, 4) if detected_count > 0 else 1.0
         recall = round(tp / gt_count, 4) if gt_count > 0 else 1.0
         f1 = round(2 * (precision * recall) / (precision + recall), 4) if (precision + recall) > 0 else 1.0
+
+        # Calculate per-category metrics across the six canonical anomaly scenarios
+        category_metrics: Dict[str, CategoryMetric] = {}
+        for cat in ALL_ANOMALY_CATEGORIES:
+            cat_gt = [
+                g for g in ground_truth_list
+                if g.get("anomaly_type") == cat
+            ]
+            cat_gt_ids = {
+                g.get("complaint_id") for g in cat_gt if g.get("complaint_id")
+            } | {
+                g.get("anomaly_id") for g in cat_gt if g.get("anomaly_id")
+            }
+            cat_detected = [d for d in detected if d.anomaly_type == cat]
+
+            cat_tp = sum(
+                1 for d in cat_detected
+                if (d.complaint_id and d.complaint_id in cat_gt_ids)
+                or (d.anomaly_id and d.anomaly_id in cat_gt_ids)
+                or d.is_ground_truth
+            )
+            cat_fp = len(cat_detected) - cat_tp
+            cat_fn = max(0, len(cat_gt) - cat_tp)
+
+            cat_prec = round(cat_tp / len(cat_detected), 4) if cat_detected else (1.0 if not cat_gt else 0.0)
+            cat_rec = round(cat_tp / len(cat_gt), 4) if cat_gt else (1.0 if not cat_detected else 0.0)
+            cat_f1 = (
+                round(2 * (cat_prec * cat_rec) / (cat_prec + cat_rec), 4)
+                if (cat_prec + cat_rec) > 0
+                else (1.0 if cat_prec == 1.0 and cat_rec == 1.0 else 0.0)
+            )
+
+            category_metrics[cat] = CategoryMetric(
+                category=cat,
+                ground_truth_count=len(cat_gt),
+                detected_count=len(cat_detected),
+                true_positives=cat_tp,
+                false_positives=cat_fp,
+                false_negatives=cat_fn,
+                precision=cat_prec,
+                recall=cat_rec,
+                f1_score=cat_f1,
+            )
 
         return AnomalyDetectionResult(
             detected_count=detected_count,
@@ -98,6 +159,7 @@ class AnomalyDetector:
             recall=recall,
             f1_score=f1,
             anomalies=detected,
+            category_metrics=category_metrics,
         )
 
     def _detect_priority_mismatches(self) -> List[AnomalyItem]:

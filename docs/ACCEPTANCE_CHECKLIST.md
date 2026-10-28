@@ -155,33 +155,35 @@ Additional SLA capabilities verified:
 
 ## AC-09: Anomaly Detection (All Six Categories)
 
-| ID | Anomaly Type | Injected | Detected | Precision | Recall | F1 |
-|---|---|---|---|---|---|---|
-| ANOM-001 | PRIORITY_MISMATCH | 1 | 1 | 100% | 100% | 1.0 |
-| ANOM-002 | SLA_BACKDATED | 1 | 1 | 100% | 100% | 1.0 |
-| ANOM-003 | SURVEY_BEFORE_CLOSURE | 1 | 1 | 100% | 100% | 1.0 |
-| ANOM-004 | DUPLICATE_ASSIGNMENT | 1 | 1 | 100% | 100% | 1.0 |
-| ANOM-005 | MISSING_STATUS_EVENT | 1 | 1 | 100% | 100% | 1.0 |
-| ANOM-006 | REFUND_WITHOUT_RESOLUTION | 1 | 1 | 100% | 100% | 1.0 |
-| **Overall** | | **6** | **6** | **100%** | **100%** | **1.000** |
+| ID | Anomaly Type | Ground Truth | Detected | TP | FP | FN | Precision | Recall | F1 |
+|---|---|---|---|---|---|---|---|---|---|
+| ANOM-001 | PRIORITY_MISMATCH | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| ANOM-002 | SLA_BACKDATED | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| ANOM-003 | SURVEY_BEFORE_CLOSURE | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| ANOM-004 | DUPLICATE_ASSIGNMENT | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| ANOM-005 | MISSING_STATUS_EVENT | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| ANOM-006 | REFUND_WITHOUT_RESOLUTION | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| **Overall** | | **6** | **6** | **6** | **0** | **0** | **100%** | **100%** | **1.000** |
 
 Ground truth isolation: Detector reads DB state, NOT the ground_truth.json file.
 
-**Verification**: `pytest tests/test_anomaly.py -v` — 10/10 passed; `python cli.py detect-anomalies`
+**Verification**: `pytest tests/test_anomaly.py -v` — 11/11 passed; `python cli.py detect-anomalies`
 
 ---
 
-## AC-10: Export Formats
+## AC-10: Export Formats & SQL Dump
 
-| Format | Files | Status |
-|---|---|---|
-| CSV | 16 tables in `data/baseline/csv/` | ✅ PASS |
-| JSON | 16 tables + summary in `data/baseline/json/` | ✅ PASS |
-| Manifest | `data/baseline/manifest.json` with SHA-256 | ✅ PASS |
-| Reproducibility | `data/baseline/reproducibility_report.md` | ✅ PASS |
-| Ground Truth | `data/anomalies/ground_truth.json` | ✅ PASS |
+| Format | Files | Size / Records | Status |
+|---|---|---|---|
+| CSV | 16 tables in `data/baseline/csv/` | 5,000 customers, 8,000 orders, 2,000 complaints | ✅ PASS |
+| JSON | 16 tables + summary in `data/baseline/json/` | Bitwise deterministic summary.json | ✅ PASS |
+| SQL Dump | `data/baseline/sql/complaint_intelligence_dump.sql` | 9.15 MB portable SQL dump | ✅ PASS |
+| SQL Import Verification | Imported to fresh database | 17/17 tables matched, 0 FK violations | ✅ PASS |
+| Manifest | `data/baseline/manifest.json` with SHA-256 | 33 files hashed with SHA-256 | ✅ PASS |
+| Reproducibility | `data/baseline/reproducibility_report.md` | 33/33 files bitwise match | ✅ PASS |
+| Ground Truth | `data/anomalies/ground_truth.json` | 6 injected anomaly targets | ✅ PASS |
 
-**Verification**: `pytest tests/test_exports_reproducibility.py -v` — 14/14 passed
+**Verification**: `python cli.py dump-sql && python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/test_verify.db` — Status: PASS
 
 ---
 
@@ -234,6 +236,8 @@ Ground truth isolation: Detector reads DB state, NOT the ground_truth.json file.
 | `cli.py inject-anomalies` | ✅ PASS |
 | `cli.py reproduce` | ✅ PASS |
 | `cli.py export` | ✅ PASS |
+| `cli.py dump-sql` | ✅ PASS |
+| `cli.py import-sql` | ✅ PASS |
 | `cli.py server` | ✅ PASS |
 
 ---
@@ -247,11 +251,13 @@ Ground truth isolation: Detector reads DB state, NOT the ground_truth.json file.
 | test_priority.py | 3 | ✅ PASS |
 | test_sla.py | 18 | ✅ PASS |
 | test_validation.py | 1 | ✅ PASS |
-| test_anomaly.py | 10 | ✅ PASS |
-| test_exports_reproducibility.py | 14 | ✅ PASS |
+| test_anomaly.py | 11 | ✅ PASS |
+| test_exports_reproducibility.py | 15 | ✅ PASS |
 | test_api.py | 9 | ✅ PASS |
 | test_api_extended.py | 29 | ✅ PASS |
-| **Total** | **91** | **✅ 91/91 PASS** |
+| **Total** | **93** | **✅ 93/93 PASS** |
+
+Coverage: **94%** overall | Execution time: **9.67s**
 
 Coverage: **94%** overall
 
@@ -319,3 +325,4 @@ git push -u origin main
 | Clean repository | ✅ PASS |
 | Documentation | ✅ PASS |
 | GitHub publication | 🔴 BLOCKED (manual step) |
+

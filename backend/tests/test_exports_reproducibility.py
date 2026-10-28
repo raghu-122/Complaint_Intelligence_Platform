@@ -223,3 +223,36 @@ def test_reproducibility_report_markdown_generated(tmp_path):
     content = report_path.read_text(encoding="utf-8")
     assert "Reproducibility" in content
     assert "PASS" in content
+
+
+def test_sql_exporter_dump_and_import_integrity(tmp_path):
+    """SQLExporter must dump database and verify 100% record and FK integrity on import."""
+    import sqlite3
+    from app.exports.exporter import SQLExporter
+
+    # Create dummy source database with relational foreign keys
+    src_db = tmp_path / "source.db"
+    conn = sqlite3.connect(src_db)
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("CREATE TABLE parent (id INTEGER PRIMARY KEY, name TEXT NOT NULL)")
+    conn.execute("CREATE TABLE child (id INTEGER PRIMARY KEY, parent_id INTEGER NOT NULL REFERENCES parent(id), value TEXT)")
+    conn.execute("INSERT INTO parent VALUES (1, 'Alice'), (2, 'Bob')")
+    conn.execute("INSERT INTO child VALUES (101, 1, 'Data A'), (102, 2, 'Data B')")
+    conn.commit()
+    conn.close()
+
+    exporter = SQLExporter(export_dir=tmp_path / "sql_export")
+    sql_file = exporter.export_database(db_path=src_db, output_filename="dump.sql")
+    assert sql_file.exists()
+    assert sql_file.stat().st_size > 0
+
+    target_db = tmp_path / "target.db"
+    result = exporter.import_and_verify(sql_path=sql_file, target_db_path=target_db, source_db_path=src_db)
+
+    assert result["status"] == "PASS"
+    assert result["table_count"] == 2
+    assert result["counts_match"] is True
+    assert result["fk_check_passed"] is True
+    assert result["target_counts"]["parent"] == 2
+    assert result["target_counts"]["child"] == 2
+

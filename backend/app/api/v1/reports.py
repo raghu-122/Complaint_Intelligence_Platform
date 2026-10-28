@@ -109,7 +109,9 @@ def get_report(report_id: str):
     settings = get_settings()
     baseline_dir = settings.data_dir / "baseline"
 
-    if report_id == "baseline_manifest":
+    normalized_id = report_id.replace("-", "_")
+
+    if normalized_id == "baseline_manifest":
         manifest_path = baseline_dir / "manifest.json"
         if not manifest_path.exists():
             raise HTTPException(
@@ -119,7 +121,7 @@ def get_report(report_id: str):
         with open(manifest_path, "r", encoding="utf-8") as f:
             return json.load(f)
 
-    elif report_id == "reproducibility_report":
+    elif normalized_id == "reproducibility_report":
         repro_path = baseline_dir / "reproducibility_report.md"
         if not repro_path.exists():
             raise HTTPException(

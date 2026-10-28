@@ -21,6 +21,18 @@ class AnomalyItem(BaseModel):
     detected_at: Optional[datetime] = None
 
 
+class CategoryMetric(BaseModel):
+    category: str
+    ground_truth_count: int
+    detected_count: int
+    true_positives: int
+    false_positives: int
+    false_negatives: int
+    precision: float
+    recall: float
+    f1_score: float
+
+
 class AnomalyDetectionResult(BaseModel):
     detected_count: int
     ground_truth_count: int
@@ -28,6 +40,7 @@ class AnomalyDetectionResult(BaseModel):
     recall: float
     f1_score: float
     anomalies: List[AnomalyItem]
+    category_metrics: Optional[Dict[str, CategoryMetric]] = None
 
 
 class InjectAnomalyRequest(BaseModel):

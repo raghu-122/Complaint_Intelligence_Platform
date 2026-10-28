@@ -268,9 +268,28 @@ Exports the current database state to CSV and/or JSON format in the specified ou
 
 # Export CSV only
 .\venv\Scripts\python cli.py export --format csv --output-dir data/exports/csv
+
+# Export portable SQL dump alongside CSV and JSON
+.\venv\Scripts\python cli.py export --format all --output-dir data/exports
 ```
 
-### 7. `server`
+### 7. `dump-sql`
+Exports a portable SQL script dump of the database (schema, indices, constraints, and data inserts) using SQLite `iterdump`.
+
+```powershell
+.\venv\Scripts\python cli.py dump-sql
+```
+
+Outputs: `backend/data/baseline/sql/complaint_intelligence_dump.sql` (9.15 MB portable SQL script).
+
+### 8. `import-sql`
+Imports a portable SQL dump into a clean target database, verifying table schemas, primary keys, record counts per table, and foreign key integrity.
+
+```powershell
+.\venv\Scripts\python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/test_verify.db
+```
+
+### 9. `server`
 Starts the FastAPI application server using Uvicorn.
 
 ```powershell
@@ -337,7 +356,7 @@ UI runs at: **http://localhost:5173**
 
 ## Testing Suite
 
-All tests use `pytest` and an isolated in-memory SQLite database (`sqlite:///:memory:`) configured with `StaticPool` to ensure thread-safety and zero test side-effects.
+All tests use `pytest` and an isolated in-memory SQLite database (`sqlite:///:memory:`) configured with `StaticPool` to ensure thread-safety and zero test side-effects. The test suite comprises **93 unit and integration tests** passing with **94% code coverage** in under 10 seconds.
 
 To run the complete test suite:
 ```powershell

@@ -190,3 +190,28 @@ class ComplaintFilter(BaseModel):
     search: Optional[str] = None
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)
+
+
+class ComplaintCreateRequest(BaseModel):
+    customer_id: int
+    order_id: Optional[int] = None
+    title: Optional[str] = None
+    subject: Optional[str] = None
+    description: str
+    channel: str = "web"
+    is_safety_incident: Optional[bool] = None
+
+
+class ComplaintMessageCreateRequest(BaseModel):
+    sender_type: str = "customer"  # customer, agent, system
+    sender_id: Optional[str] = None
+    sender_name: Optional[str] = None
+    body: str
+    channel: Optional[str] = "web"
+    is_customer_visible: bool = True
+
+
+class ComplaintUpdateRequest(BaseModel):
+    status: Optional[str] = None
+    priority: Optional[str] = None
+    notes: Optional[str] = None

@@ -183,3 +183,99 @@ class BaselineExporter:
             json.dump(manifest, f, indent=2, sort_keys=True)
 
         return manifest
+
+
+class SQLExporter:
+    """Exports SQLite database to a portable SQL script and supports import verification."""
+
+    def __init__(self, export_dir: Optional[Path] = None):
+        settings = get_settings()
+        self.export_dir = export_dir or (settings.data_dir / "baseline" / "sql")
+        self.export_dir.mkdir(parents=True, exist_ok=True)
+
+    def export_database(
+        self,
+        db_path: Optional[Path] = None,
+        output_filename: str = "complaint_intelligence_dump.sql",
+        output_path: Optional[Path] = None,
+    ) -> Path:
+        """Dump SQLite database using sqlite3 iterdump to create a portable SQL script."""
+        import sqlite3
+        from app.config import BASE_DIR
+
+        source_db = db_path or (BASE_DIR / "complaint_intelligence.db")
+        out_file = output_path or (self.export_dir / output_filename)
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+
+        conn = sqlite3.connect(str(source_db))
+        with open(out_file, "w", encoding="utf-8") as f:
+            for line in conn.iterdump():
+                f.write(f"{line}\n")
+        conn.close()
+        return out_file
+
+    def import_and_verify(
+        self,
+        sql_path: Path,
+        target_db_path: Path,
+        source_db_path: Optional[Path] = None,
+    ) -> Dict[str, Any]:
+        """Import the SQL dump into target_db_path and verify schema, counts, and FK integrity."""
+        import sqlite3
+        from app.config import BASE_DIR
+
+        source_db = source_db_path or (BASE_DIR / "complaint_intelligence.db")
+
+        # Clean slate for target database
+        if target_db_path.exists():
+            target_db_path.unlink()
+
+        conn_target = sqlite3.connect(str(target_db_path))
+        with open(sql_path, "r", encoding="utf-8") as f:
+            sql_script = f.read()
+
+        conn_target.executescript(sql_script)
+
+        # Foreign key integrity check
+        conn_target.execute("PRAGMA foreign_keys = ON")
+        cursor = conn_target.execute("PRAGMA foreign_key_check")
+        fk_violations = cursor.fetchall()
+
+        # Enumerate user tables
+        cursor = conn_target.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+        )
+        tables = [row[0] for row in cursor.fetchall()]
+
+        counts_target: Dict[str, int] = {}
+        for tbl in tables:
+            c = conn_target.execute(f"SELECT COUNT(*) FROM \"{tbl}\"").fetchone()[0]
+            counts_target[tbl] = c
+
+        counts_source: Dict[str, int] = {}
+        if source_db.exists():
+            conn_source = sqlite3.connect(str(source_db))
+            for tbl in tables:
+                try:
+                    c = conn_source.execute(f"SELECT COUNT(*) FROM \"{tbl}\"").fetchone()[0]
+                    counts_source[tbl] = c
+                except Exception:
+                    pass
+            conn_source.close()
+
+        conn_target.close()
+
+        counts_match = (counts_target == counts_source) if counts_source else True
+        fk_passed = len(fk_violations) == 0
+
+        return {
+            "tables": tables,
+            "table_count": len(tables),
+            "target_counts": counts_target,
+            "source_counts": counts_source,
+            "counts_match": counts_match,
+            "fk_violations": fk_violations,
+            "fk_check_passed": fk_passed,
+            "status": "PASS" if (counts_match and fk_passed and len(tables) > 0) else "FAIL",
+        }
+

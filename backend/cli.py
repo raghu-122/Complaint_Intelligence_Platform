@@ -23,7 +23,7 @@ from sqlalchemy import select
 from app.anomaly.detector import AnomalyDetector, inject_anomalies
 from app.config import get_settings
 from app.database import Base, SessionLocal, init_db
-from app.exports.exporter import BaselineExporter, CSVExporter, JSONExporter
+from app.exports.exporter import BaselineExporter, CSVExporter, JSONExporter, SQLExporter
 from app.generator.loader import load_all
 from app.generator.orchestrator import DataGenerator
 from app.reproducibility.engine import ReproducibilityEngine
@@ -201,6 +201,37 @@ def detect_anomalies_cmd():
 
     console.print(table)
 
+    if result.category_metrics:
+        cat_table = Table(
+            title="Per-Category Anomaly Evaluation Metrics",
+            show_header=True,
+            header_style="bold magenta",
+        )
+        cat_table.add_column("Anomaly Category", style="cyan", width=28)
+        cat_table.add_column("Ground Truth", justify="right", style="dim")
+        cat_table.add_column("Detected", justify="right", style="bold")
+        cat_table.add_column("TP", justify="right", style="green")
+        cat_table.add_column("FP", justify="right", style="yellow")
+        cat_table.add_column("FN", justify="right", style="red")
+        cat_table.add_column("Precision", justify="right", style="bold green")
+        cat_table.add_column("Recall", justify="right", style="bold green")
+        cat_table.add_column("F1-Score", justify="right", style="bold green")
+
+        for cat_name, cm in sorted(result.category_metrics.items()):
+            cat_table.add_row(
+                cat_name,
+                str(cm.ground_truth_count),
+                str(cm.detected_count),
+                str(cm.true_positives),
+                str(cm.false_positives),
+                str(cm.false_negatives),
+                f"{cm.precision:.1%}",
+                f"{cm.recall:.1%}",
+                f"{cm.f1_score:.3f}",
+            )
+
+        console.print(cat_table)
+
 
 @cli.command("inject-anomalies")
 @click.option("--count", default=6, type=int, help="Number of anomaly scenarios to inject.")
@@ -354,9 +385,9 @@ def server(host: str, port: int, reload: bool):
 @click.option(
     "--format",
     "export_format",
-    type=click.Choice(["csv", "json", "both"], case_sensitive=False),
+    type=click.Choice(["csv", "json", "sql", "both", "all"], case_sensitive=False),
     default="both",
-    help="Export file format: csv, json, or both.",
+    help="Export file format: csv, json, sql, both (csv+json), or all (csv+json+sql).",
 )
 @click.option(
     "--output-dir",
@@ -365,7 +396,7 @@ def server(host: str, port: int, reload: bool):
     help="Output directory for exported files.",
 )
 def export(export_format: str, output_dir: str):
-    """Export dataset to CSV and/or JSON format."""
+    """Export dataset to CSV, JSON, and/or SQL format."""
     init_db()
     out_path = Path(output_dir)
     out_path.mkdir(parents=True, exist_ok=True)
@@ -403,8 +434,8 @@ def export(export_format: str, output_dir: str):
     table.add_column("CSV Export", style="dim")
     table.add_column("JSON Export", style="dim")
 
-    csv_exp = CSVExporter(out_path / "csv") if export_format in ("csv", "both") else None
-    json_exp = JSONExporter(out_path / "json") if export_format in ("json", "both") else None
+    csv_exp = CSVExporter(out_path / "csv") if export_format in ("csv", "both", "all") else None
+    json_exp = JSONExporter(out_path / "json") if export_format in ("json", "both", "all") else None
 
     for entity_name, records in sorted(data.items(), key=lambda x: x[0]):
         csv_file = "-"
@@ -418,9 +449,66 @@ def export(export_format: str, output_dir: str):
         table.add_row(entity_name, f"{len(records):,}", csv_file, json_file)
 
     console.print(table)
+
+    if export_format in ("sql", "all"):
+        sql_exp = SQLExporter(out_path / "sql")
+        sql_path = sql_exp.export_database(output_path=out_path / "sql" / "complaint_intelligence_dump.sql")
+        console.print(f"[bold green]SQL Dump exported:[/bold green] [cyan]{sql_path}[/cyan] ({round(sql_path.stat().st_size / 1024, 1)} KB)")
+
     console.print(
         f"\n[bold green]Success![/bold green] Data successfully exported to [cyan]{out_path}[/cyan]."
     )
+
+
+@cli.command("dump-sql")
+@click.option("--output", "-o", default=None, help="Output .sql file path (defaults to data/baseline/sql/complaint_intelligence_dump.sql).")
+@click.option("--db-path", default=None, help="Source SQLite DB path.")
+def dump_sql_cmd(output: Optional[str], db_path: Optional[str]):
+    """Export portable SQL dump of the database."""
+    init_db()
+    console.print("[bold cyan]Exporting portable SQL dump...[/bold cyan]")
+    exporter = SQLExporter()
+    out_file = Path(output) if output else None
+    source = Path(db_path) if db_path else None
+    sql_path = exporter.export_database(db_path=source, output_path=out_file)
+    size_kb = round(sql_path.stat().st_size / 1024, 2)
+    console.print(
+        f"[bold green]Success![/bold green] Exported SQL dump to [cyan]{sql_path}[/cyan] ({size_kb} KB)"
+    )
+
+
+@cli.command("import-sql")
+@click.argument("sql_file", type=click.Path(exists=True))
+@click.option("--target-db", default="data/test_verify.db", help="Target SQLite database path for verification.")
+@click.option("--source-db", default=None, help="Source SQLite database path to compare counts against.")
+def import_sql_cmd(sql_file: str, target_db: str, source_db: Optional[str]):
+    """Import a SQL dump into a target database and verify schema, counts, and FK integrity."""
+    console.print(f"[bold cyan]Importing and verifying SQL dump from [yellow]{sql_file}[/yellow]...[/bold cyan]")
+    exporter = SQLExporter()
+    src = Path(source_db) if source_db else None
+    res = exporter.import_and_verify(sql_path=Path(sql_file), target_db_path=Path(target_db), source_db_path=src)
+
+    table = Table(title="SQL Dump Import & Verification", show_header=True, header_style="bold magenta")
+    table.add_column("Table Name", style="cyan", width=28)
+    table.add_column("Source Count", justify="right", style="dim")
+    table.add_column("Imported Count", justify="right", style="bold green")
+    table.add_column("Match Status", justify="center")
+
+    for tbl, count in sorted(res["target_counts"].items()):
+        src_cnt = res["source_counts"].get(tbl, 0)
+        match_icon = "[green]MATCH[/green]" if (not res["source_counts"] or src_cnt == count) else "[red]MISMATCH[/red]"
+        table.add_row(tbl, f"{src_cnt:,}", f"{count:,}", match_icon)
+
+    console.print(table)
+
+    fk_status = "[green]PASS (0 violations)[/green]" if res["fk_check_passed"] else f"[red]FAIL ({len(res['fk_violations'])} violations)[/red]"
+    console.print(f"Foreign Key Integrity Check: {fk_status}")
+    console.print(f"Total Tables Verified: [bold green]{res['table_count']}[/bold green]")
+    verdict_style = "bold green" if res["status"] == "PASS" else "bold red"
+    console.print(f"Overall Import Verdict: [{verdict_style}]{res['status']}[/{verdict_style}]\n")
+
+    if res["status"] != "PASS":
+        sys.exit(1)
 
 
 if __name__ == "__main__":

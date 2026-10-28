@@ -171,3 +171,26 @@ def test_anomaly_refund_without_resolution_scenario(db_session):
     rwr = [a for a in result.anomalies if a.anomaly_type == "REFUND_WITHOUT_RESOLUTION"]
     assert len(rwr) >= 1
 
+
+def test_anomaly_per_category_metrics(db_session):
+    """Detector must calculate precision, recall, F1, TP, FP, FN per category."""
+    generator = DataGenerator(seed=20261022, scale="starter")
+    data = generator.generate_all()
+    load_all(db_session, data, clear_first=True)
+
+    inject_anomalies(db_session, count=6)
+
+    detector = AnomalyDetector(db_session)
+    result = detector.detect()
+
+    assert result.category_metrics is not None
+    assert len(result.category_metrics) == 6
+    for cat, metric in result.category_metrics.items():
+        assert metric.true_positives == 1
+        assert metric.false_positives == 0
+        assert metric.false_negatives == 0
+        assert metric.precision == 1.0
+        assert metric.recall == 1.0
+        assert metric.f1_score == 1.0
+
+

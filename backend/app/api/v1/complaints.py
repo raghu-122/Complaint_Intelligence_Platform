@@ -4,15 +4,32 @@ Complaints API router.
 from __future__ import annotations
 
 import math
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select, func, or_, desc
 from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
-from app.models.complaint import Complaint, ComplaintRelationship
+from app.models.complaint import Complaint, ComplaintRelationship, ComplaintStatusEvent
+from app.models.message import ComplaintMessage
+from app.models.customer import Customer
+from app.models.order import Order
+from app.models.category import Category
+from app.models.team import Team
+from app.models.agent import Agent
 from app.models.assignment import Assignment
-from app.schemas.complaint import ComplaintDetail, ComplaintListItem, ComplaintRelationshipSchema
+from app.models.sla import SLAClock
+from app.engine import get_classifier, get_priority_engine, get_assignment_engine, get_sla_engine
+from app.schemas.complaint import (
+    ComplaintDetail,
+    ComplaintListItem,
+    ComplaintRelationshipSchema,
+    ComplaintCreateRequest,
+    ComplaintMessageCreateRequest,
+    ComplaintMessageSchema,
+    ComplaintUpdateRequest,
+)
 from app.schemas.common import PaginatedResponse
 
 router = APIRouter(prefix="/complaints", tags=["Complaints"])
@@ -253,3 +270,239 @@ def get_complaint(
         surveys=c.surveys,
         related_complaints=rels_list,
     )
+
+
+@router.post("", response_model=ComplaintListItem, status_code=status.HTTP_201_CREATED)
+def create_complaint(
+    req: ComplaintCreateRequest,
+    db: Session = Depends(get_db),
+):
+    """Create a new complaint with automated triage, classification, SLA clock, and routing."""
+    customer = db.get(Customer, req.customer_id)
+    if not customer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Customer ID {req.customer_id} not found",
+        )
+
+    order = db.get(Order, req.order_id) if req.order_id else None
+    subject = req.subject or req.title or "Customer Support Ticket"
+
+    # Automated keyword classification
+    clf = get_classifier()
+    clf_res = clf.classify(text=req.description, subject=subject)
+
+    # Determine safety incident status
+    is_safety = req.is_safety_incident if req.is_safety_incident is not None else (clf_res.category_code == "PRODUCT_SAFETY")
+
+    # Priority determination engine (PR-001 through PR-005)
+    pri_eng = get_priority_engine()
+    sentiment_label, sentiment_score = pri_eng.detect_sentiment(req.description)
+    prior_comps = db.scalar(
+        select(func.count(Complaint.id)).where(Complaint.customer_id_fk == req.customer_id)
+    ) or 0
+
+    pri_decision = pri_eng.calculate_priority(
+        category_code=clf_res.category_code,
+        is_safety_category=is_safety,
+        sentiment=sentiment_label,
+        order_total=order.total_amount if order else None,
+        customer_vulnerability_flag=customer.vulnerability_flag or False,
+        prior_complaint_count=prior_comps,
+    )
+
+    # Generate sequential business ID
+    max_id = db.scalar(select(func.max(Complaint.id))) or 0
+    new_cid = f"CMP-2026-{(max_id + 1):06d}"
+    now_utc = datetime.now(timezone.utc)
+
+    # Resolve category model
+    category = db.scalar(select(Category).where(Category.code == clf_res.category_code))
+
+    complaint = Complaint(
+        complaint_id=new_cid,
+        customer_id_fk=customer.id,
+        order_id_fk=order.id if order else None,
+        category_code=category.code if category else clf_res.category_code,
+        subject=subject,
+        description=req.description,
+        channel=req.channel,
+        status="open",
+        priority=pri_decision.priority,
+        sentiment=sentiment_label,
+        sentiment_score=sentiment_score,
+        is_safety_incident=is_safety,
+        classification_confidence=clf_res.confidence,
+        classification_evidence=clf_res.evidence,
+        classification_rule_id=clf_res.rule_id,
+        classification_rule_version=clf_res.rule_version,
+        priority_rule_applied=pri_decision.rule_applied,
+        priority_explanation=pri_decision.explanation,
+        created_at=now_utc,
+        updated_at=now_utc,
+    )
+    db.add(complaint)
+    db.flush()
+
+    # Initial open status event
+    db.add(ComplaintStatusEvent(
+        complaint_id_fk=complaint.id,
+        from_status=None,
+        to_status="open",
+        reason="Initial complaint registration",
+        changed_by="customer",
+        occurred_at=now_utc,
+    ))
+
+    # Agent routing and assignment
+    asg_eng = get_assignment_engine()
+    team_dict = asg_eng.get_team_for_category(complaint.category_code, is_safety=complaint.is_safety_incident)
+    team_code = team_dict["code"] if team_dict else "GENERAL"
+    team = db.scalar(select(Team).where(Team.code == team_code))
+
+    agent = None
+    if team:
+        agent = db.scalar(
+            select(Agent)
+            .where(Agent.team_id_fk == team.id, Agent.is_active == True)
+            .order_by(Agent.open_complaint_count.asc(), Agent.id.asc())
+        )
+        if agent:
+            agent.open_complaint_count += 1
+
+    assignment = Assignment(
+        assignment_id=f"ASN-{new_cid}-01",
+        complaint_id_fk=complaint.id,
+        team_id_fk=team.id if team else None,
+        agent_id_fk=agent.id if agent else None,
+        assignment_type="initial",
+        assigned_by="system_auto_router",
+        reason=f"Auto-routed to {team.name if team else 'General Support'}",
+        rule_applied="ROUTING_RULE_V1",
+        is_current=True,
+        assigned_at=now_utc,
+    )
+    db.add(assignment)
+
+    # SLA Clock initialization
+    sla_eng = get_sla_engine()
+    policy = sla_eng.get_policy(complaint.priority)
+    deadline = sla_eng.calculate_deadline(now_utc, complaint.priority)
+    first_resp_dl = sla_eng.calculate_first_response_deadline(now_utc, complaint.priority)
+    esc_thresh = sla_eng.calculate_escalation_threshold(now_utc, complaint.priority)
+
+    sla_clock = SLAClock(
+        sla_id=f"SLA-{new_cid}",
+        complaint_id_fk=complaint.id,
+        priority=complaint.priority,
+        resolution_hours=policy.resolution_hours,
+        first_response_hours=policy.first_response_hours,
+        escalation_hours=policy.escalation_hours,
+        start_time=now_utc,
+        original_deadline=deadline,
+        current_deadline=deadline,
+        first_response_deadline=first_resp_dl,
+        escalation_threshold_time=esc_thresh,
+        status="running",
+        is_breached=False,
+        is_escalated=False,
+        created_at=now_utc,
+    )
+    db.add(sla_clock)
+
+    db.commit()
+    db.refresh(complaint)
+    return _to_list_item(complaint)
+
+
+@router.post("/{complaint_id}/messages", response_model=ComplaintMessageSchema, status_code=status.HTTP_201_CREATED)
+def create_complaint_message(
+    complaint_id: str,
+    req: ComplaintMessageCreateRequest,
+    db: Session = Depends(get_db),
+):
+    """Add an interaction message to a complaint thread."""
+    if complaint_id.isdigit():
+        c = db.scalar(select(Complaint).where(Complaint.id == int(complaint_id)))
+    else:
+        c = db.scalar(select(Complaint).where(Complaint.complaint_id == complaint_id))
+
+    if not c:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Complaint '{complaint_id}' not found",
+        )
+
+    msg_count = db.scalar(
+        select(func.count(ComplaintMessage.id)).where(ComplaintMessage.complaint_id_fk == c.id)
+    ) or 0
+    now_utc = datetime.now(timezone.utc)
+
+    msg = ComplaintMessage(
+        message_id=f"MSG-{c.complaint_id}-{(msg_count + 1):02d}",
+        complaint_id_fk=c.id,
+        message_type="customer_message" if req.sender_type == "customer" else "internal_note",
+        sender_type=req.sender_type,
+        sender_id=req.sender_id,
+        sender_name=req.sender_name,
+        body=req.body,
+        channel=req.channel or c.channel,
+        is_customer_visible=req.is_customer_visible,
+        sequence_number=msg_count + 1,
+        delivery_status="delivered",
+        sent_at=now_utc,
+    )
+    c.updated_at = now_utc
+    db.add(msg)
+    db.commit()
+    db.refresh(msg)
+    return msg
+
+
+@router.patch("/{complaint_id}", response_model=ComplaintListItem)
+def update_complaint(
+    complaint_id: str,
+    req: ComplaintUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    """Update complaint status or priority, recording lifecycle transition events."""
+    if complaint_id.isdigit():
+        c = db.scalar(select(Complaint).where(Complaint.id == int(complaint_id)))
+    else:
+        c = db.scalar(select(Complaint).where(Complaint.complaint_id == complaint_id))
+
+    if not c:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Complaint '{complaint_id}' not found",
+        )
+
+    now_utc = datetime.now(timezone.utc)
+    if req.status and req.status != c.status:
+        db.add(ComplaintStatusEvent(
+            complaint_id_fk=c.id,
+            from_status=c.status,
+            to_status=req.status,
+            reason=req.notes or f"Status changed to {req.status}",
+            changed_by="agent",
+            occurred_at=now_utc,
+        ))
+        c.status = req.status
+        if req.status == "escalated":
+            c.is_escalated = True
+            if c.sla_clock:
+                c.sla_clock.is_escalated = True
+        elif req.status == "resolved":
+            c.resolved_at = now_utc
+            if c.sla_clock:
+                c.sla_clock.status = "completed"
+        elif req.status == "closed":
+            c.closed_at = now_utc
+
+    if req.priority:
+        c.priority = req.priority
+
+    c.updated_at = now_utc
+    db.commit()
+    db.refresh(c)
+    return _to_list_item(c)

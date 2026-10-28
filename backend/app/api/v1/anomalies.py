@@ -17,6 +17,7 @@ router = APIRouter(prefix="/anomalies", tags=["Anomalies"])
 
 
 @router.get("", response_model=AnomalyDetectionResult)
+@router.get("/detect", response_model=AnomalyDetectionResult)
 def list_anomalies(db: Session = Depends(get_db)):
     """Scan database for known anomalies and data rule violations."""
     detector = AnomalyDetector(db)
