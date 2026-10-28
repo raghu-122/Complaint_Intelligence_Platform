@@ -1,0 +1,78 @@
+{
+  "updated_at": "2026-10-28T06:06:53.816924+00:00",
+  "total_anomalies": 6,
+  "anomalies": [
+    {
+      "anomaly_id": "ANOM-001",
+      "anomaly_type": "PRIORITY_MISMATCH",
+      "description": "Safety complaint incorrectly prioritized as P3 instead of P1",
+      "severity": "high",
+      "complaint_id": "CMP-2026-000001",
+      "table_name": "complaints",
+      "record_id": "1",
+      "evidence": null,
+      "is_ground_truth": true,
+      "detected_at": null
+    },
+    {
+      "anomaly_id": "ANOM-002",
+      "anomaly_type": "SLA_BACKDATED",
+      "description": "SLA deadline set in the past before complaint creation time",
+      "severity": "high",
+      "complaint_id": "CMP-2026-000002",
+      "table_name": "sla_clocks",
+      "record_id": "2",
+      "evidence": null,
+      "is_ground_truth": true,
+      "detected_at": null
+    },
+    {
+      "anomaly_id": "ANOM-003",
+      "anomaly_type": "SURVEY_BEFORE_CLOSURE",
+      "description": "Customer satisfaction survey submitted before complaint was closed",
+      "severity": "medium",
+      "complaint_id": "CMP-2026-000003",
+      "table_name": "surveys",
+      "record_id": null,
+      "evidence": null,
+      "is_ground_truth": true,
+      "detected_at": null
+    },
+    {
+      "anomaly_id": "ANOM-004",
+      "anomaly_type": "DUPLICATE_ASSIGNMENT",
+      "description": "Complaint assigned to two agents simultaneously with is_current=True",
+      "severity": "medium",
+      "complaint_id": "CMP-2026-000004",
+      "table_name": "assignments",
+      "record_id": null,
+      "evidence": null,
+      "is_ground_truth": true,
+      "detected_at": null
+    },
+    {
+      "anomaly_id": "ANOM-005",
+      "anomaly_type": "MISSING_STATUS_EVENT",
+      "description": "Complaint has lifecycle events but lacks the initial 'open' status event",
+      "severity": "high",
+      "complaint_id": "CMP-2026-000005",
+      "table_name": "complaint_status_events",
+      "record_id": null,
+      "evidence": null,
+      "is_ground_truth": true,
+      "detected_at": null
+    },
+    {
+      "anomaly_id": "ANOM-006",
+      "anomaly_type": "REFUND_WITHOUT_RESOLUTION",
+      "description": "Refund recorded in status event but no formal Resolution record exists",
+      "severity": "high",
+      "complaint_id": "CMP-2026-000006",
+      "table_name": "resolutions",
+      "record_id": null,
+      "evidence": null,
+      "is_ground_truth": true,
+      "detected_at": null
+    }
+  ]
+}

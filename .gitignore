@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+*.pyc
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env
+backend/.env
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Distribution / packaging
+.Python
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+
+# Node
+node_modules/
+frontend/dist/
+frontend/build/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Secrets
+.env
+*.pem
+*.key
+secrets/
+
+# Generated data (large files)
+# Keep manifests and ground_truth, exclude large CSVs in full mode
+backend/data/baseline/csv/*.csv
+backend/data/baseline/json/*.json
+backend/data/baseline/sql/*.sql
+!backend/data/baseline/csv/.gitkeep
+!backend/data/baseline/json/.gitkeep
+!backend/data/baseline/sql/.gitkeep
+backend/data/exports/
+
+# Docker
+docker-data/
+
+# Mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Ruff
+.ruff_cache/

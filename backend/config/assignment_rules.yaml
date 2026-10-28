@@ -1,0 +1,64 @@
+version: "1.0.0"
+effective_date: "2026-01-01"
+
+teams:
+  - code: "SAFETY"
+    name: "Safety & Compliance Team"
+    specializations: ["PRODUCT_SAFETY"]
+    handles_priority: ["P1", "P2"]
+    safety_capable: true
+
+  - code: "DELIVERY"
+    name: "Delivery Operations Team"
+    specializations: ["DELIVERY_DELAY", "MISSING_ORDER"]
+    handles_priority: ["P1", "P2", "P3", "P4"]
+    safety_capable: false
+
+  - code: "RETURNS"
+    name: "Returns & Refunds Team"
+    specializations: ["DAMAGED_PRODUCT", "WRONG_ITEM", "REFUND"]
+    handles_priority: ["P1", "P2", "P3", "P4"]
+    safety_capable: false
+
+  - code: "BILLING"
+    name: "Billing & Payments Team"
+    specializations: ["PAYMENT"]
+    handles_priority: ["P1", "P2", "P3", "P4"]
+    safety_capable: false
+
+  - code: "QUALITY"
+    name: "Product Quality Team"
+    specializations: ["PRODUCT_QUALITY"]
+    handles_priority: ["P1", "P2", "P3", "P4"]
+    safety_capable: false
+
+  - code: "GENERAL"
+    name: "General Support Team"
+    specializations: ["ACCOUNT_SERVICE", "OTHER"]
+    handles_priority: ["P2", "P3", "P4"]
+    safety_capable: false
+
+assignment_rules:
+  - rule: "safety_first"
+    description: "Safety incidents must be assigned to SAFETY team"
+    condition: "category.safety_risk == true"
+    target_team: "SAFETY"
+    precedence: 1
+
+  - rule: "specialization_match"
+    description: "Assign to team specialized in the complaint category"
+    condition: "team.specializations contains category.code"
+    target_team: "specialized"
+    precedence: 2
+
+  - rule: "workload_balance"
+    description: "Among eligible agents, assign to agent with lowest open complaint count"
+    condition: "default"
+    target_agent: "min_workload"
+    precedence: 3
+
+  - rule: "tiebreaker"
+    description: "When workloads are equal, assign by agent_id ascending (deterministic)"
+    condition: "workload_tie"
+    target_agent: "lowest_agent_id"
+    precedence: 4

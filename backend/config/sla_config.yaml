@@ -1,0 +1,32 @@
+version: "1.0.0"
+effective_date: "2026-01-01"
+note: "SLA thresholds are project assumptions for the YottaFlex code challenge, not official business SLAs."
+time_basis: "elapsed_hours"
+timezone: "UTC"
+
+policies:
+  P1:
+    resolution_hours: 4
+    escalation_hours: 2
+    first_response_hours: 1
+  P2:
+    resolution_hours: 12
+    escalation_hours: 8
+    first_response_hours: 2
+  P3:
+    resolution_hours: 48
+    escalation_hours: 36
+    first_response_hours: 8
+  P4:
+    resolution_hours: 72
+    escalation_hours: 60
+    first_response_hours: 24
+
+pause_rules:
+  - "Awaiting customer response (explicitly documented in status)"
+  - "External investigation by third party pending regulatory requirement"
+
+escalation_policy:
+  auto_escalate_at_threshold: true
+  notify_supervisor: true
+  safety_incident_immediate_escalation: true

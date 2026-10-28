@@ -1,0 +1,117 @@
+version: "1.0.0"
+effective_date: "2026-01-01"
+note: "These are project assumptions for the YottaFlex code challenge, not official business thresholds."
+
+priority_levels:
+  - code: "P1"
+    name: "Critical"
+    description: "Requires immediate attention; safety or critical business impact"
+    sla_hours: 4
+    escalation_threshold_hours: 2
+    color: "#ef4444"
+
+  - code: "P2"
+    name: "High"
+    description: "Urgent; significant customer impact"
+    sla_hours: 12
+    escalation_threshold_hours: 8
+    color: "#f97316"
+
+  - code: "P3"
+    name: "Medium"
+    description: "Standard; moderate customer impact"
+    sla_hours: 48
+    escalation_threshold_hours: 36
+    color: "#eab308"
+
+  - code: "P4"
+    name: "Low"
+    description: "Minor; minimal customer impact"
+    sla_hours: 72
+    escalation_threshold_hours: 60
+    color: "#22c55e"
+
+rules:
+  - rule_id: "PR-001"
+    name: "safety_incident"
+    description: "Any confirmed safety incident is always P1 regardless of other factors"
+    priority: "P1"
+    condition: "category.safety_risk == true"
+    precedence: 1
+
+  - rule_id: "PR-002"
+    name: "vulnerable_customer_negative_sentiment"
+    description: "Vulnerable customer with negative sentiment is P1"
+    priority: "P1"
+    condition: "customer.vulnerability_flag == true AND sentiment == 'negative'"
+    precedence: 2
+
+  - rule_id: "PR-003"
+    name: "high_value_negative_sentiment"
+    description: "High-value order (>500) with negative sentiment is P2"
+    priority: "P2"
+    condition: "order.total_amount > 500 AND sentiment == 'negative'"
+    precedence: 3
+
+  - rule_id: "PR-004"
+    name: "recurrence_upgrade"
+    description: "Complaint from customer with 3+ prior complaints upgrades one level"
+    priority_upgrade: 1
+    condition: "customer.prior_complaint_count >= 3"
+    precedence: 4
+
+  - rule_id: "PR-005"
+    name: "medium_value_negative"
+    description: "Medium-value order (200-500) with negative sentiment is P3"
+    priority: "P3"
+    condition: "order.total_amount >= 200 AND order.total_amount <= 500 AND sentiment == 'negative'"
+    precedence: 5
+
+  - rule_id: "PR-006"
+    name: "default"
+    description: "Default priority is P3 for all other cases"
+    priority: "P3"
+    condition: "default"
+    precedence: 99
+
+sentiment_thresholds:
+  negative_keywords:
+    - "terrible"
+    - "awful"
+    - "horrible"
+    - "worst"
+    - "angry"
+    - "furious"
+    - "disgusted"
+    - "outraged"
+    - "unacceptable"
+    - "ridiculous"
+    - "never again"
+    - "scam"
+    - "fraud"
+    - "lied"
+    - "disappointed"
+    - "frustrated"
+    - "useless"
+    - "pathetic"
+    - "waste"
+    - "demand"
+    - "immediately"
+    - "lawsuit"
+    - "sue"
+    - "report"
+  positive_keywords:
+    - "thank"
+    - "great"
+    - "excellent"
+    - "good"
+    - "happy"
+    - "satisfied"
+    - "pleased"
+    - "wonderful"
+    - "love"
+    - "appreciate"
+    - "helpful"
+    - "perfect"
+    - "outstanding"
+    - "impressed"

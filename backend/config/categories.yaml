@@ -1,0 +1,191 @@
+categories:
+  - id: 1
+    code: "DELIVERY_DELAY"
+    name: "Delivery Delay"
+    description: "Complaints about delayed or late deliveries"
+    keywords:
+      - "late"
+      - "delay"
+      - "delayed"
+      - "shipping"
+      - "not arrived"
+      - "overdue"
+      - "waiting"
+      - "where is my order"
+      - "slow delivery"
+      - "delivery time"
+      - "not delivered"
+      - "tracking"
+      - "expected delivery"
+    safety_risk: false
+
+  - id: 2
+    code: "DAMAGED_PRODUCT"
+    name: "Damaged Product"
+    description: "Complaints about products received in damaged condition"
+    keywords:
+      - "damaged"
+      - "broken"
+      - "cracked"
+      - "dented"
+      - "smashed"
+      - "shattered"
+      - "crushed"
+      - "arrived broken"
+      - "package damaged"
+      - "defective on arrival"
+      - "bent"
+      - "torn"
+    safety_risk: false
+
+  - id: 3
+    code: "PRODUCT_SAFETY"
+    name: "Product Safety"
+    description: "Complaints about product safety risks, injuries, or hazards"
+    keywords:
+      - "safety"
+      - "unsafe"
+      - "hazard"
+      - "dangerous"
+      - "injury"
+      - "injured"
+      - "hurt"
+      - "burn"
+      - "fire"
+      - "electric shock"
+      - "recall"
+      - "toxic"
+      - "poisonous"
+      - "health risk"
+      - "exploded"
+      - "smoke"
+      - "sparks"
+      - "overheating"
+    safety_risk: true
+
+  - id: 4
+    code: "REFUND"
+    name: "Refund"
+    description: "Complaints requesting refunds or reimbursements"
+    keywords:
+      - "refund"
+      - "money back"
+      - "reimbursement"
+      - "return"
+      - "credit"
+      - "charge back"
+      - "chargeback"
+      - "get my money"
+      - "full refund"
+      - "partial refund"
+    safety_risk: false
+
+  - id: 5
+    code: "PAYMENT"
+    name: "Payment"
+    description: "Complaints about payment issues, billing errors, or charges"
+    keywords:
+      - "payment"
+      - "billing"
+      - "charged"
+      - "overcharged"
+      - "double charged"
+      - "invoice"
+      - "bill"
+      - "credit card"
+      - "transaction"
+      - "unauthorized charge"
+      - "wrong amount"
+      - "incorrect charge"
+    safety_risk: false
+
+  - id: 6
+    code: "PRODUCT_QUALITY"
+    name: "Product Quality"
+    description: "Complaints about poor product quality or performance"
+    keywords:
+      - "quality"
+      - "poor quality"
+      - "not as described"
+      - "misleading"
+      - "substandard"
+      - "cheap"
+      - "fell apart"
+      - "stopped working"
+      - "malfunctioning"
+      - "not working"
+      - "faulty"
+      - "defective"
+      - "inferior"
+    safety_risk: false
+
+  - id: 7
+    code: "WRONG_ITEM"
+    name: "Wrong Item"
+    description: "Complaints about receiving the wrong product or item"
+    keywords:
+      - "wrong item"
+      - "wrong product"
+      - "not what I ordered"
+      - "incorrect item"
+      - "different product"
+      - "substituted"
+      - "wrong size"
+      - "wrong color"
+      - "wrong model"
+      - "sent wrong"
+    safety_risk: false
+
+  - id: 8
+    code: "MISSING_ORDER"
+    name: "Missing Order"
+    description: "Complaints about orders that did not arrive at all"
+    keywords:
+      - "missing"
+      - "never arrived"
+      - "not received"
+      - "lost"
+      - "disappeared"
+      - "cannot find"
+      - "no delivery"
+      - "package missing"
+      - "order missing"
+      - "never delivered"
+      - "stolen"
+    safety_risk: false
+
+  - id: 9
+    code: "ACCOUNT_SERVICE"
+    name: "Account or Service"
+    description: "Complaints about account issues, login problems, or customer service"
+    keywords:
+      - "account"
+      - "login"
+      - "password"
+      - "cannot access"
+      - "locked out"
+      - "customer service"
+      - "support"
+      - "rude"
+      - "unhelpful"
+      - "no response"
+      - "ignored"
+      - "profile"
+      - "subscription"
+    safety_risk: false
+
+  - id: 10
+    code: "OTHER"
+    name: "Other"
+    description: "Complaints that do not fit any specific category"
+    keywords:
+      - "general"
+      - "other"
+      - "complaint"
+      - "issue"
+      - "problem"
+      - "concern"
+    safety_risk: false
+
+version: "1.0.0"
+effective_date: "2026-01-01"
