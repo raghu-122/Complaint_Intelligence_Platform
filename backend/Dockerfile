@@ -17,3 +17,4 @@ EXPOSE 8000
 
 # Default: generate full-scale data then start server
 CMD ["sh", "-c", "python cli.py generate --scale full --seed 20261022 --clear --export && uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+

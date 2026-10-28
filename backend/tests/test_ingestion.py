@@ -232,3 +232,4 @@ class TestCustomerIngestion:
         )
         assert r.status_code == 200
         assert r.json()["accepted"] == 1
+

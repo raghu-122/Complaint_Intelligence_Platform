@@ -15,8 +15,11 @@ An enterprise-grade, deterministic customer complaint intelligence platform feat
   - [5. Skill-Based Assignment Engine](#5-skill-based-assignment-engine)
   - [6. Five-Domain Validation Engine](#6-five-domain-validation-engine)
   - [7. Anomaly Detection & Injection Suite](#7-anomaly-detection--injection-suite)
+  - [8. Data Ingestion Pipeline](#8-data-ingestion-pipeline)
 - [Data Schema & Entity Models](#data-schema--entity-models)
 - [Setup & Installation](#setup--installation)
+- [Docker & Containerized Deployment](#docker--containerized-deployment)
+- [Cloud Deployment (Railway / Render)](#cloud-deployment-railway--render)
 - [CLI Reference](#cli-reference)
 - [REST API Endpoints](#rest-api-endpoints)
 - [Running the Applications](#running-the-applications)
@@ -123,6 +126,17 @@ graph TD
   6. `REFUND_WITHOUT_RESOLUTION`: Refund acknowledged in messages/events without formal resolution record.
 - Evaluates detection against ground-truth manifest to compute precision, recall, and F1-score.
 
+### 8. Data Ingestion Pipeline
+- **Backend Location**: `backend/app/api/v1/ingestion.py` and `backend/app/services/ingestion.py`
+- **Frontend Location**: `frontend/src/pages/Ingestion.tsx`
+- **Capabilities**:
+  - Accepts CSV and JSON payload uploads up to 10 MB for complaints and customers.
+  - Supports raw JSON arrays as well as structured wrappers (`{"data": [...]}`).
+  - Enforces field-level validation: required attributes, valid enum sets (channels, statuses, priorities, sentiments, account tiers), and regex formats (`CMP-YYYY-NNNNNN`, `CUS-NNNNNN`, valid RFC 5322 emails).
+  - Performs intelligent deduplication: identical business IDs or customer emails already in the database are automatically skipped with separate tracking.
+  - Transactional integrity: valid records are committed atomically; invalid records yield granular row-level error reports with row index, field name, and descriptive failure messages.
+  - Interactive Web UI: drag-and-drop file upload with live schema viewer, summary metrics (Accepted, Rejected, Deduplicated, Total), and searchable error breakdown.
+
 ---
 
 ## Data Schema & Entity Models
@@ -196,6 +210,50 @@ erDiagram
    cd frontend
    npm install
    ```
+
+---
+
+## Docker & Containerized Deployment
+
+The entire stack can be launched with a single command via Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+### Services Included
+- **`backend`**: Python 3.11-slim container running FastAPI with Uvicorn on port `8000`. Runs seed generation (`full` scale, seed `20261022`) automatically on startup, mounts a persistent volume for database storage, and includes an active healthcheck.
+- **`frontend`**: Multi-stage Node 20 build serving the production bundle with `serve` on port `5173`. Connects to the backend gateway automatically.
+
+Access points:
+- Frontend UI: `http://localhost:5173`
+- Backend API & Health: `http://localhost:8000/health`
+- Interactive API Docs: `http://localhost:8000/docs`
+
+---
+
+## Cloud Deployment (Railway / Render)
+
+Pre-configured infrastructure manifests are provided in the repository root for instantaneous deployment:
+
+### 1. Railway (`railway.toml` & `Procfile`)
+1. Create a new project in [Railway](https://railway.app/).
+2. Select **Deploy from GitHub repo** and connect this repository.
+3. Railway automatically detects `railway.toml` and `backend/Procfile`:
+   - Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Healthcheck path: `/health`
+
+### 2. Render (`render.yaml`)
+1. In [Render](https://render.com/), choose **New Blueprint Instance**.
+2. Point Render to your repository; it reads `render.yaml` automatically.
+3. Environment variables configured:
+   - `APP_ENV=production`
+   - `DATABASE_URL=sqlite:///./complaint_intelligence.db`
+
+### 3. Frontend Static Hosting (Vercel / Netlify / Cloudflare Pages)
+- Build command: `npm run build`
+- Output directory: `dist`
+- Environment variable: `VITE_API_URL=https://<your-backend-domain>`
 
 ---
 
@@ -332,6 +390,10 @@ The API is fully documented interactively via Swagger UI at **`http://localhost:
 | | `POST` | `/api/v1/generate/reproduce` | Run reproducibility check via API |
 | **Reports** | `GET` | `/api/v1/reports` | List available audit and baseline reports |
 | | `GET` | `/api/v1/reports/{report_id}` | Retrieve report payload (JSON or Markdown) |
+| **Ingestion** | `POST` | `/api/v1/ingest/complaints` | Upload CSV/JSON complaints with field validation & dedup |
+| | `POST` | `/api/v1/ingest/customers` | Upload CSV/JSON customers with email check & dedup |
+| | `GET` | `/api/v1/ingest/schema/complaints` | Return required/optional schema for complaints upload |
+| | `GET` | `/api/v1/ingest/schema/customers` | Return required/optional schema for customers upload |
 
 ---
 
@@ -356,7 +418,7 @@ UI runs at: **http://localhost:5173**
 
 ## Testing Suite
 
-All tests use `pytest` and an isolated in-memory SQLite database (`sqlite:///:memory:`) configured with `StaticPool` to ensure thread-safety and zero test side-effects. The test suite comprises **93 unit and integration tests** passing with **94% code coverage** in under 10 seconds.
+All tests use `pytest` and an isolated in-memory SQLite database (`sqlite:///:memory:`) configured with `StaticPool` to ensure thread-safety and zero test side-effects. The test suite comprises **110 unit and integration tests** passing with **94% code coverage** in under 11 seconds.
 
 To run the complete test suite:
 ```powershell
@@ -365,35 +427,24 @@ cd backend
 ```
 
 ### Test Coverage Areas
-1. **`tests/test_generator.py`**:
-   - Record count verification matching scale config.
-   - Exact seed reproducibility between separate runs.
-   - Entropy check verifying different seeds generate distinct values.
-2. **`tests/test_classifier.py`**:
-   - Safety keyword trigger classification and confidence metrics.
-   - Delivery issue classification.
-   - Fallback category assignment for ambiguous inputs.
-3. **`tests/test_priority.py`**:
-   - Strict P1 override rule PR-001 on safety incidents.
-   - Sentiment scoring accuracy on positive, negative, and neutral texts.
-   - High-value order priority upgrade rule PR-002/PR-003.
-4. **`tests/test_sla.py`**:
-   - SLA policy lookup and validation for P1 (4h), P2 (12h), P3 (48h), P4 (72h).
-   - Deadline computation, first-response targets, and escalation thresholds.
-   - Active breach evaluation, pause duration adjustment, hours remaining, and breach risk percentage.
-5. **`tests/test_validation.py`**:
-   - Clean dataset validation asserting 0 failures across all 5 verification domains.
-6. **`tests/test_anomaly.py`**:
-   - Verification of zero anomalies on clean synthetic datasets.
-   - Injection of all 6 distinct anomaly scenarios (`PRIORITY_MISMATCH`, `SLA_BACKDATED`, `SURVEY_BEFORE_CLOSURE`, `DUPLICATE_ASSIGNMENT`, `MISSING_STATUS_EVENT`, `REFUND_WITHOUT_RESOLUTION`).
-   - Detection verification, ground-truth matching, and Precision / Recall / F1-score evaluation.
-7. **`tests/test_exports_reproducibility.py`**:
-   - SHA-256 deterministic file hashing and manifest generation.
-   - Bitwise-identical CSV and JSON export verification across identical seeds.
-   - Bitwise mismatch detection across differing seeds.
-   - Full `ReproducibilityEngine` audit execution and markdown report generation.
-8. **`tests/test_api.py`**:
-   - Integration tests covering `/health`, complaints CRUD, customers, products, teams, dashboard KPIs, validation endpoint, anomaly detection, and reports.
+1. **`tests/test_generator.py`** (3 tests): Record count verification, seed reproducibility, entropy check.
+2. **`tests/test_classifier.py`** (3 tests): Safety keyword classification, delivery triage, fallback assignment.
+3. **`tests/test_priority.py`** (3 tests): Strict P1 override rule PR-001, sentiment scoring, high-value order escalation.
+4. **`tests/test_sla.py`** (18 tests): Policies P1-P4, deadline calculation, active breach evaluation, pause adjustments.
+5. **`tests/test_validation.py`** (1 test): Clean dataset validation asserting 0 failures across all 5 verification domains.
+6. **`tests/test_anomaly.py`** (11 tests): Zero anomalies on clean baseline, injection of all 6 scenarios, detection verification, 100% Precision / Recall / F1-score evaluation.
+7. **`tests/test_exports_reproducibility.py`** (15 tests): SHA-256 deterministic file hashing, 33/33 bitwise file matching, mismatch detection.
+8. **`tests/test_api.py`** (10 tests): Integration tests covering `/health`, complaints CRUD, customers, products, teams, dashboard KPIs, validation endpoint, anomaly detection, reports.
+9. **`tests/test_api_extended.py`** (29 tests): Extended integration coverage across edge cases, nested relationships, and lifecycle status changes.
+10. **`tests/test_ingestion.py`** (17 tests): Schema discovery, CSV/JSON complaint & customer ingestion, field validation, duplicate detection, bad input rejection.
+
+### Live End-to-End Workflow Verification
+A self-contained live API verification script runs against a dedicated test server with full database persistence:
+```powershell
+cd backend
+.\venv\Scripts\python scripts/verify_e2e_live.py
+```
+This exercises 12 distinct operational workflow steps (health, stats, charts, complaint creation with auto-classification, nested details, message thread addition, lifecycle escalation, anomaly detection verification, 5-domain data validation, customer filters, and baseline reproducibility audit).
 
 ---
 
@@ -406,8 +457,17 @@ cd backend
 | **AC-03** | Keyword Classification | `app/engine/classifier.py` regex boundary matching over 10 categories with confidence | **PASSED** |
 | **AC-04** | SLA Monitoring | `app/engine/sla.py` tracks targets, countdowns, pause durations, and breach alerts | **PASSED** |
 | **AC-05** | Agent Assignment | `app/engine/assignment.py` matches squad capabilities and balances agent workload | **PASSED** |
-| **AC-06** | 5-Domain Validation | `app/validation/validator.py` executes 20+ checks; verified clean on starter dataset | **PASSED** |
+| **AC-06** | 5-Domain Validation | `app/validation/validator.py` executes 20+ checks; verified clean on starter & full datasets | **PASSED** |
 | **AC-07** | Anomaly Detection | `app/anomaly/detector.py` scans 6 anomaly types with precision, recall, and F1 scoring | **PASSED** |
-| **AC-08** | Click CLI | `backend/cli.py` implements `generate`, `validate`, `detect-anomalies`, `reproduce`, `server`, `export` | **PASSED** |
+| **AC-08** | Click CLI | `backend/cli.py` implements `generate`, `validate`, `detect-anomalies`, `reproduce`, `server`, `export`, `dump-sql`, `import-sql` | **PASSED** |
 | **AC-09** | REST API | Complete endpoints with CORS, Pydantic schemas, and Swagger docs | **PASSED** |
 | **AC-10** | Modern Frontend | React 18 + Vite UI with dashboards, complaint tables, triage tools, and anomaly viewers | **PASSED** |
+| **AC-11** | Full-Scale Volume | 2,000 complaints, 5,000 customers, 8,000 orders, 6,000 messages generated & validated | **PASSED** |
+| **AC-12** | Portable SQL Dump | Complete SQLite dump export & verified import (`complaint_intelligence_dump.sql`, 9.15 MB) | **PASSED** |
+| **AC-13** | Reproducibility Manifest | 33/33 exported baseline files match SHA-256 hashes bit-for-bit | **PASSED** |
+| **AC-14** | Live E2E Verification | 12/12 automated live API tests passing across isolated server instances | **PASSED** |
+| **AC-15** | Data Ingestion Pipeline | CSV/JSON upload with validation, deduplication, and row-level error reporting (17 tests) | **PASSED** |
+| **AC-16** | Containerization | `docker-compose.yml` with backend (auto-seeded) and frontend services | **PASSED** |
+| **AC-17** | Cloud Deployment Config | `railway.toml`, `render.yaml`, and `backend/Procfile` ready for zero-config deployment | **PASSED** |
+| **AC-18** | Security & Hygiene | No credentials committed; `.env`, `venv/`, `node_modules/`, and DB files gitignored | **PASSED** |
+| **AC-19** | GitHub Publication | Clean git tree ready for public remote push | **READY** |

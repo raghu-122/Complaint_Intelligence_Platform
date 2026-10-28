@@ -141,3 +141,4 @@ def customers_schema() -> dict[str, Any]:
             "Rows with a duplicate customer_id or email are silently skipped (deduplicated).",
         ],
     }
+

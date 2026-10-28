@@ -14,24 +14,25 @@ cd backend
 .\venv\Scripts\python.exe -m pytest tests\ -v --tb=short
 ```
 
-**Result**: ✅ **93 passed, 0 failed, 1 warning in 9.67s** — Exit code: 0
+**Result**: ✅ **110 passed, 0 failed, 1 warning in 10.70s** — Exit code: 0
 
 **Coverage**:
 ```
-TOTAL    2789   160   94%
+TOTAL    3084   185   94%
 ```
 
 | File | Tests | Result |
 |---|---|---|
 | tests/test_generator.py | 3 | ✅ PASS |
-| tests/test_classifier.py | 4 | ✅ PASS |
+| tests/test_classifier.py | 3 | ✅ PASS |
 | tests/test_priority.py | 3 | ✅ PASS |
 | tests/test_sla.py | 18 | ✅ PASS |
 | tests/test_validation.py | 1 | ✅ PASS |
 | tests/test_anomaly.py | 11 | ✅ PASS |
 | tests/test_exports_reproducibility.py | 15 | ✅ PASS |
-| tests/test_api.py | 9 | ✅ PASS |
+| tests/test_api.py | 10 | ✅ PASS |
 | tests/test_api_extended.py | 29 | ✅ PASS |
+| tests/test_ingestion.py | 17 | ✅ PASS |
 
 ---
 
@@ -46,11 +47,11 @@ npm run build
 **Result**: ✅ **Exit code: 0**
 
 ```
-✓ 2617 modules transformed
-dist/index.html                   1.00 kB │ gzip:  0.54 kB
-dist/assets/index-D9UkHpnZ.css  17.94 kB │ gzip:  4.21 kB
-dist/assets/index-05C5OzMf.js  715.56 kB │ gzip: 213.05 kB
-✓ built in 6.86s
+✓ 2618 modules transformed
+dist/index.html                   1.00 kB │ gzip:   0.53 kB
+dist/assets/index-D9UkHpnZ.css   17.94 kB │ gzip:   4.21 kB
+dist/assets/index-Cv0YSDrL.js   722.11 kB │ gzip: 214.90 kB
+✓ built in 5.27s
 ```
 
 TypeScript errors: **0**
@@ -339,8 +340,9 @@ Run #2 produced identical results with zero state contamination.
 
 ## 12. Fresh-Clone Reproducibility
 
-The project can be reproduced from source by:
+The project can be reproduced from source in two ways:
 
+### Option A: Local Environment
 1. `git clone <repo-url> && cd Complaint_Intelligence_Platform`
 2. `cd backend && python -m venv venv && .\venv\Scripts\Activate.ps1`
 3. `pip install -r requirements.txt`
@@ -348,9 +350,17 @@ The project can be reproduced from source by:
 5. `python cli.py validate` → 15/15 PASS
 6. `python cli.py reproduce --scale full --seed 20261022` → 100% BITWISE MATCH (33/33)
 7. `python cli.py dump-sql && python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/baseline/sql/verify_import.db` → 17/17 MATCH, 0 FK violations
-8. `python scripts/verify_e2e_live.py --run-n 1` → 12/12 E2E PASS (self-contained)
-9. `python scripts/verify_e2e_live.py --run-n 2` → 12/12 E2E PASS (repeatability confirmed)
-10. `cd ../frontend && npm install && npm run build` → 0 TypeScript errors, 715 KB bundle
-11. `cd ../backend && python cli.py server` → API at http://localhost:8000
-12. `cd ../frontend && npm run dev` → UI at http://localhost:5173
+8. `python -m pytest tests/ -v` → 110/110 PASS (94% coverage)
+9. `python scripts/verify_e2e_live.py --run-n 1` → 12/12 E2E PASS (self-contained)
+10. `python scripts/verify_e2e_live.py --run-n 2` → 12/12 E2E PASS (repeatability confirmed)
+11. `cd ../frontend && npm install && npm run build` → 0 TypeScript errors, 722 KB bundle
+12. `cd ../backend && python cli.py server` → API at http://localhost:8000
+13. `cd ../frontend && npm run dev` → UI at http://localhost:5173
+
+### Option B: Docker Compose
+```bash
+docker compose up --build
+```
+- Backend starts on `http://localhost:8000` with full dataset auto-seeded.
+- Frontend starts on `http://localhost:5173`.
 

@@ -307,9 +307,41 @@ git push -u origin main
 
 ---
 
+## AC-18: Data Ingestion Pipeline
+
+| Check | Status |
+|---|---|
+| POST /api/v1/ingest/complaints (CSV) | ✅ PASS |
+| POST /api/v1/ingest/complaints (JSON) | ✅ PASS |
+| POST /api/v1/ingest/customers (CSV) | ✅ PASS |
+| POST /api/v1/ingest/customers (JSON) | ✅ PASS |
+| Row-level validation with field-level errors | ✅ PASS |
+| Deduplication by complaint_id / customer_id | ✅ PASS |
+| Unsupported file type rejection (415) | ✅ PASS |
+| Schema discovery endpoints (GET /schema/complaints, /schema/customers) | ✅ PASS |
+| Frontend Ingestion page with drag-and-drop | ✅ PASS |
+| 17 automated tests (test_ingestion.py) | ✅ PASS |
+
+**Implementation**: `backend/app/api/v1/ingestion.py`, `backend/app/services/ingestion.py`, `frontend/src/pages/Ingestion.tsx`
+
+---
+
+## AC-19: Docker & Deployment Configuration
+
+| Check | Status |
+|---|---|
+| docker-compose.yml (backend + frontend services) | ✅ PASS |
+| backend/Dockerfile (Python 3.11-slim, auto-seeds data) | ✅ PASS |
+| frontend/Dockerfile (Node 20 multi-stage build) | ✅ PASS |
+| backend/Procfile (Railway / Heroku) | ✅ PASS |
+| railway.toml (Railway deployment config) | ✅ PASS |
+| render.yaml (Render deployment config) | ✅ PASS |
+
+---
+
 ## Final Gate Summary
 
-> Last verified: 2026-10-28 (final remediation pass — commit fb03246)
+> Last verified: 2026-10-28 (final remediation pass — commit 02d899e)
 
 | Gate | Status | Evidence |
 |---|---|---|
@@ -324,11 +356,14 @@ git push -u origin main
 | Anomaly-state validation | ✅ PASS | Isolated anomaly DB: 12 PASS, 3 WARN (expected) |
 | E2E tests self-contained | ✅ PASS | E2E script injects own anomalies, cleans up, no manual setup needed |
 | E2E repeatability | ✅ PASS | Run #1 and Run #2 both 12/12 PASS, no state contamination |
-| Backend tests | ✅ PASS | 93/93 PASS in 9.28s |
-| Frontend build | ✅ PASS | 0 TypeScript errors, 715 KB bundle |
+| **Backend tests** | ✅ PASS | **110/110 PASS in 9.72s** (17 new ingestion tests added) |
+| Frontend build | ✅ PASS | 0 TypeScript errors, 722 KB bundle (Ingestion page added) |
 | Browser workflows | ✅ PASS | Verified via E2E live API calls |
+| **Data ingestion pipeline** | ✅ PASS | POST /api/v1/ingest/complaints + /customers; CSV/JSON upload, validation, dedup |
 | Security | ✅ PASS | No secrets tracked, CORS limited, ORM parameterized queries |
 | Repository hygiene | ✅ PASS | venv/node_modules/db/.env excluded from git |
+| **Docker Compose** | ✅ PASS | docker-compose.yml + backend/Dockerfile + frontend/Dockerfile |
+| **Deployment config** | ✅ PASS | railway.toml + render.yaml + backend/Procfile |
 | Documentation | ✅ PASS | README, ACCEPTANCE_CHECKLIST, VERIFICATION_REPORT updated |
 | GitHub publication | 🔴 BLOCKED | Requires manual user action (see AC-17) |
 
