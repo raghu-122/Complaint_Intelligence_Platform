@@ -1,6 +1,6 @@
 # Verification Report — YottaFlex Complaint Intelligence Platform
 
-> **Date**: 2026-10-28  
+> **Date**: 2026-10-28 (final remediation pass)
 > **Verifier**: Automated CI + Manual inspection  
 > **Environment**: Windows 11, Python 3.13.14, Node.js 18+, SQLite 3
 
@@ -200,21 +200,14 @@ Running Reproducibility Verification...
 
 ## 7. Anomaly Detection & Independent Ground-Truth Evaluation
 
-**Commands**:
-```powershell
-cd backend
-.\venv\Scripts\python.exe cli.py detect-anomalies
-```
+**Design note**: The canonical baseline DB is kept clean (no injected anomalies).
+Anomaly testing uses an isolated copy of the database with anomalies injected fresh
+at test start. This ensures the clean baseline validation (section 5) is not contaminated.
 
-**Overall Detection Metrics**:
-```
-+------------------------- Anomaly Detection Metrics -------------------------+
-| Detected: 6 | Ground Truth: 6 | Precision: 100.00% | Recall: 100.00%       |
-| F1-Score: 100.00%                                                           |
-+-----------------------------------------------------------------------------+
-```
+**E2E anomaly result** (from isolated test DB — see section 9):
+- 6 anomalies injected → 6 detected → **Precision 100%, Recall 100%, F1 100%**
 
-**Per-Category Evaluation Metrics**:
+**Per-category Evaluation** (on isolated test DB with 1 anomaly per category):
 
 | Anomaly Category | Ground Truth | Detected | TP | FP | FN | Precision | Recall | F1-Score |
 |---|---|---|---|---|---|---|---|---|
@@ -225,7 +218,8 @@ cd backend
 | `SLA_BACKDATED` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
 | `SURVEY_BEFORE_CLOSURE` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
 
-*Ground-truth isolation confirmed: The detector scans SQLite database tables independently and does not read `ground_truth.json` during scanning.*
+*Ground-truth isolation confirmed: The detector scans SQLite database tables independently
+and does not read `ground_truth.json` during scanning.*
 
 ---
 
@@ -235,32 +229,33 @@ cd backend
 ```powershell
 cd backend
 .\venv\Scripts\python.exe cli.py dump-sql
-.\venv\Scripts\python.exe cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/test_verify.db
+.\venv\Scripts\python.exe cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/baseline/sql/verify_import.db
 ```
 
 **Result**: ✅ **All 17 tables matched, 0 FK violations, Verdict: PASS**
 
-- SQL dump file: `backend/data/baseline/sql/complaint_intelligence_dump.sql` (9.15 MB)
-- Schema, constraints, indices, primary keys, and foreign keys verified on fresh database import.
+- SQL dump file: `backend/data/baseline/sql/complaint_intelligence_dump.sql` (9,148 KB)
+- Generated fresh from the canonical full-scale database (seed=20261022).
+- Schema, constraints, primary keys, and foreign keys verified on fresh import.
 
 | Table Name | Source Count | Imported Count | Match Status |
 |---|---|---|---|
 | agents | 48 | 48 | MATCH |
-| assignments | 2,001 | 2,001 | MATCH |
+| assignments | 2,000 | 2,000 | MATCH |
 | categories | 10 | 10 | MATCH |
 | complaint_messages | 6,000 | 6,000 | MATCH |
 | complaint_relationships | 14 | 14 | MATCH |
 | complaint_status_events | 5,542 | 5,542 | MATCH |
 | complaints | 2,000 | 2,000 | MATCH |
 | customers | 5,000 | 5,000 | MATCH |
-| generation_runs | 0 | 0 | MATCH |
+| generation_runs | 3 | 3 | MATCH |
 | orders | 8,000 | 8,000 | MATCH |
 | priority_rules | 6 | 6 | MATCH |
 | products | 200 | 200 | MATCH |
 | resolutions | 1,102 | 1,102 | MATCH |
 | sla_clocks | 2,000 | 2,000 | MATCH |
 | sla_events | 2,655 | 2,655 | MATCH |
-| surveys | 423 | 423 | MATCH |
+| surveys | 422 | 422 | MATCH |
 | teams | 6 | 6 | MATCH |
 
 Foreign Key Integrity Check: **PASS (0 violations)**  
@@ -271,28 +266,51 @@ Overall Import Verdict: **PASS**
 
 ## 9. Live End-to-End Workflow Verification
 
-**Command**:
+**Command** (self-contained — injects anomalies into isolated temp DB, cleans up after):
 ```powershell
 cd backend
-.\venv\Scripts\python.exe scripts\verify_e2e_live.py
+.\venv\Scripts\python.exe scripts\verify_e2e_live.py --run-n 1
+# Run again to verify repeatability:
+.\venv\Scripts\python.exe scripts\verify_e2e_live.py --run-n 2
 ```
 
-**Result**: ✅ **ALL 12 E2E WORKFLOW CHECKS PASSED WITH 100% SUCCESS**
+**Result**: ✅ **12/12 E2E CHECKS PASSED — BOTH CONSECUTIVE RUNS IDENTICAL**
+
+The E2E script is now fully self-contained:
+- Copies the canonical database to a temp directory.
+- Injects 6 anomalies into the isolated copy.
+- Starts uvicorn on port 8001 against the isolated DB.
+- Runs all 12 workflow assertions.
+- Shuts down server and removes temp directory.
+- Canonical DB is never modified.
 
 ```
-✓ E2E-01: Health check passed (/health -> healthy)
-✓ E2E-02: Dashboard stats loaded (Total complaints: 2,004)
-✓ E2E-03: Dashboard charts data loaded (priority and status breakdowns present)
-✓ E2E-04: Created complaint CMP-2026-002005 - auto-classified P1 Safety Incident
-✓ E2E-05: Retrieved complaint detail with nested customer, SLA clock, and assignment
-✓ E2E-06: Added customer interaction message to complaint CMP-2026-002005
-✓ E2E-07: Escalated complaint CMP-2026-002005 to status 'escalated'
-✓ E2E-08: Anomaly detection endpoint verified (Detected: 6, Precision: 100%)
-✓ E2E-09: Data validation engine endpoint passed (12/15 checks passed)
-✓ E2E-10: Vulnerable customer filtering verified (20 vulnerable customers found)
-✓ E2E-11: Safety complaint filtering verified (20 safety complaints found)
-✓ E2E-12: Baseline manifest report endpoint verified (33 baseline files recorded, scale=full)
+[setup] Preparing isolated E2E environment ...
+  [setup] Copied canonical DB (8,852 KB) to e2e_test.db
+  [setup] Injected 6 anomaly records into isolated DB.
+[setup] Server ready.
+
+============================================================
+YottaFlex E2E Verification  (Run #1)
+============================================================
+  [PASS] E2E-01: Health check passed (/health -> healthy)
+  [PASS] E2E-02: Dashboard stats loaded (total_complaints=2,000)
+  [PASS] E2E-03: Dashboard charts data loaded (priority and status breakdowns present)
+  [PASS] E2E-04: Created complaint CMP-2026-002001 — auto-classified P1 Safety Incident
+  [PASS] E2E-05: Retrieved complaint detail with nested customer, SLA clock, and assignment
+  [PASS] E2E-06: Added customer interaction message to complaint CMP-2026-002001
+  [PASS] E2E-07: Escalated complaint CMP-2026-002001 to status 'escalated'
+  [PASS] E2E-08: Anomaly detection verified (Detected=6, Precision=100%)
+  [PASS] E2E-09: Data validation engine passed (12/15 checks, 3 warnings)
+  [PASS] E2E-10: Vulnerable customer filter verified (20 found)
+  [PASS] E2E-11: Safety complaint filter verified (20 found)
+  [PASS] E2E-12: Baseline manifest report verified (33 files, scale=full)
+
+E2E RESULT (Run #1): 12 PASSED | 0 FAILED
+ALL E2E WORKFLOW CHECKS PASSED
 ```
+
+Run #2 produced identical results with zero state contamination.
 
 ---
 
@@ -315,6 +333,7 @@ cd backend
 1. **GitHub publication**: Requires manual user authentication/remote — no pre-authenticated `gh` CLI credentials present on the host. Precise commands provided in documentation.
 2. **asyncio deprecation warning**: Pytest emits `asyncio_default_fixture_loop_scope` warning (cosmetic, zero failures).
 3. **Chunk size warning in Vite build**: 715 KB bundle — single vendor chunk. Not a build error.
+4. **`detect-anomalies` CLI on clean canonical DB**: Returns 0 detections because the clean baseline has no injected anomalies. This is correct behavior. Anomaly testing is performed by the self-contained E2E script which injects anomalies into an isolated temp DB. The detector correctly finds 6/6 anomalies (Precision 100%, Recall 100%) in the isolated test environment.
 
 ---
 
@@ -327,10 +346,11 @@ The project can be reproduced from source by:
 3. `pip install -r requirements.txt`
 4. `python cli.py generate --scale full --seed 20261022 --clear --export`
 5. `python cli.py validate` → 15/15 PASS
-6. `python cli.py reproduce --scale full --seed 20261022` → 100% BITWISE MATCH
-7. `python cli.py dump-sql && python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql` → 17/17 MATCH
-8. `python cli.py inject-anomalies --count 6 && python cli.py detect-anomalies` → Precision 100%, Recall 100%
-9. `cd ../frontend && npm install && npm run build` → 0 errors
-10. `cd ../backend && python cli.py server` → API at http://localhost:8000
-11. `cd ../frontend && npm run dev` → UI at http://localhost:5173
+6. `python cli.py reproduce --scale full --seed 20261022` → 100% BITWISE MATCH (33/33)
+7. `python cli.py dump-sql && python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/baseline/sql/verify_import.db` → 17/17 MATCH, 0 FK violations
+8. `python scripts/verify_e2e_live.py --run-n 1` → 12/12 E2E PASS (self-contained)
+9. `python scripts/verify_e2e_live.py --run-n 2` → 12/12 E2E PASS (repeatability confirmed)
+10. `cd ../frontend && npm install && npm run build` → 0 TypeScript errors, 715 KB bundle
+11. `cd ../backend && python cli.py server` → API at http://localhost:8000
+12. `cd ../frontend && npm run dev` → UI at http://localhost:5173
 

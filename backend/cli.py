@@ -77,6 +77,19 @@ def generate(scale: str, seed: int, clear: bool, export: bool):
         with SessionLocal() as db:
             counts = load_all(db, data, clear_first=clear)
 
+    # When clearing the database, also reset the anomaly ground truth so it
+    # does not reference complaint IDs from a previous run.
+    if clear:
+        settings = get_settings()
+        gt_path = settings.data_dir / "anomalies" / "ground_truth.json"
+        if gt_path.exists():
+            import json as _json
+            empty_gt = {"total_anomalies": 0, "anomalies": [],
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "note": "Ground truth reset — run inject-anomalies to populate."}
+            gt_path.write_text(_json.dumps(empty_gt, indent=2))
+            console.print("[dim]Anomaly ground truth reset (database cleared).[/dim]")
+
     manifest_info = None
     if export:
         with console.status("[bold green]Exporting CSVs, JSONs, and manifest with SHA-256 hashes..."):
