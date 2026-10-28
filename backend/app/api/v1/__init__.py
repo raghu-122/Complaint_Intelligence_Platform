@@ -12,6 +12,7 @@ from app.api.v1.generate import router as generate_router
 from app.api.v1.anomalies import router as anomalies_router
 from app.api.v1.validate import router as validate_router
 from app.api.v1.reports import router as reports_router
+from app.api.v1.ingestion import router as ingestion_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -24,5 +25,6 @@ api_router.include_router(generate_router)
 api_router.include_router(anomalies_router)
 api_router.include_router(validate_router)
 api_router.include_router(reports_router)
+api_router.include_router(ingestion_router)
 
 __all__ = ["api_router"]

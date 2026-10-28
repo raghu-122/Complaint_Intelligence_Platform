@@ -6,6 +6,7 @@ import Customers from './pages/Customers';
 import Anomalies from './pages/Anomalies';
 import Validation from './pages/Validation';
 import Reports from './pages/Reports';
+import Ingestion from './pages/Ingestion';
 import './index.css';
 
 const NAV_ITEMS = [
@@ -15,6 +16,7 @@ const NAV_ITEMS = [
   { to: '/anomalies', icon: '🔍', label: 'Anomaly Detection' },
   { to: '/validation', icon: '✅', label: 'Validation' },
   { to: '/reports', icon: '📁', label: 'Reports' },
+  { to: '/ingestion', icon: '📥', label: 'Data Ingestion' },
 ];
 
 function Sidebar() {
@@ -88,6 +90,7 @@ function Topbar() {
     '/anomalies': { title: 'Anomaly Detection', desc: 'Detected data quality and behavioral anomalies' },
     '/validation': { title: 'Validation Report', desc: 'Schema, chronology, and business rule checks' },
     '/reports': { title: 'Reports', desc: 'Export datasets and evaluation reports' },
+    '/ingestion': { title: 'Data Ingestion', desc: 'Upload CSV/JSON records with validation and deduplication' },
   };
 
   const path = location.pathname.startsWith('/complaints/') ? '/complaints' : location.pathname;
@@ -128,6 +131,7 @@ function AppLayout() {
             <Route path="/anomalies" element={<Anomalies />} />
             <Route path="/validation" element={<Validation />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/ingestion" element={<Ingestion />} />
           </Routes>
         </main>
       </div>
