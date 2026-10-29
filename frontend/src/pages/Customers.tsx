@@ -8,11 +8,19 @@ function formatDate(iso?: string) {
   catch { return iso; }
 }
 
+const TIER_CONFIG: Record<string, { label: string; className: string }> = {
+  vip: { label: 'VIP', className: 'badge-p1' },
+  premium: { label: 'Premium', className: 'badge-p2' },
+  standard: { label: 'Standard', className: 'badge-neutral' },
+};
+
 function TierBadge({ tier }: { tier: string }) {
-  const colorMap: Record<string, string> = {
-    platinum: 'badge-p1', gold: 'badge-p2', silver: 'badge-p3', bronze: 'badge-p4', standard: 'badge-neutral',
+  const normalized = (tier || '').toLowerCase();
+  const config = TIER_CONFIG[normalized] || {
+    label: tier ? (tier.toUpperCase() === 'VIP' ? 'VIP' : tier.charAt(0).toUpperCase() + tier.slice(1)) : 'Standard',
+    className: 'badge-neutral',
   };
-  return <span className={`badge ${colorMap[tier.toLowerCase()] || 'badge-neutral'}`}>{tier}</span>;
+  return <span className={`badge ${config.className}`}>{config.label}</span>;
 }
 
 export default function Customers() {
@@ -62,10 +70,8 @@ export default function Customers() {
         </div>
         <select id="tier-filter" className="filter-select" value={tierFilter} onChange={e => setTierFilter(e.target.value)}>
           <option value="">All Tiers</option>
-          <option value="platinum">Platinum</option>
-          <option value="gold">Gold</option>
-          <option value="silver">Silver</option>
-          <option value="bronze">Bronze</option>
+          <option value="vip">VIP</option>
+          <option value="premium">Premium</option>
           <option value="standard">Standard</option>
         </select>
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--text-secondary)', cursor: 'pointer' }}>

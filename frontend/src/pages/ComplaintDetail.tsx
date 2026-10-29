@@ -156,7 +156,22 @@ export default function ComplaintDetail() {
                     <div className="detail-grid">
                       <DetailField label="Name" value={`${complaint.customer.name}`} />
                       <DetailField label="Tier" value={
-                        <Badge text={complaint.customer.account_tier} className="badge-info" />
+                        <Badge
+                          text={
+                            (complaint.customer.account_tier || '').toLowerCase() === 'vip'
+                              ? 'VIP'
+                              : complaint.customer.account_tier
+                              ? complaint.customer.account_tier.charAt(0).toUpperCase() + complaint.customer.account_tier.slice(1)
+                              : 'Standard'
+                          }
+                          className={
+                            (complaint.customer.account_tier || '').toLowerCase() === 'vip'
+                              ? 'badge-p1'
+                              : (complaint.customer.account_tier || '').toLowerCase() === 'premium'
+                              ? 'badge-p2'
+                              : 'badge-neutral'
+                          }
+                        />
                       } />
                       <DetailField label="Email" value={
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12 }}>{complaint.customer.email}</span>

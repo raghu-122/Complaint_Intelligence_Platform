@@ -34,7 +34,7 @@ def list_customers(
     )
 
     if account_tier:
-        query = query.where(Customer.account_tier == account_tier)
+        query = query.where(func.lower(Customer.account_tier) == account_tier.lower())
     if vulnerability_flag is not None:
         query = query.where(Customer.vulnerability_flag == vulnerability_flag)
     elif vulnerable_only is not None:
