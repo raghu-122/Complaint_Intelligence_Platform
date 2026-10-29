@@ -15,4 +15,4 @@ services:
       - key: PYTHON_VERSION
         value: 3.12.8
       - key: CORS_ORIGINS
-        value: http://localhost:5173,http://localhost:3000
+        value: https://complaint-intelligence-frontend.onrender.com,http://localhost:5173,http://localhost:3000
