@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { apiClient } from '../api';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
+import { apiClient, api } from '../api';
 
 async function downloadFile(filePath: string, fileName: string) {
   try {
-    const resp = await fetch(`${API_BASE}/reports/download?file=${encodeURIComponent(filePath)}`);
+    const resp = await fetch(
+      `${api.defaults.baseURL}/api/v1/reports/download?file=${encodeURIComponent(filePath)}`
+    );
     if (!resp.ok) {
       const detail = await resp.text().catch(() => `HTTP ${resp.status}`);
       throw new Error(detail);

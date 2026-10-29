@@ -9,6 +9,8 @@ import Reports from './pages/Reports';
 import Ingestion from './pages/Ingestion';
 import './index.css';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 const NAV_ITEMS = [
   { to: '/', icon: '📊', label: 'Dashboard', exact: true },
   { to: '/complaints', icon: '📋', label: 'Complaints' },
@@ -51,7 +53,7 @@ function Sidebar() {
         <div className="nav-section">
           <div className="nav-section-label">Reference</div>
           <a
-            href="http://localhost:8000/docs"
+            href={`${API_BASE}/docs`}
             target="_blank"
             rel="noreferrer"
             className="nav-item"
@@ -60,7 +62,7 @@ function Sidebar() {
             API Docs
           </a>
           <a
-            href="http://localhost:8000/health"
+            href={`${API_BASE}/health`}
             target="_blank"
             rel="noreferrer"
             className="nav-item"
@@ -74,7 +76,7 @@ function Sidebar() {
       <div className="sidebar-footer">
         <div className="sidebar-status">
           <div className="status-dot" />
-          <span>API: localhost:8000</span>
+          <span>API: {new URL(API_BASE).hostname}</span>
         </div>
       </div>
     </aside>
