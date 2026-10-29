@@ -504,3 +504,17 @@ def test_postgresql_ddl_compilation_all_models():
     for table in Base.metadata.sorted_tables:
         ddl = str(CreateTable(table).compile(dialect=pg_dialect))
         assert f"CREATE TABLE {table.name}" in ddl or f'CREATE TABLE "{table.name}"' in ddl
+
+
+def test_sqlite_to_pg_migration_dry_run():
+    """Verify sqlite to postgres migration tool dry-run inspects all 18 tables."""
+    import os
+    from scripts.migrate_sqlite_to_pg import migrate
+
+    sqlite_path = "backend/complaint_intelligence.db"
+    if os.path.exists(sqlite_path):
+        counts = migrate(sqlite_path=sqlite_path, pg_url="sqlite:///:memory:", dry_run=True)
+        assert len(counts) == 18
+        assert counts["complaints"] > 0
+        assert counts["customers"] > 0
+        assert counts["orders"] > 0

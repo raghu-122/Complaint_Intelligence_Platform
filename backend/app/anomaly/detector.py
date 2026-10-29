@@ -143,11 +143,13 @@ class AnomalyEvaluator:
         fp = max(0, detected_count - tp)
         fn = max(0, gt_count - tp)
 
-        # Standard metrics with safe zero-denominator handling
+        # Standard metrics with safe zero-denominator handling:
+        # Undefined metrics (0/0) when neither ground truth nor detections exist are returned as 0.0
+        # to ensure un-evaluated runs are never misleadingly presented as a 100% "perfect score".
         if detected_count == 0 and gt_count == 0:
-            precision = 1.0
-            recall = 1.0
-            f1 = 1.0
+            precision = 0.0
+            recall = 0.0
+            f1 = 0.0
         elif detected_count == 0 and gt_count > 0:
             precision = 0.0
             recall = 0.0
@@ -206,9 +208,9 @@ class AnomalyEvaluator:
             cat_fn = max(0, cat_gt_count - cat_tp)
 
             if cat_detected_count == 0 and cat_gt_count == 0:
-                cat_prec = 1.0
-                cat_rec = 1.0
-                cat_f1 = 1.0
+                cat_prec = 0.0
+                cat_rec = 0.0
+                cat_f1 = 0.0
             elif cat_detected_count == 0 and cat_gt_count > 0:
                 cat_prec = 0.0
                 cat_rec = 0.0

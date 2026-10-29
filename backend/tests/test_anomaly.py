@@ -382,7 +382,11 @@ def test_false_negatives_metric_handling(tmp_path):
 
 
 def test_no_detected_anomalies_metric_handling(tmp_path):
-    """Safe zero-denominator handling when 0 anomalies are detected."""
+    """Safe zero-denominator handling when 0 anomalies are detected.
+    
+    When 0 detected and 0 ground truth, metrics are undefined and returned as 0.0
+    (not misleadingly presented as 100% / 1.0).
+    """
     import json
     from app.anomaly.detector import AnomalyEvaluator
 
@@ -390,9 +394,9 @@ def test_no_detected_anomalies_metric_handling(tmp_path):
     result_clean = evaluator_clean.evaluate([])
     assert result_clean.detected_count == 0
     assert result_clean.ground_truth_count == 0
-    assert result_clean.precision == 1.0
-    assert result_clean.recall == 1.0
-    assert result_clean.f1_score == 1.0
+    assert result_clean.precision == 0.0
+    assert result_clean.recall == 0.0
+    assert result_clean.f1_score == 0.0
 
     gt_file = tmp_path / "gt_with_items.json"
     gt_file.write_text(json.dumps({"anomalies": [{"anomaly_id": "A1"}]}))
@@ -477,6 +481,6 @@ def test_reset_anomalies(db_session):
     result_after = detector.detect()
     assert result_after.detected_count == 0
     assert result_after.ground_truth_count == 0
-    assert result_after.precision == 1.0
-    assert result_after.recall == 1.0
-    assert result_after.f1_score == 1.0
+    assert result_after.precision == 0.0
+    assert result_after.recall == 0.0
+    assert result_after.f1_score == 0.0

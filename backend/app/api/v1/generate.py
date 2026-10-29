@@ -8,7 +8,7 @@ import time
 import threading
 from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -36,9 +36,31 @@ def trigger_generation(
             detail="A dataset generation task is already in progress. Please wait for it to complete.",
         )
 
+    has_advisory_lock = False
+    is_pg = False
     try:
-        # Cross-process concurrency check via database state
-        stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
+        bind = db.get_bind()
+        if bind and bind.dialect.name == "postgresql":
+            is_pg = True
+    except Exception:
+        pass
+
+    try:
+        if is_pg:
+            # Atomic cluster-wide advisory lock for PostgreSQL (key 987654321)
+            # Rejects concurrent workers across multiple instances before touching table state
+            lock_res = db.execute(text("SELECT pg_try_advisory_lock(987654321)")).scalar()
+            if not lock_res:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A dataset generation task is already in progress across active workers. Please wait for it to complete.",
+                )
+            has_advisory_lock = True
+
+        # Cross-process concurrency check via database state:
+        # 15-minute threshold ensures long-running full dataset generation jobs
+        # are never prematurely treated as stale, while recovering from hard worker terminations.
+        stale_threshold = datetime.now(timezone.utc) - timedelta(minutes=15)
         active_run = db.execute(
             select(GenerationRun).where(
                 GenerationRun.status == "running",
@@ -138,5 +160,10 @@ def trigger_generation(
                 detail=f"Generation failed: {str(e)}",
             )
     finally:
+        if has_advisory_lock and is_pg:
+            try:
+                db.execute(text("SELECT pg_advisory_unlock(987654321)"))
+            except Exception:
+                pass
         if _generation_lock.locked():
             _generation_lock.release()

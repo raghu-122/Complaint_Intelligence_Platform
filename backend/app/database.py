@@ -30,9 +30,12 @@ def _get_engine():
     if is_sqlite:
         engine_kwargs["connect_args"] = {"check_same_thread": False}
     else:
-        # PostgreSQL connection pool tuning for production web workloads
-        engine_kwargs["pool_size"] = 10
-        engine_kwargs["max_overflow"] = 20
+        # PostgreSQL connection pool tuning for production managed databases (Render free/starter)
+        # Keeps max connections at 15 per worker, avoiding slot exhaustion
+        engine_kwargs["pool_size"] = 5
+        engine_kwargs["max_overflow"] = 10
+        engine_kwargs["pool_timeout"] = 30
+        engine_kwargs["pool_recycle"] = 1800
 
     engine = create_engine(db_url, **engine_kwargs)
 

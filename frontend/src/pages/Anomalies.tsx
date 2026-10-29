@@ -160,14 +160,14 @@ export default function Anomalies() {
             />
             <MetricCard
               label="Precision"
-              value={`${(result.precision * 100).toFixed(1)}%`}
-              desc="Positive predictive value"
+              value={result.ground_truth_count === 0 && result.detected_count === 0 ? 'N/A' : `${(result.precision * 100).toFixed(1)}%`}
+              desc={result.ground_truth_count === 0 && result.detected_count === 0 ? 'Clean baseline (no ground truth)' : 'Positive predictive value'}
               accent={result.precision >= 0.8 ? 'var(--accent-emerald)' : 'var(--accent-amber)'}
             />
             <MetricCard
               label="F1 Score"
-              value={result.f1_score.toFixed(3)}
-              desc={`Recall: ${(result.recall * 100).toFixed(1)}%`}
+              value={result.ground_truth_count === 0 && result.detected_count === 0 ? 'N/A' : result.f1_score.toFixed(3)}
+              desc={result.ground_truth_count === 0 && result.detected_count === 0 ? 'Clean baseline (no ground truth)' : `Recall: ${(result.recall * 100).toFixed(1)}%`}
               accent={result.f1_score >= 0.7 ? 'var(--accent-emerald)' : 'var(--p2)'}
             />
           </div>

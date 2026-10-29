@@ -3,13 +3,16 @@ Main FastAPI application for YottaFlex Complaint Intelligence Platform.
 """
 from __future__ import annotations
 
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.config import get_settings
-from app.database import init_db
+from app.database import init_db, get_db
 from app.api.v1 import api_router
 
 
@@ -44,23 +47,52 @@ app.include_router(api_router)
 
 
 @app.get("/health", tags=["System"])
-def health_check():
-    """Health status and service metadata."""
+def health_check(db: Session = Depends(get_db)):
+    """Health status and service metadata with database dialect diagnostics."""
+    db_status = "connected"
+    db_dialect = "unknown"
+    try:
+        bind = db.get_bind()
+        if bind:
+            db_dialect = bind.dialect.name
+            db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    commit_sha = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", settings.app_version))
+
     return {
-        "status": "healthy",
+        "status": "healthy" if db_status == "connected" else "degraded",
         "app_name": settings.app_name,
         "version": settings.app_version,
+        "commit_sha": commit_sha,
+        "database": {
+            "status": db_status,
+            "dialect": db_dialect,
+        },
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
 @app.get("/", tags=["System"])
-def root():
+def root(db: Session = Depends(get_db)):
     """Root redirect / information endpoint."""
+    db_dialect = "unknown"
+    try:
+        bind = db.get_bind()
+        if bind:
+            db_dialect = bind.dialect.name
+    except Exception:
+        pass
+
+    commit_sha = os.getenv("RENDER_GIT_COMMIT", os.getenv("GIT_COMMIT", settings.app_version))
+
     return {
         "app_name": settings.app_name,
         "version": settings.app_version,
         "status": "online",
+        "commit_sha": commit_sha,
+        "database_dialect": db_dialect,
         "docs_url": "/docs",
         "health_url": "/health",
         "api_v1_base": "/api/v1",
