@@ -7,6 +7,9 @@ Implements:
 3. arithmetic_checks: numeric integrity (order totals, paused hours)
 4. business_rule_checks: business policy enforcement (safety P1, SLA configs)
 5. integrity_checks: referential integrity, orphaned records, unique constraints
+
+Performance: all checks use set-based SQL queries to avoid N+1 query patterns
+and ensure the endpoint responds within the 15-second timeout on the full dataset.
 """
 from __future__ import annotations
 
@@ -16,7 +19,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from typing import List, Optional
 
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func, and_, text, exists, literal
 from sqlalchemy.orm import Session
 
 from app.models.customer import Customer
@@ -43,7 +46,11 @@ def _is_gt(dt1: Optional[datetime], dt2: Optional[datetime]) -> bool:
 
 
 class ValidationEngine:
-    """Runs data quality, integrity, and business logic checks against the database."""
+    """Runs data quality, integrity, and business logic checks against the database.
+    
+    All checks use efficient SQL queries rather than per-row Python loops
+    to avoid N+1 patterns and stay within API response time limits.
+    """
 
     def __init__(self, db: Session):
         self.db = db
@@ -85,20 +92,25 @@ class ValidationEngine:
     def schema_checks(self) -> List[ValidationFinding]:
         findings = []
 
-        # Complaints: required core fields
-        complaints = self.db.scalars(select(Complaint)).all()
-        invalid_complaints = [
-            c.complaint_id for c in complaints
-            if not c.complaint_id or not c.subject or not c.description or not c.status or not c.priority
-        ]
-        if invalid_complaints:
+        # Complaints: required core fields — single query
+        invalid_complaint_ids = self.db.scalars(
+            select(Complaint.complaint_id).where(
+                (Complaint.complaint_id.is_(None)) |
+                (Complaint.subject.is_(None)) |
+                (Complaint.description.is_(None)) |
+                (Complaint.status.is_(None)) |
+                (Complaint.priority.is_(None))
+            )
+        ).all()
+
+        if invalid_complaint_ids:
             findings.append(ValidationFinding(
                 category="schema",
                 check_name="complaint_required_fields",
                 status="fail",
-                message=f"Found {len(invalid_complaints)} complaints with missing required fields",
+                message=f"Found {len(invalid_complaint_ids)} complaints with missing required fields",
                 table_name="complaints",
-                details={"invalid_ids": invalid_complaints[:10]},
+                details={"invalid_ids": list(invalid_complaint_ids[:10])},
             ))
         else:
             findings.append(ValidationFinding(
@@ -109,20 +121,25 @@ class ValidationEngine:
                 table_name="complaints",
             ))
 
-        # Customers: valid email & name
-        customers = self.db.scalars(select(Customer)).all()
-        invalid_customers = [
-            c.customer_id for c in customers
-            if not c.customer_id or not c.first_name or not c.last_name or "@" not in (c.email or "")
-        ]
-        if invalid_customers:
+        # Customers: valid email & name — single query
+        invalid_customer_ids = self.db.scalars(
+            select(Customer.customer_id).where(
+                (Customer.customer_id.is_(None)) |
+                (Customer.first_name.is_(None)) |
+                (Customer.last_name.is_(None)) |
+                (Customer.email.is_(None)) |
+                (~Customer.email.contains("@"))
+            )
+        ).all()
+
+        if invalid_customer_ids:
             findings.append(ValidationFinding(
                 category="schema",
                 check_name="customer_required_fields",
                 status="fail",
-                message=f"Found {len(invalid_customers)} customers with invalid name or email format",
+                message=f"Found {len(invalid_customer_ids)} customers with invalid name or email format",
                 table_name="customers",
-                details={"invalid_ids": invalid_customers[:10]},
+                details={"invalid_ids": list(invalid_customer_ids[:10])},
             ))
         else:
             findings.append(ValidationFinding(
@@ -133,20 +150,23 @@ class ValidationEngine:
                 table_name="customers",
             ))
 
-        # Products: unit_price non-negative & non-empty SKU
-        products = self.db.scalars(select(Product)).all()
-        invalid_products = [
-            p.product_id for p in products
-            if not p.sku or (p.unit_price is not None and p.unit_price < 0)
-        ]
-        if invalid_products:
+        # Products: unit_price non-negative & non-empty SKU — single query
+        invalid_product_ids = self.db.scalars(
+            select(Product.product_id).where(
+                (Product.sku.is_(None)) |
+                (Product.sku == "") |
+                (Product.unit_price < 0)
+            )
+        ).all()
+
+        if invalid_product_ids:
             findings.append(ValidationFinding(
                 category="schema",
                 check_name="product_constraints",
                 status="fail",
-                message=f"Found {len(invalid_products)} products with negative price or empty SKU",
+                message=f"Found {len(invalid_product_ids)} products with negative price or empty SKU",
                 table_name="products",
-                details={"invalid_ids": invalid_products[:10]},
+                details={"invalid_ids": list(invalid_product_ids[:10])},
             ))
         else:
             findings.append(ValidationFinding(
@@ -157,7 +177,7 @@ class ValidationEngine:
                 table_name="products",
             ))
 
-        # Teams: valid JSON specializations
+        # Teams: valid JSON specializations — fetch only teams (small table)
         teams = self.db.scalars(select(Team)).all()
         invalid_teams = []
         for t in teams:
@@ -191,25 +211,46 @@ class ValidationEngine:
     def chronology_checks(self) -> List[ValidationFinding]:
         findings = []
 
-        # Complaints: created_at <= resolved_at <= closed_at
-        complaints = self.db.scalars(select(Complaint)).all()
-        chrono_violations = []
-        for c in complaints:
-            if c.resolved_at and c.created_at and _is_gt(c.created_at, c.resolved_at):
-                chrono_violations.append({
-                    "complaint_id": c.complaint_id,
-                    "reason": f"created_at ({c.created_at}) > resolved_at ({c.resolved_at})",
-                })
-            elif c.closed_at and c.resolved_at and _is_gt(c.resolved_at, c.closed_at):
-                chrono_violations.append({
-                    "complaint_id": c.complaint_id,
-                    "reason": f"resolved_at ({c.resolved_at}) > closed_at ({c.closed_at})",
-                })
-            elif c.closed_at and c.created_at and _is_gt(c.created_at, c.closed_at):
-                chrono_violations.append({
-                    "complaint_id": c.complaint_id,
-                    "reason": f"created_at ({c.created_at}) > closed_at ({c.closed_at})",
-                })
+        # Complaints: created_at <= resolved_at <= closed_at — SQL filter
+        chrono_rows = self.db.execute(
+            select(
+                Complaint.complaint_id,
+                Complaint.created_at,
+                Complaint.resolved_at,
+                Complaint.closed_at,
+            ).where(
+                # resolved_at before created_at
+                (
+                    (Complaint.resolved_at.isnot(None)) &
+                    (Complaint.resolved_at < Complaint.created_at)
+                ) |
+                # closed_at before resolved_at
+                (
+                    (Complaint.closed_at.isnot(None)) &
+                    (Complaint.resolved_at.isnot(None)) &
+                    (Complaint.closed_at < Complaint.resolved_at)
+                ) |
+                # closed_at before created_at
+                (
+                    (Complaint.closed_at.isnot(None)) &
+                    (Complaint.closed_at < Complaint.created_at)
+                )
+            )
+        ).all()
+
+        chrono_violations = [
+            {
+                "complaint_id": row.complaint_id,
+                "reason": (
+                    f"created_at ({row.created_at}) > resolved_at ({row.resolved_at})"
+                    if row.resolved_at and row.resolved_at < row.created_at
+                    else f"resolved_at ({row.resolved_at}) > closed_at ({row.closed_at})"
+                    if row.closed_at and row.resolved_at and row.closed_at < row.resolved_at
+                    else f"created_at ({row.created_at}) > closed_at ({row.closed_at})"
+                )
+            }
+            for row in chrono_rows
+        ]
 
         if chrono_violations:
             findings.append(ValidationFinding(
@@ -229,26 +270,49 @@ class ValidationEngine:
                 table_name="complaints",
             ))
 
-        # Surveys: survey submitted_at >= complaint closed_at
-        surveys = self.db.scalars(select(Survey)).all()
-        survey_violations = []
-        for s in surveys:
-            comp = self.db.get(Complaint, s.complaint_id_fk)
-            if comp:
-                # If survey submitted before closed and not marked anomaly
-                if not comp.closed_at:
-                    if not s.is_anomaly:
-                        survey_violations.append({
-                            "survey_id": s.survey_id,
-                            "complaint_id": comp.complaint_id,
-                            "reason": "Survey submitted for unclosed complaint without anomaly flag",
-                        })
-                elif comp.closed_at and _is_gt(comp.closed_at, s.submitted_at) and not s.is_anomaly and not s.submitted_before_closure:
-                    survey_violations.append({
-                        "survey_id": s.survey_id,
-                        "complaint_id": comp.complaint_id,
-                        "reason": f"Survey submitted_at ({s.submitted_at}) < closed_at ({comp.closed_at})",
-                    })
+        # Surveys: submitted_at should be >= closed_at — SQL filter
+        # Join surveys with complaints to compare timestamps
+        survey_violation_rows = self.db.execute(
+            select(
+                Survey.survey_id,
+                Survey.submitted_at,
+                Survey.is_anomaly,
+                Survey.submitted_before_closure,
+                Complaint.complaint_id,
+                Complaint.status,
+                Complaint.closed_at,
+            )
+            .join(Complaint, Survey.complaint_id_fk == Complaint.id)
+            .where(
+                (Survey.is_anomaly == False) &
+                (Survey.submitted_before_closure == False) &
+                (
+                    # Survey on open complaint (no closed_at)
+                    (
+                        Complaint.closed_at.is_(None) &
+                        (Complaint.status != "closed")
+                    ) |
+                    # Survey before closure timestamp
+                    (
+                        Complaint.closed_at.isnot(None) &
+                        (Survey.submitted_at < Complaint.closed_at)
+                    )
+                )
+            )
+        ).all()
+
+        survey_violations = [
+            {
+                "survey_id": row.survey_id,
+                "complaint_id": row.complaint_id,
+                "reason": (
+                    f"Survey submitted_at ({row.submitted_at}) < closed_at ({row.closed_at})"
+                    if row.closed_at
+                    else "Survey submitted for unclosed complaint without anomaly flag"
+                ),
+            }
+            for row in survey_violation_rows
+        ]
 
         if survey_violations:
             findings.append(ValidationFinding(
@@ -268,20 +332,37 @@ class ValidationEngine:
                 table_name="surveys",
             ))
 
-        # Orders: ordered_at <= shipped_at <= delivered_at
-        orders = self.db.scalars(select(Order)).all()
-        order_violations = []
-        for o in orders:
-            if o.shipped_at and o.ordered_at and _is_gt(o.ordered_at, o.shipped_at):
-                order_violations.append({
-                    "order_id": o.order_id,
-                    "reason": f"ordered_at ({o.ordered_at}) > shipped_at ({o.shipped_at})",
-                })
-            elif o.delivered_at and o.shipped_at and _is_gt(o.shipped_at, o.delivered_at):
-                order_violations.append({
-                    "order_id": o.order_id,
-                    "reason": f"shipped_at ({o.shipped_at}) > delivered_at ({o.delivered_at})",
-                })
+        # Orders: ordered_at <= shipped_at <= delivered_at — SQL filter
+        order_violation_rows = self.db.execute(
+            select(
+                Order.order_id,
+                Order.ordered_at,
+                Order.shipped_at,
+                Order.delivered_at,
+            ).where(
+                (
+                    Order.shipped_at.isnot(None) &
+                    (Order.shipped_at < Order.ordered_at)
+                ) |
+                (
+                    Order.delivered_at.isnot(None) &
+                    Order.shipped_at.isnot(None) &
+                    (Order.delivered_at < Order.shipped_at)
+                )
+            )
+        ).all()
+
+        order_violations = [
+            {
+                "order_id": row.order_id,
+                "reason": (
+                    f"ordered_at ({row.ordered_at}) > shipped_at ({row.shipped_at})"
+                    if row.shipped_at and row.shipped_at < row.ordered_at
+                    else f"shipped_at ({row.shipped_at}) > delivered_at ({row.delivered_at})"
+                ),
+            }
+            for row in order_violation_rows
+        ]
 
         if order_violations:
             findings.append(ValidationFinding(
@@ -309,23 +390,45 @@ class ValidationEngine:
     def arithmetic_checks(self) -> List[ValidationFinding]:
         findings = []
 
-        # Order totals: total_amount = sum of order_items line_totals
-        # When an order has items, validate against item sums; otherwise fall back to
-        # the single-item formula (unit_price * quantity - discount).
-        from app.models.order_item import OrderItem as _OrderItem
-        orders = self.db.scalars(select(Order)).all()
+        # Order totals: use SQL aggregation on order_items when available
+        # Fetch order_items grouped by order FK and compare with orders.total_amount
+        from app.models.order_item import OrderItem
+
+        # Get all orders with their item sums in one query
+        item_sums = dict(
+            self.db.execute(
+                select(
+                    OrderItem.order_id_fk,
+                    func.sum(OrderItem.line_total).label("item_total"),
+                ).group_by(OrderItem.order_id_fk)
+            ).all()
+        )
+
+        orders = self.db.execute(
+            select(
+                Order.id,
+                Order.order_id,
+                Order.total_amount,
+                Order.unit_price,
+                Order.quantity,
+                Order.discount_amount,
+            )
+        ).all()
+
         math_violations = []
-        for o in orders:
-            # Prefer item-level sum when order_items exist
-            items = o.items if hasattr(o, "items") else []
-            if items:
-                expected = sum(Decimal(str(it.line_total)) for it in items)
+        for row in orders:
+            if row.id in item_sums:
+                expected = Decimal(str(item_sums[row.id]))
             else:
-                expected = (Decimal(str(o.unit_price)) * o.quantity) - Decimal(str(o.discount_amount or "0.00"))
-            actual = Decimal(str(o.total_amount))
+                unit = Decimal(str(row.unit_price)) if row.unit_price is not None else Decimal("0")
+                disc = Decimal(str(row.discount_amount or "0"))
+                qty = int(row.quantity) if row.quantity else 1
+                expected = unit * qty - disc
+
+            actual = Decimal(str(row.total_amount)) if row.total_amount is not None else Decimal("0")
             if abs(actual - expected) >= Decimal("0.02"):
                 math_violations.append({
-                    "order_id": o.order_id,
+                    "order_id": row.order_id,
                     "expected": str(expected.quantize(Decimal("0.01"))),
                     "actual": str(actual),
                     "difference": str((actual - expected).quantize(Decimal("0.01"))),
@@ -349,20 +452,28 @@ class ValidationEngine:
                 table_name="orders",
             ))
 
-        # Non-negative SLA accumulated pause
-        sla_clocks = self.db.scalars(select(SLAClock)).all()
-        invalid_pauses = [
-            s.sla_id for s in sla_clocks
-            if s.accumulated_paused_hours is not None and s.accumulated_paused_hours < 0
-        ]
-        if invalid_pauses:
+        # Non-negative SLA accumulated pause — SQL query
+        invalid_pause_count = self.db.scalar(
+            select(func.count(SLAClock.id)).where(
+                (SLAClock.accumulated_paused_hours.isnot(None)) &
+                (SLAClock.accumulated_paused_hours < 0)
+            )
+        ) or 0
+
+        if invalid_pause_count > 0:
+            invalid_pauses = self.db.scalars(
+                select(SLAClock.sla_id).where(
+                    (SLAClock.accumulated_paused_hours.isnot(None)) &
+                    (SLAClock.accumulated_paused_hours < 0)
+                ).limit(20)
+            ).all()
             findings.append(ValidationFinding(
                 category="arithmetic",
                 check_name="sla_paused_hours_non_negative",
                 status="fail",
-                message=f"Found {len(invalid_pauses)} SLA clocks with negative paused hours",
+                message=f"Found {invalid_pause_count} SLA clocks with negative paused hours",
                 table_name="sla_clocks",
-                details={"invalid_ids": invalid_pauses},
+                details={"invalid_ids": list(invalid_pauses)},
             ))
         else:
             findings.append(ValidationFinding(
@@ -381,22 +492,33 @@ class ValidationEngine:
     def business_rule_checks(self) -> List[ValidationFinding]:
         findings = []
 
-        # Rule 1: Safety complaints MUST be P1
-        complaints = self.db.scalars(select(Complaint)).all()
-        safety_priority_violations = []
-        for c in complaints:
-            is_safety = c.category_code == "PRODUCT_SAFETY" or c.is_safety_incident
-            if is_safety and c.priority != "P1":
-                # Check if this was marked as an anomaly
-                safety_priority_violations.append({
-                    "complaint_id": c.complaint_id,
-                    "priority": c.priority,
-                    "category_code": c.category_code,
-                    "is_anomaly": c.is_anomaly,
-                })
+        # Rule 1: Safety complaints MUST be P1 — SQL query
+        safety_violations = self.db.execute(
+            select(
+                Complaint.complaint_id,
+                Complaint.priority,
+                Complaint.category_code,
+                Complaint.is_anomaly,
+            ).where(
+                (
+                    (Complaint.category_code == "PRODUCT_SAFETY") |
+                    (Complaint.is_safety_incident == True)
+                ) &
+                (Complaint.priority != "P1")
+            )
+        ).all()
 
-        # Exclude intentional anomalies from hard validation fail, or warn if anomalies present
-        unintentional = [v for v in safety_priority_violations if not v["is_anomaly"]]
+        unintentional = [
+            {"complaint_id": r.complaint_id, "priority": r.priority,
+             "category_code": r.category_code, "is_anomaly": r.is_anomaly}
+            for r in safety_violations if not r.is_anomaly
+        ]
+        intentional = [
+            {"complaint_id": r.complaint_id, "priority": r.priority,
+             "category_code": r.category_code, "is_anomaly": r.is_anomaly}
+            for r in safety_violations if r.is_anomaly
+        ]
+
         if unintentional:
             findings.append(ValidationFinding(
                 category="business_rules",
@@ -406,14 +528,14 @@ class ValidationEngine:
                 table_name="complaints",
                 details={"violations": unintentional[:10]},
             ))
-        elif safety_priority_violations:
+        elif intentional:
             findings.append(ValidationFinding(
                 category="business_rules",
                 check_name="safety_complaints_must_be_p1",
                 status="warn",
-                message=f"Found {len(safety_priority_violations)} deliberate anomaly safety complaints with P3/P4",
+                message=f"Found {len(intentional)} deliberate anomaly safety complaints with P3/P4",
                 table_name="complaints",
-                details={"anomalies": safety_priority_violations},
+                details={"anomalies": intentional[:10]},
             ))
         else:
             findings.append(ValidationFinding(
@@ -424,24 +546,23 @@ class ValidationEngine:
                 table_name="complaints",
             ))
 
-        # Rule 2: SLA deadlines match config policy
-        sla_clocks = self.db.scalars(select(SLAClock)).all()
+        # Rule 2: SLA deadlines match config policy — fetch all sla_clocks (targeted columns only)
+        sla_rows = self.db.execute(
+            select(SLAClock.sla_id, SLAClock.priority, SLAClock.resolution_hours)
+        ).all()
         sla_violations = []
-        for s in sla_clocks:
+        for row in sla_rows:
             try:
-                policy = self.sla_engine.get_policy(s.priority)
-                if abs(s.resolution_hours - policy.resolution_hours) > 0.01:
+                policy = self.sla_engine.get_policy(row.priority)
+                if abs(row.resolution_hours - policy.resolution_hours) > 0.01:
                     sla_violations.append({
-                        "sla_id": s.sla_id,
-                        "priority": s.priority,
-                        "clock_hours": s.resolution_hours,
+                        "sla_id": row.sla_id,
+                        "priority": row.priority,
+                        "clock_hours": row.resolution_hours,
                         "expected_hours": policy.resolution_hours,
                     })
             except Exception as ex:
-                sla_violations.append({
-                    "sla_id": s.sla_id,
-                    "error": str(ex),
-                })
+                sla_violations.append({"sla_id": row.sla_id, "error": str(ex)})
 
         if sla_violations:
             findings.append(ValidationFinding(
@@ -461,19 +582,32 @@ class ValidationEngine:
                 table_name="sla_clocks",
             ))
 
-        # Rule 3: Initial status event exists for complaints
-        missing_initial_event = []
-        for c in complaints:
-            has_open_event = any(
-                e.to_status == "open" for e in c.status_events
+        # Rule 3: Initial status event exists for complaints — use SQL subquery
+        # Find complaint IDs that have NO 'open' status event
+        has_open_event_subq = (
+            select(ComplaintStatusEvent.complaint_id_fk)
+            .where(ComplaintStatusEvent.to_status == "open")
+            .scalar_subquery()
+        )
+        missing_event_rows = self.db.execute(
+            select(Complaint.complaint_id, Complaint.is_anomaly).where(
+                Complaint.id.not_in(
+                    select(ComplaintStatusEvent.complaint_id_fk).where(
+                        ComplaintStatusEvent.to_status == "open"
+                    )
+                )
             )
-            if not has_open_event:
-                missing_initial_event.append({
-                    "complaint_id": c.complaint_id,
-                    "is_anomaly": c.is_anomaly,
-                })
+        ).all()
 
-        unintentional_missing = [m for m in missing_initial_event if not m["is_anomaly"]]
+        unintentional_missing = [
+            {"complaint_id": r.complaint_id, "is_anomaly": r.is_anomaly}
+            for r in missing_event_rows if not r.is_anomaly
+        ]
+        intentional_missing = [
+            {"complaint_id": r.complaint_id, "is_anomaly": r.is_anomaly}
+            for r in missing_event_rows if r.is_anomaly
+        ]
+
         if unintentional_missing:
             findings.append(ValidationFinding(
                 category="business_rules",
@@ -483,14 +617,14 @@ class ValidationEngine:
                 table_name="complaint_status_events",
                 details={"violations": unintentional_missing[:10]},
             ))
-        elif missing_initial_event:
+        elif intentional_missing:
             findings.append(ValidationFinding(
                 category="business_rules",
                 check_name="complaint_initial_status_event",
                 status="warn",
-                message=f"Found {len(missing_initial_event)} deliberate anomaly complaints without initial 'open' event",
+                message=f"Found {len(intentional_missing)} deliberate anomaly complaints without initial 'open' event",
                 table_name="complaint_status_events",
-                details={"anomalies": missing_initial_event},
+                details={"anomalies": intentional_missing[:10]},
             ))
         else:
             findings.append(ValidationFinding(
@@ -509,23 +643,44 @@ class ValidationEngine:
     def integrity_checks(self) -> List[ValidationFinding]:
         findings = []
 
-        # Orders: valid foreign keys
-        orders = self.db.scalars(select(Order)).all()
-        orphaned_orders = []
-        for o in orders:
-            if not self.db.get(Customer, o.customer_id_fk):
-                orphaned_orders.append({"order_id": o.order_id, "missing_customer_fk": o.customer_id_fk})
-            if not self.db.get(Product, o.product_id_fk):
-                orphaned_orders.append({"order_id": o.order_id, "missing_product_fk": o.product_id_fk})
+        # Pre-load valid customer and product IDs as sets for O(1) lookup
+        valid_customer_ids: set = set(
+            self.db.scalars(select(Customer.id)).all()
+        )
+        valid_product_ids: set = set(
+            self.db.scalars(select(Product.id)).all()
+        )
+        valid_order_ids: set = set(
+            self.db.scalars(select(Order.id)).all()
+        )
 
-        if orphaned_orders:
+        # Orders: valid foreign keys — SQL LEFT JOIN approach
+        orphaned_orders = self.db.execute(
+            select(Order.order_id, Order.customer_id_fk, Order.product_id_fk).where(
+                ~Order.customer_id_fk.in_(
+                    select(Customer.id)
+                ) |
+                ~Order.product_id_fk.in_(
+                    select(Product.id)
+                )
+            )
+        ).all()
+
+        orphaned_order_list = [
+            {"order_id": row.order_id,
+             "missing_customer_fk": row.customer_id_fk if row.customer_id_fk not in valid_customer_ids else None,
+             "missing_product_fk": row.product_id_fk if row.product_id_fk not in valid_product_ids else None}
+            for row in orphaned_orders
+        ]
+
+        if orphaned_order_list:
             findings.append(ValidationFinding(
                 category="integrity",
                 check_name="order_foreign_key_integrity",
                 status="fail",
-                message=f"Found {len(orphaned_orders)} orders referencing non-existent customer or product",
+                message=f"Found {len(orphaned_order_list)} orders referencing non-existent customer or product",
                 table_name="orders",
-                details={"violations": orphaned_orders[:10]},
+                details={"violations": orphaned_order_list[:10]},
             ))
         else:
             findings.append(ValidationFinding(
@@ -536,29 +691,39 @@ class ValidationEngine:
                 table_name="orders",
             ))
 
-        # Complaints: customer FK integrity
-        complaints = self.db.scalars(select(Complaint)).all()
-        orphaned_complaints = []
-        for c in complaints:
-            if c.customer_id_fk and not self.db.get(Customer, c.customer_id_fk):
-                orphaned_complaints.append({
-                    "complaint_id": c.complaint_id,
-                    "missing_customer_fk": c.customer_id_fk,
-                })
-            if c.order_id_fk and not self.db.get(Order, c.order_id_fk):
-                orphaned_complaints.append({
-                    "complaint_id": c.complaint_id,
-                    "missing_order_fk": c.order_id_fk,
-                })
+        # Complaints: customer and order FK integrity — SQL query (nulls are OK for anomaly testing)
+        orphaned_complaint_rows = self.db.execute(
+            select(Complaint.complaint_id, Complaint.customer_id_fk, Complaint.order_id_fk).where(
+                # customer_id_fk non-null but references missing customer
+                (
+                    Complaint.customer_id_fk.isnot(None) &
+                    ~Complaint.customer_id_fk.in_(select(Customer.id))
+                ) |
+                # order_id_fk non-null but references missing order
+                (
+                    Complaint.order_id_fk.isnot(None) &
+                    ~Complaint.order_id_fk.in_(select(Order.id))
+                )
+            )
+        ).all()
 
-        if orphaned_complaints:
+        orphaned_complaint_list = [
+            {
+                "complaint_id": row.complaint_id,
+                "missing_customer_fk": row.customer_id_fk if (row.customer_id_fk and row.customer_id_fk not in valid_customer_ids) else None,
+                "missing_order_fk": row.order_id_fk if (row.order_id_fk and row.order_id_fk not in valid_order_ids) else None,
+            }
+            for row in orphaned_complaint_rows
+        ]
+
+        if orphaned_complaint_list:
             findings.append(ValidationFinding(
                 category="integrity",
                 check_name="complaint_foreign_key_integrity",
                 status="fail",
-                message=f"Found {len(orphaned_complaints)} complaints with orphaned customer or order references",
+                message=f"Found {len(orphaned_complaint_list)} complaints with orphaned customer or order references",
                 table_name="complaints",
-                details={"violations": orphaned_complaints[:10]},
+                details={"violations": orphaned_complaint_list[:10]},
             ))
         else:
             findings.append(ValidationFinding(
@@ -569,22 +734,43 @@ class ValidationEngine:
                 table_name="complaints",
             ))
 
-        # Check for multiple current assignments for a single complaint
-        assignment_violations = []
-        for c in complaints:
-            current_assignments = [a for a in c.assignments if a.is_current]
-            if len(current_assignments) > 1:
-                assignment_violations.append({
-                    "complaint_id": c.complaint_id,
-                    "current_assignment_count": len(current_assignments),
-                    "assignment_ids": [a.assignment_id for a in current_assignments],
-                })
+        # Multiple current assignments — SQL GROUP BY
+        multi_assign_rows = self.db.execute(
+            select(
+                Assignment.complaint_id_fk,
+                func.count(Assignment.id).label("cnt"),
+            )
+            .where(Assignment.is_current == True)
+            .group_by(Assignment.complaint_id_fk)
+            .having(func.count(Assignment.id) > 1)
+        ).all()
 
-        if assignment_violations:
+        if multi_assign_rows:
+            # Fetch complaint_ids and anomaly flags for context
+            comp_fks = [r.complaint_id_fk for r in multi_assign_rows]
+            comp_anomaly_map = dict(
+                self.db.execute(
+                    select(Complaint.id, Complaint.complaint_id, Complaint.is_anomaly).where(
+                        Complaint.id.in_(comp_fks)
+                    )
+                ).all()
+            )
+            assignment_violations = [
+                {
+                    "complaint_fk": row.complaint_id_fk,
+                    "current_assignment_count": row.cnt,
+                }
+                for row in multi_assign_rows
+            ]
+            # Determine status: warn if anomalies are involved, fail otherwise
+            any_anomaly = any(
+                comp_anomaly_map.get(r.complaint_id_fk, (None, None, False))[2]
+                for r in multi_assign_rows
+            )
             findings.append(ValidationFinding(
                 category="integrity",
                 check_name="single_current_assignment",
-                status="warn" if any(c.is_anomaly for c in complaints if c.complaint_id in [v["complaint_id"] for v in assignment_violations]) else "fail",
+                status="warn" if any_anomaly else "fail",
                 message=f"Found {len(assignment_violations)} complaints with multiple active assignments",
                 table_name="assignments",
                 details={"violations": assignment_violations},

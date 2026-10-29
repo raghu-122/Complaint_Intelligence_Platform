@@ -1,76 +1,95 @@
 {
-  "updated_at": "2026-10-29T07:24:52.588885+00:00",
+  "updated_at": "2026-10-29T11:11:19.353442+00:00",
   "total_anomalies": 6,
   "anomalies": [
     {
       "anomaly_id": "ANOM-001",
-      "anomaly_type": "PRIORITY_MISMATCH",
-      "description": "Safety complaint incorrectly prioritized as P3 instead of P1",
+      "anomaly_type": "MISSING_CUSTOMER_RELATIONSHIP",
+      "description": "Complaint CMP-2026-000001 has no linked customer (customer_id_fk set to NULL)",
       "severity": "high",
       "complaint_id": "CMP-2026-000001",
       "table_name": "complaints",
       "record_id": "1",
-      "evidence": null,
+      "evidence": {
+        "original_customer_fk": 469,
+        "customer_id_fk": null
+      },
       "is_ground_truth": true,
       "detected_at": null
     },
     {
       "anomaly_id": "ANOM-002",
-      "anomaly_type": "SLA_BACKDATED",
-      "description": "SLA deadline set in the past before complaint creation time",
+      "anomaly_type": "RESOLUTION_BEFORE_CREATION",
+      "description": "Resolution for CMP-2026-000002 has resolved_at (2026-04-06T00:32:03.185088) BEFORE complaint created_at (2026-04-07T00:32:03.185088)",
       "severity": "high",
       "complaint_id": "CMP-2026-000002",
-      "table_name": "sla_clocks",
-      "record_id": "2",
-      "evidence": null,
+      "table_name": "resolutions",
+      "record_id": "1082",
+      "evidence": {
+        "resolved_at": "2026-04-06T00:32:03.185088",
+        "complaint_created_at": "2026-04-07T00:32:03.185088"
+      },
       "is_ground_truth": true,
       "detected_at": null
     },
     {
       "anomaly_id": "ANOM-003",
-      "anomaly_type": "SURVEY_BEFORE_CLOSURE",
-      "description": "Customer satisfaction survey submitted before complaint was closed",
-      "severity": "medium",
+      "anomaly_type": "SLA_PAUSE_RESUME_INCONSISTENCY",
+      "description": "SLA clock for CMP-2026-000003 has 'resumed' event at 2026-05-05T12:47:57.141306 BEFORE its 'paused' event at 2026-05-05T13:47:57.141306",
+      "severity": "high",
       "complaint_id": "CMP-2026-000003",
-      "table_name": "surveys",
-      "record_id": null,
-      "evidence": null,
+      "table_name": "sla_events",
+      "record_id": "3",
+      "evidence": {
+        "resume_time": "2026-05-05T12:47:57.141306",
+        "pause_time": "2026-05-05T13:47:57.141306",
+        "issue": "resume_not_after_pause"
+      },
       "is_ground_truth": true,
       "detected_at": null
     },
     {
       "anomaly_id": "ANOM-004",
-      "anomaly_type": "DUPLICATE_ASSIGNMENT",
-      "description": "Complaint assigned to two agents simultaneously with is_current=True",
+      "anomaly_type": "REPEAT_COMPLAINT_NOT_LINKED",
+      "description": "Complaint CMP-2026-000480 is a repeat from same customer (FK=2) but has no ComplaintRelationship record linking it",
       "severity": "medium",
-      "complaint_id": "CMP-2026-000004",
-      "table_name": "assignments",
-      "record_id": null,
-      "evidence": null,
+      "complaint_id": "CMP-2026-000480",
+      "table_name": "complaint_relationships",
+      "record_id": "480",
+      "evidence": {
+        "customer_id_fk": 2,
+        "relationship_records_deleted": 0
+      },
       "is_ground_truth": true,
       "detected_at": null
     },
     {
       "anomaly_id": "ANOM-005",
-      "anomaly_type": "MISSING_STATUS_EVENT",
-      "description": "Complaint has lifecycle events but lacks the initial 'open' status event",
-      "severity": "high",
-      "complaint_id": "CMP-2026-000005",
-      "table_name": "complaint_status_events",
-      "record_id": null,
-      "evidence": null,
+      "anomaly_type": "SURVEY_BEFORE_CLOSURE",
+      "description": "Customer survey submitted for complaint CMP-2026-000004 which is still open (not closed)",
+      "severity": "medium",
+      "complaint_id": "CMP-2026-000004",
+      "table_name": "surveys",
+      "record_id": "369",
+      "evidence": {
+        "complaint_status": "open",
+        "submitted_before_closure": true
+      },
       "is_ground_truth": true,
       "detected_at": null
     },
     {
       "anomaly_id": "ANOM-006",
-      "anomaly_type": "REFUND_WITHOUT_RESOLUTION",
-      "description": "Refund recorded in status event but no formal Resolution record exists",
+      "anomaly_type": "SAFETY_LOW_PRIORITY",
+      "description": "Critical PRODUCT_SAFETY complaint CMP-2026-000005 incorrectly assigned priority P4 (must be P1 per rule PR-001)",
       "severity": "high",
-      "complaint_id": "CMP-2026-000006",
-      "table_name": "resolutions",
-      "record_id": null,
-      "evidence": null,
+      "complaint_id": "CMP-2026-000005",
+      "table_name": "complaints",
+      "record_id": "5",
+      "evidence": {
+        "category_code": "PRODUCT_SAFETY",
+        "priority": "P4"
+      },
       "is_ground_truth": true,
       "detected_at": null
     }

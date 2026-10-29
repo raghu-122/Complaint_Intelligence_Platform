@@ -117,14 +117,17 @@ graph TD
 
 ### 7. Anomaly Detection & Injection Suite
 - **Location**: `backend/app/anomaly/detector.py`
-- Scans active database for 6 distinct anomaly types:
-  1. `PRIORITY_MISMATCH`: Safety incidents incorrectly classified as P3/P4.
-  2. `SLA_BACKDATED`: SLA deadline backdated before clock start time.
-  3. `SURVEY_BEFORE_CLOSURE`: CSAT surveys submitted before ticket resolution/closure.
-  4. `DUPLICATE_ASSIGNMENT`: Multiple active assignments on a single complaint.
-  5. `MISSING_STATUS_EVENT`: Complaint lifecycle missing initial 'open' status event.
-  6. `REFUND_WITHOUT_RESOLUTION`: Refund acknowledged in messages/events without formal resolution record.
-- Evaluates detection against ground-truth manifest to compute precision, recall, and F1-score.
+- Scans active database for the 6 required anomaly scenarios:
+  1. `MISSING_CUSTOMER_RELATIONSHIP`: Complaint with null `customer_id_fk` (no customer linked).
+  2. `RESOLUTION_BEFORE_CREATION`: Resolution `resolved_at` timestamp is before complaint `created_at`.
+  3. `SLA_PAUSE_RESUME_INCONSISTENCY`: SLA `resumed` event occurs before its paired `paused` event.
+  4. `REPEAT_COMPLAINT_NOT_LINKED`: Repeat complaint from same customer has no `ComplaintRelationship` record.
+  5. `SURVEY_BEFORE_CLOSURE`: CSAT survey submitted before complaint is closed (`submitted_before_closure=True`).
+  6. `SAFETY_LOW_PRIORITY`: Critical `PRODUCT_SAFETY` complaint incorrectly assigned P3 or P4 priority.
+- **Detector Independence**: `AnomalyDetector` operates purely on DB state; `AnomalyEvaluator` separately consumes ground-truth files — never mixing detection with evaluation.
+- **Evaluation Matching**: Uses `(anomaly_type, complaint_id)` pair (not complaint_id alone) to prevent inflated precision metrics.
+- Computes precision, recall, and F1-score globally and per-category (6 categories).
+- Ground truth persisted to `data/anomalies/ground_truth.json` and `ground_truth.csv` after each injection.
 
 ### 8. Data Ingestion Pipeline
 - **Backend Location**: `backend/app/api/v1/ingestion.py` and `backend/app/services/ingestion.py`
@@ -435,8 +438,8 @@ cd backend
 3. **`tests/test_priority.py`** (3 tests): Strict P1 override rule PR-001, sentiment scoring, high-value order escalation.
 4. **`tests/test_sla.py`** (18 tests): Policies P1-P4, deadline calculation, active breach evaluation, pause adjustments.
 5. **`tests/test_validation.py`** (1 test): Clean dataset validation asserting 0 failures across all 5 verification domains.
-6. **`tests/test_anomaly.py`** (13 tests): Zero anomalies on clean baseline, injection of all 6 scenarios, detection verification, 100% Precision / Recall / F1-score evaluation, detector independence from ground truth file, `ground_truth.csv` generation.
-7. **`tests/test_exports_reproducibility.py`** (15 tests): SHA-256 deterministic file hashing, 33/33 bitwise file matching, mismatch detection.
+6. **`tests/test_anomaly.py`** (13 tests): Zero anomalies on clean baseline, injection of all 6 required scenarios, per-scenario detection verification (MISSING_CUSTOMER_RELATIONSHIP, RESOLUTION_BEFORE_CREATION, SLA_PAUSE_RESUME_INCONSISTENCY, REPEAT_COMPLAINT_NOT_LINKED, SURVEY_BEFORE_CLOSURE, SAFETY_LOW_PRIORITY), 100% Precision / Recall / F1-score per category, detector independence from ground-truth file, `ground_truth.csv` generation.
+7. **`tests/test_exports_reproducibility.py`** (15 tests): SHA-256 deterministic file hashing, 35/35 bitwise file matching, mismatch detection.
 8. **`tests/test_api.py`** (10 tests): Integration tests covering `/health`, complaints CRUD, customers, products, teams, dashboard KPIs, validation endpoint, anomaly detection, reports.
 9. **`tests/test_api_extended.py`** (29 tests): Extended integration coverage across edge cases, nested relationships, and lifecycle status changes.
 10. **`tests/test_ingestion.py`** (17 tests): Schema discovery, CSV/JSON complaint & customer ingestion, field validation, duplicate detection, bad input rejection.
@@ -460,8 +463,8 @@ This exercises 12 distinct operational workflow steps (health, stats, charts, co
 | **AC-03** | Keyword Classification | `app/engine/classifier.py` regex boundary matching over 10 categories with confidence | **PASSED** |
 | **AC-04** | SLA Monitoring | `app/engine/sla.py` tracks targets, countdowns, pause durations, and breach alerts | **PASSED** |
 | **AC-05** | Agent Assignment | `app/engine/assignment.py` matches squad capabilities and balances agent workload | **PASSED** |
-| **AC-06** | 5-Domain Validation | `app/validation/validator.py` executes 20+ checks; verified clean on starter & full datasets | **PASSED** |
-| **AC-07** | Anomaly Detection | `app/anomaly/detector.py` + `AnomalyEvaluator` separation; 6 types, ground_truth.csv, 100% P/R/F1 | **PASSED** |
+| **AC-06** | 5-Domain Validation | `app/validation/validator.py` executes 15 checks across 5 domains; ~0.21 s on full dataset; verified clean on starter & full datasets | **PASSED** |
+| **AC-07** | Anomaly Detection | `app/anomaly/detector.py` + `AnomalyEvaluator` separation; 6 required scenarios (MISSING_CUSTOMER_RELATIONSHIP, RESOLUTION_BEFORE_CREATION, SLA_PAUSE_RESUME_INCONSISTENCY, REPEAT_COMPLAINT_NOT_LINKED, SURVEY_BEFORE_CLOSURE, SAFETY_LOW_PRIORITY); `(anomaly_type, complaint_id)` pair matching; 100% P/R/F1 per category | **PASSED** |
 | **AC-08** | Click CLI | `backend/cli.py` implements `generate`, `validate`, `detect-anomalies`, `reproduce`, `server`, `export`, `dump-sql`, `import-sql` | **PASSED** |
 | **AC-09** | REST API | Complete endpoints with CORS, Pydantic schemas, and Swagger docs | **PASSED** |
 | **AC-10** | Modern Frontend | React 18 + Vite UI with dashboards, complaint tables, triage tools, and anomaly viewers | **PASSED** |

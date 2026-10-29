@@ -1,5 +1,13 @@
 """
-Tests for AnomalyDetector — all six scenarios and ground-truth evaluation.
+Tests for AnomalyDetector — all six required scenarios and ground-truth evaluation.
+
+Required scenarios (per spec):
+1. MISSING_CUSTOMER_RELATIONSHIP – complaint has no linked customer
+2. RESOLUTION_BEFORE_CREATION   – resolved_at < created_at
+3. SLA_PAUSE_RESUME_INCONSISTENCY – SLA resume event before matching pause
+4. REPEAT_COMPLAINT_NOT_LINKED  – repeat complaint not linked to prior record
+5. SURVEY_BEFORE_CLOSURE        – survey submitted before complaint was closed
+6. SAFETY_LOW_PRIORITY          – PRODUCT_SAFETY complaint assigned P3/P4
 """
 from __future__ import annotations
 
@@ -23,7 +31,7 @@ def test_clean_data_has_no_anomalies(db_session):
 
 
 def test_inject_six_anomaly_scenarios(db_session):
-    """Inject must produce exactly 6 anomaly records, one for each scenario."""
+    """Inject must produce exactly 6 anomaly records, one for each required scenario."""
     generator = DataGenerator(seed=20261022, scale="starter")
     data = generator.generate_all()
     load_all(db_session, data, clear_first=True)
@@ -34,15 +42,15 @@ def test_inject_six_anomaly_scenarios(db_session):
     assert response.injected_count == 6
     assert len(response.anomalies) == 6
 
-    # Verify all 6 distinct anomaly types are present
+    # Verify all 6 required anomaly types are present
     types = {a.anomaly_type for a in response.anomalies}
     expected_types = {
-        "PRIORITY_MISMATCH",
-        "SLA_BACKDATED",
+        "MISSING_CUSTOMER_RELATIONSHIP",
+        "RESOLUTION_BEFORE_CREATION",
+        "SLA_PAUSE_RESUME_INCONSISTENCY",
+        "REPEAT_COMPLAINT_NOT_LINKED",
         "SURVEY_BEFORE_CLOSURE",
-        "DUPLICATE_ASSIGNMENT",
-        "MISSING_STATUS_EVENT",
-        "REFUND_WITHOUT_RESOLUTION",
+        "SAFETY_LOW_PRIORITY",
     }
     assert types == expected_types
 
@@ -81,8 +89,8 @@ def test_anomaly_detection_metrics(db_session):
     assert result.ground_truth_count == 6
 
 
-def test_anomaly_priority_mismatch_scenario(db_session):
-    """PRIORITY_MISMATCH: safety complaint must be detected with P3/P4 priority."""
+def test_anomaly_missing_customer_relationship_scenario(db_session):
+    """MISSING_CUSTOMER_RELATIONSHIP: complaint with null customer FK must be detected."""
     generator = DataGenerator(seed=20261022, scale="starter")
     data = generator.generate_all()
     load_all(db_session, data, clear_first=True)
@@ -92,13 +100,13 @@ def test_anomaly_priority_mismatch_scenario(db_session):
     detector = AnomalyDetector(db_session)
     result = detector.detect()
 
-    pm = [a for a in result.anomalies if a.anomaly_type == "PRIORITY_MISMATCH"]
-    assert len(pm) >= 1
-    assert pm[0].severity == "high"
+    mcr = [a for a in result.anomalies if a.anomaly_type == "MISSING_CUSTOMER_RELATIONSHIP"]
+    assert len(mcr) >= 1
+    assert mcr[0].severity in ("high", "critical")
 
 
-def test_anomaly_sla_backdated_scenario(db_session):
-    """SLA_BACKDATED: detector must find SLA deadline set before complaint creation."""
+def test_anomaly_resolution_before_creation_scenario(db_session):
+    """RESOLUTION_BEFORE_CREATION: resolved_at < created_at must be detected."""
     generator = DataGenerator(seed=20261022, scale="starter")
     data = generator.generate_all()
     load_all(db_session, data, clear_first=True)
@@ -108,8 +116,8 @@ def test_anomaly_sla_backdated_scenario(db_session):
     detector = AnomalyDetector(db_session)
     result = detector.detect()
 
-    sla_b = [a for a in result.anomalies if a.anomaly_type == "SLA_BACKDATED"]
-    assert len(sla_b) >= 1
+    rbc = [a for a in result.anomalies if a.anomaly_type == "RESOLUTION_BEFORE_CREATION"]
+    assert len(rbc) >= 1
 
 
 def test_anomaly_survey_before_closure_scenario(db_session):
@@ -127,8 +135,8 @@ def test_anomaly_survey_before_closure_scenario(db_session):
     assert len(sbc) >= 1
 
 
-def test_anomaly_duplicate_assignment_scenario(db_session):
-    """DUPLICATE_ASSIGNMENT: complaint with two simultaneous active assignments."""
+def test_anomaly_sla_pause_resume_inconsistency_scenario(db_session):
+    """SLA_PAUSE_RESUME_INCONSISTENCY: resume before pause must be detected."""
     generator = DataGenerator(seed=20261022, scale="starter")
     data = generator.generate_all()
     load_all(db_session, data, clear_first=True)
@@ -138,12 +146,12 @@ def test_anomaly_duplicate_assignment_scenario(db_session):
     detector = AnomalyDetector(db_session)
     result = detector.detect()
 
-    da = [a for a in result.anomalies if a.anomaly_type == "DUPLICATE_ASSIGNMENT"]
-    assert len(da) >= 1
+    spri = [a for a in result.anomalies if a.anomaly_type == "SLA_PAUSE_RESUME_INCONSISTENCY"]
+    assert len(spri) >= 1
 
 
-def test_anomaly_missing_status_event_scenario(db_session):
-    """MISSING_STATUS_EVENT: complaint without initial 'open' event must be detected."""
+def test_anomaly_repeat_complaint_not_linked_scenario(db_session):
+    """REPEAT_COMPLAINT_NOT_LINKED: repeat complaint without relationship record must be detected."""
     generator = DataGenerator(seed=20261022, scale="starter")
     data = generator.generate_all()
     load_all(db_session, data, clear_first=True)
@@ -153,12 +161,12 @@ def test_anomaly_missing_status_event_scenario(db_session):
     detector = AnomalyDetector(db_session)
     result = detector.detect()
 
-    mse = [a for a in result.anomalies if a.anomaly_type == "MISSING_STATUS_EVENT"]
-    assert len(mse) >= 1
+    rcnl = [a for a in result.anomalies if a.anomaly_type == "REPEAT_COMPLAINT_NOT_LINKED"]
+    assert len(rcnl) >= 1
 
 
-def test_anomaly_refund_without_resolution_scenario(db_session):
-    """REFUND_WITHOUT_RESOLUTION: refund status event without resolution record."""
+def test_anomaly_safety_low_priority_scenario(db_session):
+    """SAFETY_LOW_PRIORITY: PRODUCT_SAFETY complaint with P3/P4 priority must be detected."""
     generator = DataGenerator(seed=20261022, scale="starter")
     data = generator.generate_all()
     load_all(db_session, data, clear_first=True)
@@ -168,8 +176,9 @@ def test_anomaly_refund_without_resolution_scenario(db_session):
     detector = AnomalyDetector(db_session)
     result = detector.detect()
 
-    rwr = [a for a in result.anomalies if a.anomaly_type == "REFUND_WITHOUT_RESOLUTION"]
-    assert len(rwr) >= 1
+    slp = [a for a in result.anomalies if a.anomaly_type == "SAFETY_LOW_PRIORITY"]
+    assert len(slp) >= 1
+    assert slp[0].severity == "high"
 
 
 def test_anomaly_per_category_metrics(db_session):
@@ -240,6 +249,3 @@ def test_ground_truth_csv_generation(db_session):
         assert row["entity"]
         assert row["issue_type"]
         assert row["field"]
-
-
-
