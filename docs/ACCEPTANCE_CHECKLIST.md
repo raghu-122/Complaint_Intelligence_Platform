@@ -1,6 +1,6 @@
 # Acceptance Checklist — YottaFlex Complaint Intelligence Platform
 
-> **Last Updated**: 2026-10-29 | **Evaluator**: Automated + Manual verification  
+> **Last Updated**: 2026-10-29 (Final Completion Pass) | **Evaluator**: Automated + Manual verification  
 > **Test Suite**: 112 tests, 0 failures | **Seed**: 20261022 | **Scale**: full
 
 ---
@@ -149,12 +149,12 @@ All 6 lifecycle event types present. Paused/resumed are symmetric (equal counts)
 
 | Type | Injected | Detectable | In ground_truth.csv | Status |
 |---|---|---|---|---|
-| PRIORITY_MISMATCH | ✅ | ✅ | ✅ | ✅ PASS |
-| SLA_BACKDATED | ✅ | ✅ | ✅ | ✅ PASS |
+| MISSING_CUSTOMER_RELATIONSHIP | ✅ | ✅ | ✅ | ✅ PASS |
+| RESOLUTION_BEFORE_CREATION | ✅ | ✅ | ✅ | ✅ PASS |
+| SLA_PAUSE_RESUME_INCONSISTENCY | ✅ | ✅ | ✅ | ✅ PASS |
+| REPEAT_COMPLAINT_NOT_LINKED | ✅ | ✅ | ✅ | ✅ PASS |
 | SURVEY_BEFORE_CLOSURE | ✅ | ✅ | ✅ | ✅ PASS |
-| DUPLICATE_ASSIGNMENT | ✅ | ✅ | ✅ | ✅ PASS |
-| MISSING_STATUS_EVENT | ✅ | ✅ | ✅ | ✅ PASS |
-| REFUND_WITHOUT_RESOLUTION | ✅ | ✅ | ✅ | ✅ PASS |
+| SAFETY_LOW_PRIORITY | ✅ | ✅ | ✅ | ✅ PASS |
 
 **Clean baseline isolation**: Detector finds 0 anomalies on clean data (`test_clean_data_has_no_anomalies` passes).
 
@@ -182,6 +182,17 @@ All 6 lifecycle event types present. Paused/resumed are symmetric (equal counts)
 | TP per category | 1 | ✅ PASS |
 | FP per category | 0 | ✅ PASS |
 | FN per category | 0 | ✅ PASS |
+
+**Actual CLI output** (`python cli.py detect-anomalies` after injection):
+
+| Anomaly Category | Ground Truth | Detected | TP | FP | FN | Precision | Recall | F1 |
+|---|---|---|---|---|---|---|---|---|
+| MISSING_CUSTOMER_RELATIONSHIP | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| REPEAT_COMPLAINT_NOT_LINKED | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| RESOLUTION_BEFORE_CREATION | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| SAFETY_LOW_PRIORITY | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| SLA_PAUSE_RESUME_INCONSISTENCY | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
+| SURVEY_BEFORE_CLOSURE | 1 | 1 | 1 | 0 | 0 | 100% | 100% | 1.000 |
 
 ---
 
@@ -215,10 +226,12 @@ All 6 lifecycle event types present. Paused/resumed are symmetric (equal counts)
 |---|---|---|
 | Baseline CSV (17 files) | `backend/data/baseline/csv/*.csv` | ✅ PASS |
 | Baseline JSON (18 files) | `backend/data/baseline/json/*.json` | ✅ PASS |
-| SQL dump (~10.5 MB) | `backend/data/baseline/sql/complaint_intelligence_dump.sql` | ✅ PASS |
+| SQL dump (~10.7 MB) | `backend/data/baseline/sql/complaint_intelligence_dump.sql` | ✅ PASS |
+| SQL import/verify round-trip | 17 tables verified, 0 FK violations | ✅ PASS |
 | SHA-256 manifest | `backend/data/baseline/manifest.json` | ✅ PASS |
 | Ground truth CSV | `backend/data/anomalies/ground_truth.csv` | ✅ PASS |
 | Ground truth JSON | `backend/data/anomalies/ground_truth.json` | ✅ PASS |
+| Per-file export (Reports UI) | `GET /api/v1/reports/download?file=<path>` + Export buttons on every row | ✅ PASS |
 
 ---
 
@@ -294,7 +307,7 @@ All 6 lifecycle event types present. Paused/resumed are symmetric (equal counts)
 
 | Item | Detail |
 |---|---|
-| Six canonical anomaly types | The six types implemented are: PRIORITY_MISMATCH, SLA_BACKDATED, SURVEY_BEFORE_CLOSURE, DUPLICATE_ASSIGNMENT, MISSING_STATUS_EVENT, REFUND_WITHOUT_RESOLUTION. These differ slightly from the spec's six (which reference COMPLAINT_WITHOUT_CUSTOMER, RESOLUTION_BEFORE_COMPLAINT, INCORRECT_SLA_PAUSE, UNLINKED_REPEAT_ISSUE, SURVEY_BEFORE_CLOSURE, PRIORITY_MISMATCH). Some spec types overlap conceptually; future work would align names exactly. |
 | P4 distribution (66%) | 1,334/2,000 complaints are P4 (neutral sentiment → general inquiry). This is realistic for customer service platforms but may appear high to evaluators. Distribution is fully documented and rules-based. |
 | GitHub publication | Requires manual execution of `git push` after configuring remote. No credentials were available during automated implementation. |
-| OrderItem CSV baseline tracking | Large CSV/JSON files are excluded from git tracking by `.gitignore` (by design). Run `python cli.py generate` to regenerate. |
+| Generated data not in git | Large CSV/JSON/SQL files are excluded from git tracking by `.gitignore` (by design). Run `python cli.py generate --scale full --seed 20261022 --clear --export` to regenerate. |
+| Vite bundle size warning | 723 KB JS bundle exceeds Vite's 500 KB guideline. Not a build error — cosmetic warning only. Code-splitting is a future optimization. |

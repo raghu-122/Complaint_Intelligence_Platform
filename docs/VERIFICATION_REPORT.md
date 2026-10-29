@@ -1,6 +1,6 @@
 # Verification Report — YottaFlex Complaint Intelligence Platform
 
-> **Date**: 2026-10-29 (final remediation pass — Phase 2)
+> **Date**: 2026-10-29 (final completion pass — Phase 3)
 > **Verifier**: Automated CI + Manual inspection  
 > **Environment**: Windows 11, Python 3.13.14, Node.js 18+, SQLite 3
 
@@ -237,11 +237,11 @@ at test start. This ensures the clean baseline validation (section 5) is not con
 
 | Anomaly Category | Ground Truth | Detected | TP | FP | FN | Precision | Recall | F1-Score |
 |---|---|---|---|---|---|---|---|---|
-| `DUPLICATE_ASSIGNMENT` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
-| `MISSING_STATUS_EVENT` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
-| `PRIORITY_MISMATCH` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
-| `REFUND_WITHOUT_RESOLUTION` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
-| `SLA_BACKDATED` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
+| `MISSING_CUSTOMER_RELATIONSHIP` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
+| `REPEAT_COMPLAINT_NOT_LINKED` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
+| `RESOLUTION_BEFORE_CREATION` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
+| `SAFETY_LOW_PRIORITY` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
+| `SLA_PAUSE_RESUME_INCONSISTENCY` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
 | `SURVEY_BEFORE_CLOSURE` | 1 | 1 | 1 | 0 | 0 | 100.0% | 100.0% | 1.000 |
 
 *Ground-truth isolation confirmed: The detector scans SQLite database tables independently
