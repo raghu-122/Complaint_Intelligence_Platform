@@ -18,6 +18,7 @@ from app.models.priority_rule import PriorityRule
 from app.models.product import Product
 from app.models.customer import Customer
 from app.models.order import Order
+from app.models.order_item import OrderItem
 from app.models.complaint import Complaint, ComplaintStatusEvent, ComplaintRelationship
 from app.models.message import ComplaintMessage
 from app.models.assignment import Assignment
@@ -207,15 +208,35 @@ def load_all(db: Session, data: dict, clear_first: bool = False) -> dict[str, in
         order_map[o["order_id"]] = obj.id
     counts["orders"] = len(data.get("orders", []))
 
+    # 7b. Order Items
+    for oi in data.get("order_items", []):
+        order_pk = order_map.get(oi["order_id_fk_code"])
+        product_pk = product_map.get(oi["product_id_fk_code"])
+        obj = OrderItem(
+            order_item_id=oi["order_item_id"],
+            order_id_fk=order_pk,
+            product_id_fk=product_pk,
+            quantity=oi["quantity"],
+            unit_price=Decimal(oi["unit_price"]),
+            discount_amount=Decimal(oi["discount_amount"]),
+            line_total=Decimal(oi["line_total"]),
+            created_at=_dt(oi.get("created_at")) or datetime.now(timezone.utc),
+        )
+        db.add(obj)
+    db.flush()
+    counts["order_items"] = len(data.get("order_items", []))
+
     # 8. Complaints
     for c in data.get("complaints", []):
         customer_pk = customer_map.get(c.get("customer_id_fk_code"))
         order_pk = order_map.get(c.get("order_id_fk_code"))
+        prod_pk = product_map.get(c.get("product_id_fk_code"))
         cat_pk = cat_map.get(c.get("category_id_fk_code"))
         obj = Complaint(
             complaint_id=c["complaint_id"],
             customer_id_fk=customer_pk,
             order_id_fk=order_pk,
+            product_id_fk=prod_pk,
             category_id_fk=cat_pk,
             subject=c["subject"],
             description=c["description"],
@@ -422,7 +443,7 @@ def _clear_tables(db: Session) -> None:
     tables = [
         "surveys", "resolutions", "sla_events", "sla_clocks",
         "assignments", "complaint_relationships", "complaint_messages",
-        "complaint_status_events", "complaints", "orders",
+        "complaint_status_events", "complaints", "order_items", "orders",
         "customers", "products", "agents", "teams",
         "priority_rules", "categories",
     ]

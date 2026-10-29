@@ -147,8 +147,16 @@ class PriorityEngine:
             explanation_parts.append(
                 f"Medium order value (${order_value:.2f}) with negative sentiment (PR-005)"
             )
+        # PR-006: Standard negative sentiment → P3
+        elif sentiment == "negative":
+            base_priority = "P3"
+            rule_applied = "PR-006"
+            explanation_parts.append("Standard complaint with negative sentiment (PR-006)")
+        # PR-007: General inquiry or low severity with non-negative sentiment → P4
         else:
-            explanation_parts.append("Default priority applied (PR-006)")
+            base_priority = "P4"
+            rule_applied = "PR-007"
+            explanation_parts.append("Low severity / general inquiry with non-negative sentiment (PR-007)")
 
         # PR-004: Recurrence upgrade — applies after base priority is set
         final_priority = base_priority
@@ -159,7 +167,7 @@ class PriorityEngine:
                 f"({prior_complaint_count} prior complaints, PR-004)"
             )
             final_priority = upgraded
-            if rule_applied == "PR-006":
+            if rule_applied in ("PR-006", "PR-007"):
                 rule_applied = "PR-004"
             else:
                 rule_applied = f"{rule_applied}+PR-004"

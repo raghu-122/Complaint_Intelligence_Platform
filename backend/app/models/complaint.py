@@ -61,6 +61,7 @@ class Complaint(Base):
     customer_id_fk: Mapped[int | None] = mapped_column(ForeignKey("customers.id"), nullable=True, index=True)
     order_id_fk: Mapped[int | None] = mapped_column(ForeignKey("orders.id"), nullable=True, index=True)
     category_id_fk: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True, index=True)
+    product_id_fk: Mapped[int | None] = mapped_column(ForeignKey("products.id"), nullable=True, index=True)
 
     # Core fields
     subject: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -110,6 +111,7 @@ class Complaint(Base):
     customer: Mapped["Customer | None"] = relationship("Customer", back_populates="complaints")
     order: Mapped["Order | None"] = relationship("Order", back_populates="complaints")
     category: Mapped["Category | None"] = relationship("Category", back_populates="complaints")
+    product: Mapped["Product | None"] = relationship("Product", back_populates="complaints")
     messages: Mapped[list["ComplaintMessage"]] = relationship("ComplaintMessage", back_populates="complaint",
                                                                order_by="ComplaintMessage.sent_at")
     status_events: Mapped[list["ComplaintStatusEvent"]] = relationship("ComplaintStatusEvent",

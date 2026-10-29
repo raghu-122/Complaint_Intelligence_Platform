@@ -41,7 +41,8 @@ class Product(Base):
                                                   onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
-    order_items: Mapped[list["Order"]] = relationship("Order", back_populates="product")
+    order_items: Mapped[list["OrderItem"]] = relationship("OrderItem", back_populates="product")
+    complaints: Mapped[list["Complaint"]] = relationship("Complaint", back_populates="product")
 
     def __repr__(self) -> str:
         return f"<Product {self.product_id}: {self.name}>"

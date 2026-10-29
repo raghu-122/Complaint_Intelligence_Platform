@@ -139,6 +139,7 @@ class DataGenerator:
         self.products: list[dict] = []
         self.customers: list[dict] = []
         self.orders: list[dict] = []
+        self.order_items: list[dict] = []
         self.complaints: list[dict] = []
         self.messages: list[dict] = []
         self.assignments: list[dict] = []
@@ -336,23 +337,17 @@ class DataGenerator:
         return customers
 
     def generate_orders(self) -> list[dict]:
-        """Generate order records with valid customer/product references."""
+        """Generate order records with normalized OrderItem line items and valid customer/product references."""
         orders = []
+        order_items = []
         num = self.config["orders"]
         cust_ids = [c["customer_id"] for c in self.customers]
         prod_ids = [p["product_id"] for p in self.products]
+        prod_by_id = {p["product_id"]: p for p in self.products}
 
         for i in range(1, num + 1):
+            oid = ID.order_id(i)
             cid = self.rng.choice(cust_ids)
-            pid = self.rng.choice(prod_ids)
-            product = next(p for p in self.products if p["product_id"] == pid)
-            unit_price = Decimal(product["unit_price"])
-            quantity = self.rng.randint(1, 5)
-            discount = Decimal("0.00")
-            if self.rng.random() < 0.15:
-                discount = (unit_price * quantity * Decimal("0.10")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            total = (unit_price * quantity - discount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
             order_date = self._rand_ts(-180, -1)
             status = self.rng.choices(ORDER_STATUSES, weights=ORDER_STATUS_WEIGHTS)[0]
             shipped_at = None
@@ -362,15 +357,52 @@ class DataGenerator:
             if status in ("delivered", "returned"):
                 delivered_at = (order_date + timedelta(days=self.rng.randint(4, 10))).isoformat()
 
-            oid = ID.order_id(i)
+            # Multi-product order item generation (1 to 3 items per order)
+            num_items = self.rng.choices([1, 2, 3], weights=[0.70, 0.20, 0.10])[0]
+            chosen_pids = self.rng.sample(prod_ids, min(num_items, len(prod_ids)))
+
+            cur_order_items = []
+            order_total = Decimal("0.00")
+            order_discount = Decimal("0.00")
+            order_qty = 0
+
+            for seq, pid in enumerate(chosen_pids, start=1):
+                product = prod_by_id[pid]
+                uprice = Decimal(product["unit_price"])
+                qty = self.rng.randint(1, 4)
+                item_discount = Decimal("0.00")
+                if self.rng.random() < 0.15:
+                    item_discount = (uprice * qty * Decimal("0.10")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                line_total = (uprice * qty - item_discount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+                order_total += line_total
+                order_discount += item_discount
+                order_qty += qty
+
+                item_id = ID.order_item_id(i, seq)
+                item_dict = {
+                    "order_item_id": item_id,
+                    "order_id_fk_code": oid,
+                    "product_id_fk_code": pid,
+                    "quantity": qty,
+                    "unit_price": str(uprice),
+                    "discount_amount": str(item_discount),
+                    "line_total": str(line_total),
+                    "created_at": order_date.isoformat(),
+                }
+                cur_order_items.append(item_dict)
+                order_items.append(item_dict)
+
+            primary_item = cur_order_items[0]
+
             orders.append({
                 "order_id": oid,
                 "customer_id_fk_code": cid,
-                "product_id_fk_code": pid,
-                "quantity": quantity,
-                "unit_price": str(unit_price),
-                "discount_amount": str(discount),
-                "total_amount": str(total),
+                "product_id_fk_code": primary_item["product_id_fk_code"],
+                "quantity": order_qty,
+                "unit_price": primary_item["unit_price"],
+                "discount_amount": str(order_discount),
+                "total_amount": str(order_total),
                 "currency": "USD",
                 "status": status,
                 "shipping_address": self.fake.address().replace("\n", ", "),
@@ -382,7 +414,9 @@ class DataGenerator:
                 "updated_at": order_date.isoformat(),
             })
             self._order_map[oid] = orders[-1]
+
         self.orders = orders
+        self.order_items = order_items
         return orders
 
     def _get_category_by_code(self, code: str) -> dict:
@@ -398,7 +432,6 @@ class DataGenerator:
         target_messages = self.config["messages"]
 
         cust_ids = [c["customer_id"] for c in self.customers]
-        order_ids = [o["order_id"] for o in self.orders]
         cat_codes = [c["code"] for c in self.categories]
         agent_list = [
             {
@@ -410,24 +443,32 @@ class DataGenerator:
             for a in self.agents
         ]
 
-        # Track how many messages we've created
-        total_messages = 0
-        msgs_per_complaint = max(1, target_messages // num)
-        extra_msgs_needed = target_messages - (msgs_per_complaint * num)
+        # Fast lookup maps for referential integrity
+        customer_orders_map: dict[str, list[dict]] = {}
+        for o in self.orders:
+            customer_orders_map.setdefault(o["customer_id_fk_code"], []).append(o)
+
+        order_items_map: dict[str, list[dict]] = {}
+        for it in self.order_items:
+            order_items_map.setdefault(it["order_id_fk_code"], []).append(it)
+
+        # Pre-allocate variable messages per complaint summing to exactly target_messages
+        msg_weights = [0.12, 0.28, 0.35, 0.15, 0.07, 0.03]  # distribution across 1 to 6
+        allocated_msgs = [self.rng.choices([1, 2, 3, 4, 5, 6], weights=msg_weights)[0] for _ in range(num)]
+        diff = target_messages - sum(allocated_msgs)
+        if diff > 0:
+            for k in range(diff):
+                allocated_msgs[k % num] += 1
+        elif diff < 0:
+            k = 0
+            while diff < 0:
+                slot = k % num
+                if allocated_msgs[slot] > 1:
+                    allocated_msgs[slot] -= 1
+                    diff += 1
+                k += 1
 
         # Domain variation flags
-        has_safety = False
-        has_missing_order = False
-        has_refund = False
-        has_reopened = False
-        has_repeat = False
-        safety_indices = set()
-        missing_order_indices = set()
-        refund_indices = set()
-        reopen_indices = set()
-        repeat_indices = set()
-
-        # Reserve slots for required domain variations
         indices = list(range(num))
         self.rng.shuffle(indices)
         chunk = max(1, num // 20)
@@ -435,7 +476,10 @@ class DataGenerator:
         missing_order_indices = set(indices[chunk:chunk*2])
         refund_indices = set(indices[chunk*2:chunk*3])
         reopen_indices = set(indices[chunk*3:chunk*4])
-        repeat_indices = set(indices[chunk*4:chunk*5])
+
+        # Recurrence: allocate repeat complaints (~70 for full, ~5 for starter)
+        num_repeats = max(5, int(num * 0.035))
+        repeat_indices = set(self.rng.sample(range(num // 4, num), min(num_repeats, num - num // 4)))
 
         repeat_pairs = {}  # complaint_idx -> prior_complaint_id
 
@@ -443,23 +487,23 @@ class DataGenerator:
             i = idx + 1
             cid = ID.complaint_id(i)
 
-            # Pick customer
-            customer_id = self.rng.choice(cust_ids)
+            # Pick customer: if this is a repeat complaint, select a customer who already filed one
+            if idx in repeat_indices and complaints:
+                prior_complaint_customers = [c["customer_id_fk_code"] for c in complaints]
+                customer_id = self.rng.choice(prior_complaint_customers)
+            else:
+                customer_id = self.rng.choice(cust_ids)
+
             customer = self._customer_map[customer_id]
             prior_count = self._customer_complaint_count.get(customer_id, 0)
 
-            # Pick order (most complaints reference an order; some don't)
+            # Pick order: STRICT CONSISTENCY — orders come ONLY from this customer's orders
             order_id_ref = None
             order_ref = None
-            if idx not in missing_order_indices and self.rng.random() < 0.85:
-                # Prefer orders from this customer
-                cust_orders = [o["order_id"] for o in self.orders
-                               if o["customer_id_fk_code"] == customer_id]
-                if cust_orders:
-                    order_id_ref = self.rng.choice(cust_orders)
-                else:
-                    order_id_ref = self.rng.choice(order_ids)
-                order_ref = self._order_map.get(order_id_ref)
+            cust_orders = customer_orders_map.get(customer_id, [])
+            if idx not in missing_order_indices and cust_orders and self.rng.random() < 0.85:
+                order_ref = self.rng.choice(cust_orders)
+                order_id_ref = order_ref["order_id"]
 
             # Determine category
             if idx in safety_indices:
@@ -473,15 +517,30 @@ class DataGenerator:
 
             category = self._get_category_by_code(cat_code)
 
+            # Pick product consistent with order or category
+            prod_id_ref = None
+            product_name = ""
+            if order_ref:
+                items_in_order = order_items_map.get(order_id_ref, [])
+                if items_in_order:
+                    prod_id_ref = self.rng.choice(items_in_order)["product_id_fk_code"]
+                else:
+                    prod_id_ref = order_ref.get("product_id_fk_code")
+            else:
+                # For complaints without an order, link if category is product-related
+                if cat_code in ("PRODUCT_SAFETY", "PRODUCT_QUALITY", "DAMAGED_PRODUCT", "WRONG_ITEM"):
+                    prod_id_ref = self.rng.choice(self.products)["product_id"]
+                else:
+                    prod_id_ref = None
+
+            if prod_id_ref:
+                prod = next((p for p in self.products if p["product_id"] == prod_id_ref), None)
+                if prod:
+                    product_name = prod["name"]
+
             # Build complaint text
             templates = COMPLAINT_TEMPLATES.get(cat_code, COMPLAINT_TEMPLATES["OTHER"])
             subject_tmpl, body_tmpl = self.rng.choice(templates)
-            product_name = ""
-            if order_ref:
-                prod = next((p for p in self.products
-                             if p["product_id"] == order_ref.get("product_id_fk_code", "")), None)
-                if prod:
-                    product_name = prod["name"]
             subject = subject_tmpl.format(order_id=order_id_ref or "N/A", product_name=product_name or "product")
             body = body_tmpl.format(order_id=order_id_ref or "N/A", product_name=product_name or "product")
 
@@ -553,6 +612,7 @@ class DataGenerator:
                 "complaint_num": i,
                 "customer_id_fk_code": customer_id,
                 "order_id_fk_code": order_id_ref,
+                "product_id_fk_code": prod_id_ref,
                 "category_id_fk_code": cat_code,
                 "subject": subject,
                 "description": body,
@@ -596,10 +656,9 @@ class DataGenerator:
                     if a["agent_id"] == assignment_decision.agent_id:
                         a["open_complaint_count"] = self._agent_workload[assignment_decision.agent_id]
 
-            # Store repeat complaint relationship
+            # Store repeat complaint relationship with strictly prior complaint from same customer
             if idx in repeat_indices and len(complaints) >= 2:
-                # Find a prior complaint from same customer
-                prior = next((c for c in complaints[:-1]
+                prior = next((c for c in reversed(complaints[:-1])
                               if c["customer_id_fk_code"] == customer_id), None)
                 if prior:
                     repeat_pairs[i] = prior["complaint_id"]
@@ -618,16 +677,16 @@ class DataGenerator:
             })
 
         # Generate status events, messages, SLA, assignments, resolutions, surveys
-        self._generate_auxiliary(complaints, msgs_per_complaint, extra_msgs_needed)
+        self._generate_auxiliary(complaints, allocated_msgs)
 
         return complaints
 
-    def _generate_auxiliary(self, complaints: list[dict], msgs_per: int, extra: int) -> None:
+    def _generate_auxiliary(self, complaints: list[dict], allocated_msgs: list[int]) -> None:
         """Generate all auxiliary records for complaints."""
         msg_counter: dict[int, int] = {}  # complaint_num -> message seq
         total_msgs = 0
 
-        for comp in complaints:
+        for comp_idx, comp in enumerate(complaints):
             comp_num = comp["complaint_num"]
             complaint_id_str = comp["complaint_id"]
             complaint_ts = datetime.fromisoformat(comp["created_at"])
@@ -714,17 +773,22 @@ class DataGenerator:
             escalation_threshold = (complaint_ts + timedelta(hours=sla_policy.escalation_hours))
             first_response_deadline = (complaint_ts + timedelta(hours=sla_policy.first_response_hours))
 
-            is_breached = comp["status"] in ("closed", "resolved") and comp["resolved_at"] and \
-                datetime.fromisoformat(comp["resolved_at"]) > original_deadline
-            sla_status = "completed" if comp["status"] in ("closed", "resolved") else \
-                "breached" if is_breached else "running"
+            # Realistic pause simulation: escalated complaints or small fraction of in-progress/closed
+            has_pause = (comp["status"] == "escalated") or (self.rng.random() < 0.08 and comp["status"] in ("in_progress", "resolved", "closed"))
+            paused_hours = round(self.rng.uniform(1.0, 5.0), 2) if has_pause else 0.0
+            current_deadline = original_deadline + timedelta(hours=paused_hours)
 
-            paused_hours = 0.0
-            if comp["status"] == "escalated":
-                paused_hours = round(self.rng.uniform(0, 2), 2)
+            res_dt = datetime.fromisoformat(comp["resolved_at"]) if comp.get("resolved_at") else None
+            is_breached = bool(res_dt and res_dt > current_deadline)
+
+            if comp["status"] in ("closed", "resolved"):
+                sla_status = "completed"
+            elif is_breached:
+                sla_status = "breached"
+            else:
+                sla_status = "running"
 
             sla_id_str = ID.sla_id(comp_num)
-            current_deadline = original_deadline + timedelta(hours=paused_hours)
 
             self.sla_clocks.append({
                 "sla_id": sla_id_str,
@@ -741,13 +805,13 @@ class DataGenerator:
                 "accumulated_paused_hours": paused_hours,
                 "status": sla_status,
                 "is_breached": is_breached,
-                "breached_at": comp["resolved_at"] if is_breached else None,
+                "breached_at": current_deadline.isoformat() if is_breached else None,
                 "is_escalated": comp["is_escalated"],
                 "config_version": "1.0.0",
                 "created_at": complaint_ts.isoformat(),
             })
 
-            # SLA event: created
+            # SLA events (Complete lifecycle: created, paused, resumed, escalated, breached, completed)
             self.sla_events.append({
                 "sla_id_fk_code": sla_id_str,
                 "event_type": "created",
@@ -756,21 +820,60 @@ class DataGenerator:
                 "occurred_at": complaint_ts.isoformat(),
                 "is_anomaly": False,
             })
+
+            if paused_hours > 0:
+                pause_time = complaint_ts + timedelta(hours=min(1.0, sla_policy.first_response_hours * 0.5))
+                resume_time = pause_time + timedelta(hours=paused_hours)
+                self.sla_events.append({
+                    "sla_id_fk_code": sla_id_str,
+                    "event_type": "paused",
+                    "reason": "Clock paused awaiting customer documentation",
+                    "hours_paused": paused_hours,
+                    "occurred_at": pause_time.isoformat(),
+                    "is_anomaly": False,
+                })
+                self.sla_events.append({
+                    "sla_id_fk_code": sla_id_str,
+                    "event_type": "resumed",
+                    "reason": "Customer responded with requested documentation",
+                    "hours_paused": None,
+                    "occurred_at": resume_time.isoformat(),
+                    "is_anomaly": False,
+                })
+
+            if comp["is_escalated"]:
+                esc_time = complaint_ts + timedelta(hours=min(sla_policy.escalation_hours * 0.8, 8.0))
+                self.sla_events.append({
+                    "sla_id_fk_code": sla_id_str,
+                    "event_type": "escalated",
+                    "reason": "Escalated to specialized tier due to threshold breach",
+                    "hours_paused": None,
+                    "occurred_at": esc_time.isoformat(),
+                    "is_anomaly": False,
+                })
+
             if is_breached:
                 self.sla_events.append({
                     "sla_id_fk_code": sla_id_str,
                     "event_type": "breached",
                     "reason": "Resolution time exceeded SLA deadline",
                     "hours_paused": None,
-                    "occurred_at": original_deadline.isoformat(),
+                    "occurred_at": current_deadline.isoformat(),
+                    "is_anomaly": False,
+                })
+
+            if sla_status == "completed" and res_dt:
+                self.sla_events.append({
+                    "sla_id_fk_code": sla_id_str,
+                    "event_type": "completed",
+                    "reason": "SLA clock completed upon resolution",
+                    "hours_paused": None,
+                    "occurred_at": res_dt.isoformat(),
                     "is_anomaly": False,
                 })
 
             # --- Messages ---
-            num_msgs = msgs_per
-            if extra > 0:
-                num_msgs += 1
-                extra -= 1
+            num_msgs = allocated_msgs[comp_idx]
 
             for seq in range(1, num_msgs + 1):
                 msg_ts = complaint_ts + timedelta(hours=self.rng.uniform(seq * 0.5, seq * 4))
@@ -886,6 +989,7 @@ class DataGenerator:
             "products": self.products,
             "customers": self.customers,
             "orders": self.orders,
+            "order_items": self.order_items,
             "complaints": self.complaints,
             "status_events": self.status_events,
             "assignments": self.assignments,

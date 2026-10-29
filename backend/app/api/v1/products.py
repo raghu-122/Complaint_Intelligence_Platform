@@ -99,10 +99,8 @@ def get_product(
             detail=f"Product '{product_id}' not found",
         )
 
-    # Count complaints associated with orders of this product
-    complaint_count = 0
-    for order in p.order_items:
-        complaint_count += len(order.complaints)
+    # Count complaints associated with this product (via direct product FK)
+    complaint_count = len(p.complaints) if hasattr(p, "complaints") else 0
 
     return ProductDetail(
         id=p.id,

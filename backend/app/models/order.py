@@ -53,8 +53,9 @@ class Order(Base):
 
     # Relationships
     customer: Mapped["Customer"] = relationship("Customer", back_populates="orders")
-    product: Mapped["Product"] = relationship("Product", back_populates="order_items")
+    product: Mapped["Product"] = relationship("Product", foreign_keys=[product_id_fk])
     complaints: Mapped[list["Complaint"]] = relationship("Complaint", back_populates="order")
+    items: Mapped[list["OrderItem"]] = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<Order {self.order_id}: customer={self.customer_id_fk}>"

@@ -309,18 +309,26 @@ class ValidationEngine:
     def arithmetic_checks(self) -> List[ValidationFinding]:
         findings = []
 
-        # Order totals: total_amount = unit_price * quantity - discount_amount
+        # Order totals: total_amount = sum of order_items line_totals
+        # When an order has items, validate against item sums; otherwise fall back to
+        # the single-item formula (unit_price * quantity - discount).
+        from app.models.order_item import OrderItem as _OrderItem
         orders = self.db.scalars(select(Order)).all()
         math_violations = []
         for o in orders:
-            expected = (Decimal(str(o.unit_price)) * o.quantity) - Decimal(str(o.discount_amount or "0.00"))
+            # Prefer item-level sum when order_items exist
+            items = o.items if hasattr(o, "items") else []
+            if items:
+                expected = sum(Decimal(str(it.line_total)) for it in items)
+            else:
+                expected = (Decimal(str(o.unit_price)) * o.quantity) - Decimal(str(o.discount_amount or "0.00"))
             actual = Decimal(str(o.total_amount))
             if abs(actual - expected) >= Decimal("0.02"):
                 math_violations.append({
                     "order_id": o.order_id,
-                    "expected": str(expected),
+                    "expected": str(expected.quantize(Decimal("0.01"))),
                     "actual": str(actual),
-                    "difference": str(actual - expected),
+                    "difference": str((actual - expected).quantize(Decimal("0.01"))),
                 })
 
         if math_violations:

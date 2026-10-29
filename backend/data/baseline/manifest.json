@@ -6,9 +6,9 @@
       "sha256": "97415e8bef446293651cdadb8b15c79bf78f8599191e03b321382172ed0bc6ac"
     },
     "csv/assignments.csv": {
-      "bytes": 332189,
+      "bytes": 332060,
       "records": 2000,
-      "sha256": "e0ae312e5f67f52e99f79661d0d2795ce93a1709cc7dfc5203f8e3178decc176"
+      "sha256": "4d5eda7cde5bc410116e1b681cb9c15ffb06beb5d532f814a4d4b9ffd2b2dd27"
     },
     "csv/categories.csv": {
       "bytes": 2896,
@@ -16,14 +16,14 @@
       "sha256": "04802fc71ab47fa074f4a0df537818efd5c104c87a1aaa4dc54f3872e85b4fb4"
     },
     "csv/complaint_relationships.csv": {
-      "bytes": 1843,
-      "records": 14,
-      "sha256": "6c318c802067962ca63e61cb100553a69868790c5c71c4be18662b9d4b22d165"
+      "bytes": 8843,
+      "records": 70,
+      "sha256": "a5b4566d026f5aec062780363ccde30c546e70b7ce887983ee595349bf019e5b"
     },
     "csv/complaints.csv": {
-      "bytes": 1300962,
+      "bytes": 1361015,
       "records": 2000,
-      "sha256": "891526fed030123acb071e8f25fb45e62d71dadc008b0569600a7aa16d1d45d2"
+      "sha256": "348611deb0d43e4a680a05341b905fadd5550bbbbd6cc0db881dc299ede615ef"
     },
     "csv/customers.csv": {
       "bytes": 1032286,
@@ -31,19 +31,24 @@
       "sha256": "afec027e58f40a3ff58afd6c160221c63609a0572997a0040e868696b8df156a"
     },
     "csv/messages.csv": {
-      "bytes": 1444998,
+      "bytes": 1457915,
       "records": 6000,
-      "sha256": "119194b1c0f9654b7794811a931c3e5e36480766c72b92b147f4c55b3b3bb2ff"
+      "sha256": "6b03f8ba63cbf747973d6ec00195ceb22a4dae912269901917751880cf65066b"
+    },
+    "csv/order_items.csv": {
+      "bytes": 1124688,
+      "records": 11240,
+      "sha256": "17775022ae3e32d860fabd6c0e8d3a310f531b61cad1f71bc70fb12196e5f798"
     },
     "csv/orders.csv": {
-      "bytes": 2227057,
+      "bytes": 2230536,
       "records": 8000,
-      "sha256": "f3df257b8e30ab49fb3fc6e369ca3cc0b843a4d678f7f7f69de00b674046e5cc"
+      "sha256": "0b8db4c1bb9bd85a1aced9d2626a4323dd8b5d57e48981509377d515400a2964"
     },
     "csv/priority_rules.csv": {
-      "bytes": 1085,
-      "records": 6,
-      "sha256": "9396028ecd2ee08a7058bba3cace8481895aa289c25130739ec07f0a4b921d69"
+      "bytes": 1282,
+      "records": 7,
+      "sha256": "04f176c25d4b26c08eedd3f885d1f8558a9d730991f93f8f054c01b0da9353f3"
     },
     "csv/products.csv": {
       "bytes": 38647,
@@ -51,29 +56,29 @@
       "sha256": "a2b526e683786b59816c3b86284879fdf676188bf54293a9c035aae39b37b82b"
     },
     "csv/resolutions.csv": {
-      "bytes": 231681,
-      "records": 1102,
-      "sha256": "cdefe69e9314c287fe04af45de4784913a75624108e1a119c20d873af452f1c7"
+      "bytes": 227043,
+      "records": 1081,
+      "sha256": "7ffe6d9b045db2c3112faf6431909ab9d4cbbeaa7b4b0d2a80e190ee91555060"
     },
     "csv/sla_clocks.csv": {
-      "bytes": 573867,
+      "bytes": 576792,
       "records": 2000,
-      "sha256": "20fb01324f4feb97ec6bbc0058c94da4f93ab59364897724279862ca6b075336"
+      "sha256": "7855617a4a139b47d883365415a30c272ab69a586e74a2818e537aac5c625f32"
     },
     "csv/sla_events.csv": {
-      "bytes": 276154,
-      "records": 2655,
-      "sha256": "8744cf752502fa6253486e2c50653ccdbe1ff3a09148d239dbb9b15bc1e4eb76"
+      "bytes": 465070,
+      "records": 4361,
+      "sha256": "3f6c4a7a2d7796fd2fbe2a2bb8578204131bbbabcad301e7928b6b581be78370"
     },
     "csv/status_events.csv": {
-      "bytes": 535506,
-      "records": 5542,
-      "sha256": "25cff0ab5cb57955dc4042287cd267c8398a8feb72f72e7178e16f806be0b629"
+      "bytes": 530316,
+      "records": 5499,
+      "sha256": "6714fc91c7eff66f700e246afeb9c910a0a8f76804ec11bd79c6104c628ff281"
     },
     "csv/surveys.csv": {
-      "bytes": 66252,
-      "records": 422,
-      "sha256": "e3d78ad7e2bab9ea6cb01e1b6673f9d3d56dcf6120d75678c518d4564bf3f369"
+      "bytes": 58445,
+      "records": 368,
+      "sha256": "4b7e8262d32acdd51b6ac50112009ae5d720d45313a85e6540ada008f75ceae1"
     },
     "csv/teams.csv": {
       "bytes": 1145,
@@ -86,9 +91,9 @@
       "sha256": "3322b8e463f4f647d0e6273464490ac1dc28e8c29f0d7c17ff9ebadafb651525"
     },
     "json/assignments.json": {
-      "bytes": 846053,
+      "bytes": 845924,
       "records": 2000,
-      "sha256": "ed740ccc79b1d183effd6585628df6a4438a87ee6725e026b20161ab4cec4c54"
+      "sha256": "e0669d719cd0505f30e01413e6e556863a40adc0c302b34e0f854adcdefd81b4"
     },
     "json/categories.json": {
       "bytes": 4315,
@@ -96,14 +101,14 @@
       "sha256": "0ab72474214f3ccfaead14c166e8fceb47ab44daae5d6045a90c2b1abe2a6a63"
     },
     "json/complaint_relationships.json": {
-      "bytes": 3965,
-      "records": 14,
-      "sha256": "e1311f5dc5f653b4940a000a7d59afcb9869ec242c4883aead656f9bbbe250b9"
+      "bytes": 19813,
+      "records": 70,
+      "sha256": "ff1a8b76217fa4feca27baa8ed74e0ca74f1261074632be6f645db7fd8e1e7ec"
     },
     "json/complaints.json": {
-      "bytes": 2945939,
+      "bytes": 3067671,
       "records": 2000,
-      "sha256": "7180c2904872d5de357c750d39edd78da39db0561b703ebf182aa9f5c76ba000"
+      "sha256": "05411432860d6a3dcef056a72c31020653432a204c46fea75a01d1cbe2dbacd4"
     },
     "json/customers.json": {
       "bytes": 3178582,
@@ -111,19 +116,24 @@
       "sha256": "881287d8e8324fca1db631c5e451059e6857e686babbc9785bc017ead75d3352"
     },
     "json/messages.json": {
-      "bytes": 3448827,
+      "bytes": 3461744,
       "records": 6000,
-      "sha256": "050cf69ac9904fdfeb15e30377a64e525aa21b850ee2bee98d1955ee1c9cbe6f"
+      "sha256": "0535f9f4308e65d1d0facea789b5e2813b3a12821418bb27ed51bfae2e24f8b7"
+    },
+    "json/order_items.json": {
+      "bytes": 3417543,
+      "records": 11240,
+      "sha256": "836779d2f8604d17fad8be8e550ebe15490f25e5915378c759c7aa78d37f84d7"
     },
     "json/orders.json": {
-      "bytes": 5317271,
+      "bytes": 5320598,
       "records": 8000,
-      "sha256": "ef72ef19cb8be72f35dcf6b8e794f9dc23ef2b9df111a5abfbce000b1fc3997f"
+      "sha256": "f2a1279fca37081682b1f104d67bfda97cb4a840f1f6c4f1eea62410c8539719"
     },
     "json/priority_rules.json": {
-      "bytes": 2359,
-      "records": 6,
-      "sha256": "84e20655a2e567508d8359d46231d690abb457bf2e6fb8d5349be70c100240c2"
+      "bytes": 2787,
+      "records": 7,
+      "sha256": "50005b7c939ac97d36ec32e2b5da8c40e58a05089bacfaa88fdb48365ac8b693"
     },
     "json/products.json": {
       "bytes": 98576,
@@ -131,34 +141,34 @@
       "sha256": "53989c165f85ba0216cc67354f0f8eeda6d4ff8a492beea70a2573f9e6c83324"
     },
     "json/resolutions.json": {
-      "bytes": 634809,
-      "records": 1102,
-      "sha256": "9cc5f9fd3a406b53937a51bc4adc59936f611c016e0348202305bfc5f1e5dbbc"
+      "bytes": 622485,
+      "records": 1081,
+      "sha256": "1549656f017fd752d20c71682cbab77ed40569657505fdf9703cf11d27c2bc44"
     },
     "json/sla_clocks.json": {
-      "bytes": 1534277,
+      "bytes": 1537102,
       "records": 2000,
-      "sha256": "ead58e6de2eecf7067be58b81d76e575cb20556624a947c264ea3e438c989db2"
+      "sha256": "4f27eb2e375f82451843f21ef96e12f758ecbe82b5f5774c8b9bd460394dda61"
     },
     "json/sla_events.json": {
-      "bytes": 661063,
-      "records": 2655,
-      "sha256": "2b4b46f98c7f3d96db3383077e3080276f6ba4703b5a432a2eaac81c37a23771"
+      "bytes": 1096325,
+      "records": 4361,
+      "sha256": "9640365f80e5346baf77e8f1aa59007932d62eabfc2ec9ba89a908abdc4c2083"
     },
     "json/status_events.json": {
-      "bytes": 1365194,
-      "records": 5542,
-      "sha256": "e1cbd7e634dda3e7db5e0fe8cbfa20cce46686be8bd327cf8cb72b53aa7314f7"
+      "bytes": 1353597,
+      "records": 5499,
+      "sha256": "e5d628a4df23f9e32cacbb2734b82442072de9f55ef022b849c2f00c3fcee014"
     },
     "json/summary.json": {
-      "bytes": 489,
+      "bytes": 516,
       "records": 1,
-      "sha256": "66d64863b3507463197017488cf72fdf1f3b13188add5feeb4e8101b8e83ab50"
+      "sha256": "f5222eb05bb06e404631737c8ad6aa576f407d7da3b0d146fab75c606134f36a"
     },
     "json/surveys.json": {
-      "bytes": 160441,
-      "records": 422,
-      "sha256": "194655badb4ad889dfd226224c94c2b3991ef9decd99a386feeea2dde714670f"
+      "bytes": 140508,
+      "records": 368,
+      "sha256": "8125dc018e2d3a8f8dfafa7263c3a0d5a7bd0cec75c1fc66d3c10df132a03767"
     },
     "json/teams.json": {
       "bytes": 2243,
@@ -172,21 +182,22 @@
     "agents": 48,
     "assignments": 2000,
     "categories": 10,
-    "complaint_relationships": 14,
+    "complaint_relationships": 70,
     "complaints": 2000,
     "customers": 5000,
     "messages": 6000,
+    "order_items": 11240,
     "orders": 8000,
-    "priority_rules": 6,
+    "priority_rules": 7,
     "products": 200,
-    "resolutions": 1102,
+    "resolutions": 1081,
     "sla_clocks": 2000,
-    "sla_events": 2655,
-    "status_events": 5542,
-    "surveys": 422,
+    "sla_events": 4361,
+    "status_events": 5499,
+    "surveys": 368,
     "teams": 6
   },
   "scale": "full",
   "seed": 20261022,
-  "timestamp": "2026-10-28T12:12:33.346549+00:00"
+  "timestamp": "2026-10-29T07:06:23.110625+00:00"
 }

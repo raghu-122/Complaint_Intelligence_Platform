@@ -68,10 +68,17 @@ rules:
     precedence: 5
 
   - rule_id: "PR-006"
-    name: "default"
-    description: "Default priority is P3 for all other cases"
+    name: "standard_negative_sentiment"
+    description: "Standard complaint with negative sentiment is P3"
     priority: "P3"
-    condition: "default"
+    condition: "sentiment == 'negative'"
+    precedence: 6
+
+  - rule_id: "PR-007"
+    name: "general_inquiry_or_low_severity"
+    description: "Low-severity inquiry or non-negative sentiment complaint is P4"
+    priority: "P4"
+    condition: "sentiment != 'negative'"
     precedence: 99
 
 sentiment_thresholds:

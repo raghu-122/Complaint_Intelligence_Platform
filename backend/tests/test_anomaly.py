@@ -194,3 +194,52 @@ def test_anomaly_per_category_metrics(db_session):
         assert metric.f1_score == 1.0
 
 
+def test_detector_independence_from_ground_truth(db_session, monkeypatch, tmp_path):
+    """The detector must detect anomalies based purely on DB state without any ground truth file."""
+    generator = DataGenerator(seed=20261022, scale="starter")
+    data = generator.generate_all()
+    load_all(db_session, data, clear_first=True)
+
+    inject_anomalies(db_session, count=6)
+
+    # Point ground truth directory to an empty temp dir where no ground truth files exist
+    non_existent_gt = tmp_path / "empty_dir" / "ground_truth.json"
+    from app.anomaly import detector as detector_mod
+    monkeypatch.setattr(detector_mod, "_get_ground_truth_path", lambda: non_existent_gt)
+
+    detector = AnomalyDetector(db_session)
+    # detect_only performs pure DB scanning with zero ground truth access
+    findings = detector.detect_only()
+
+    assert len(findings) == 6
+    found_types = {f.anomaly_type for f in findings}
+    assert len(found_types) == 6
+
+
+def test_ground_truth_csv_generation(db_session):
+    """Injection must generate ground_truth.csv with entity, record_id, issue_type, field."""
+    import csv
+    generator = DataGenerator(seed=20261022, scale="starter")
+    data = generator.generate_all()
+    load_all(db_session, data, clear_first=True)
+
+    inject_anomalies(db_session, count=6)
+
+    from app.anomaly.detector import _get_ground_truth_csv_path
+    csv_path = _get_ground_truth_csv_path()
+    assert csv_path.exists(), "ground_truth.csv must be created"
+
+    with open(csv_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+
+    assert len(rows) == 6
+    required_cols = {"entity", "record_id", "issue_type", "field"}
+    assert required_cols.issubset(set(reader.fieldnames or []))
+    for row in rows:
+        assert row["entity"]
+        assert row["issue_type"]
+        assert row["field"]
+
+
+

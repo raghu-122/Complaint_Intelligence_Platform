@@ -11,6 +11,7 @@ Defines 6 key anomaly patterns:
 """
 from __future__ import annotations
 
+import csv
 import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -50,6 +51,13 @@ def _get_ground_truth_path() -> Path:
     return path
 
 
+def _get_ground_truth_csv_path() -> Path:
+    settings = get_settings()
+    path = settings.data_dir / "anomalies" / "ground_truth.csv"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def _is_gt(dt1: Optional[datetime], dt2: Optional[datetime]) -> bool:
     if not dt1 or not dt2:
         return False
@@ -58,31 +66,26 @@ def _is_gt(dt1: Optional[datetime], dt2: Optional[datetime]) -> bool:
     return d1 > d2
 
 
-class AnomalyDetector:
-    """Scans the database for data corruption, logic bypasses, and rule violations."""
+class AnomalyEvaluator:
+    """Independent evaluation component.
+    
+    Consumes detector findings and compares them against ground truth metadata
+    (ground_truth.json / ground_truth.csv).
+    
+    The AnomalyDetector itself NEVER accesses ground truth files.
+    """
 
-    def __init__(self, db: Session):
-        self.db = db
+    def __init__(self, ground_truth_path: Optional[Path] = None):
+        self.gt_path = ground_truth_path or _get_ground_truth_path()
 
-    def detect(self) -> AnomalyDetectionResult:
-        """Run all detectors, collect detected anomalies, and evaluate against ground truth."""
-        detected: List[AnomalyItem] = []
-
-        detected.extend(self._detect_priority_mismatches())
-        detected.extend(self._detect_sla_backdated())
-        detected.extend(self._detect_survey_before_closure())
-        detected.extend(self._detect_duplicate_assignments())
-        detected.extend(self._detect_missing_status_events())
-        detected.extend(self._detect_refund_without_resolution())
-
-        # Load ground truth if exists
-        gt_path = _get_ground_truth_path()
+    def evaluate(self, detected: List[AnomalyItem]) -> AnomalyDetectionResult:
+        """Evaluate detected findings against ground truth and compute metrics."""
         ground_truth_map: Dict[str, dict] = {}
         ground_truth_ids: Dict[str, dict] = {}
         ground_truth_list: List[dict] = []
-        if gt_path.exists():
+        if self.gt_path.exists():
             try:
-                with open(gt_path, "r", encoding="utf-8") as f:
+                with open(self.gt_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
                     ground_truth_list = data.get("anomalies", [])
                     for item in ground_truth_list:
@@ -95,19 +98,34 @@ class AnomalyDetector:
 
         # Mark ground truth matches
         for item in detected:
-            if (item.complaint_id and item.complaint_id in ground_truth_map) or (item.anomaly_id and item.anomaly_id in ground_truth_ids):
+            gt_key_complaint = item.complaint_id and item.complaint_id in ground_truth_map
+            gt_key_anomaly = item.anomaly_id and item.anomaly_id in ground_truth_ids
+            if gt_key_complaint or gt_key_anomaly:
                 item.is_ground_truth = True
 
         gt_count = max(len(ground_truth_map), len(ground_truth_ids), len(ground_truth_list))
         detected_count = len(detected)
 
-        # Calculate overall metrics
-        tp = sum(1 for d in detected if d.is_ground_truth)
-        fp = detected_count - tp
-        fn = gt_count - tp
-        precision = round(tp / detected_count, 4) if detected_count > 0 else 1.0
+        # Calculate overall metrics — TP is the number of unique GT records matched
+        matched_gt_set: set[str] = set()
+        fp_count = 0
+        for item in detected:
+            gt_id = None
+            if item.anomaly_id and item.anomaly_id in ground_truth_ids:
+                gt_id = item.anomaly_id
+            elif item.complaint_id and item.complaint_id in ground_truth_map:
+                gt_id = item.complaint_id
+            if gt_id:
+                matched_gt_set.add(gt_id)
+            else:
+                fp_count += 1
+
+        tp = len(matched_gt_set)
+        fp = fp_count
+        fn = max(0, gt_count - tp)
+        precision = round(tp / detected_count, 4) if detected_count > 0 else (1.0 if gt_count == 0 else 0.0)
         recall = round(tp / gt_count, 4) if gt_count > 0 else 1.0
-        f1 = round(2 * (precision * recall) / (precision + recall), 4) if (precision + recall) > 0 else 1.0
+        f1 = round(2 * (precision * recall) / (precision + recall), 4) if (precision + recall) > 0 else (1.0 if gt_count == 0 else 0.0)
 
         # Calculate per-category metrics across the six canonical anomaly scenarios
         category_metrics: Dict[str, CategoryMetric] = {}
@@ -123,13 +141,21 @@ class AnomalyDetector:
             }
             cat_detected = [d for d in detected if d.anomaly_type == cat]
 
-            cat_tp = sum(
-                1 for d in cat_detected
-                if (d.complaint_id and d.complaint_id in cat_gt_ids)
-                or (d.anomaly_id and d.anomaly_id in cat_gt_ids)
-                or d.is_ground_truth
-            )
-            cat_fp = len(cat_detected) - cat_tp
+            # Count TP as 1 per detected item that matches any GT record
+            cat_matched_gt_keys: set[str] = set()
+            cat_tp = 0
+            cat_fp = 0
+            for d in cat_detected:
+                matched_key = None
+                if d.anomaly_id and d.anomaly_id in cat_gt_ids:
+                    matched_key = d.anomaly_id
+                elif d.complaint_id and d.complaint_id in cat_gt_ids:
+                    matched_key = d.complaint_id
+                if matched_key:
+                    cat_tp += 1
+                    cat_matched_gt_keys.add(matched_key)
+                else:
+                    cat_fp += 1
             cat_fn = max(0, len(cat_gt) - cat_tp)
 
             cat_prec = round(cat_tp / len(cat_detected), 4) if cat_detected else (1.0 if not cat_gt else 0.0)
@@ -161,6 +187,35 @@ class AnomalyDetector:
             anomalies=detected,
             category_metrics=category_metrics,
         )
+
+
+class AnomalyDetector:
+    """Scans the database for data corruption, logic bypasses, and rule violations.
+    
+    INDEPENDENCE GUARANTEE:
+    This detector operates purely on relational database state and NEVER accesses
+    ground_truth.json, ground_truth.csv, or any evaluation metadata.
+    """
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def detect_only(self) -> List[AnomalyItem]:
+        """Pure detection scanning without any evaluation metadata access."""
+        detected: List[AnomalyItem] = []
+        detected.extend(self._detect_priority_mismatches())
+        detected.extend(self._detect_sla_backdated())
+        detected.extend(self._detect_survey_before_closure())
+        detected.extend(self._detect_duplicate_assignments())
+        detected.extend(self._detect_missing_status_events())
+        detected.extend(self._detect_refund_without_resolution())
+        return detected
+
+    def detect(self) -> AnomalyDetectionResult:
+        """Run pure detection, then delegate evaluation to the separate AnomalyEvaluator."""
+        detected = self.detect_only()
+        evaluator = AnomalyEvaluator()
+        return evaluator.evaluate(detected)
 
     def _detect_priority_mismatches(self) -> List[AnomalyItem]:
         results = []
@@ -380,6 +435,10 @@ def inject_anomalies(db: Session, count: int = 6) -> InjectAnomalyResponse:
     comp3.is_anomaly = True
     comp3.anomaly_id = "ANOM-003"
     comp3.anomaly_type = "SURVEY_BEFORE_CLOSURE"
+    # Remove any existing surveys for this complaint to prevent double-detection
+    for existing_survey in list(comp3.surveys):
+        db.delete(existing_survey)
+    db.flush()
     # Create survey submitted immediately
     survey = Survey(
         survey_id=f"SRV-ANOM-{comp3.complaint_id}",
@@ -498,9 +557,38 @@ def inject_anomalies(db: Session, count: int = 6) -> InjectAnomalyResponse:
     with open(gt_path, "w", encoding="utf-8") as f:
         json.dump(gt_payload, f, indent=2)
 
+    # Save to ground_truth.csv (Required fields: entity, record_id, issue_type, field)
+    gt_csv_path = _get_ground_truth_csv_path()
+    field_mapping = {
+        "PRIORITY_MISMATCH": "priority",
+        "SLA_BACKDATED": "original_deadline",
+        "SURVEY_BEFORE_CLOSURE": "submitted_at",
+        "DUPLICATE_ASSIGNMENT": "is_current",
+        "MISSING_STATUS_EVENT": "to_status",
+        "REFUND_WITHOUT_RESOLUTION": "resolution_type",
+    }
+    csv_fieldnames = [
+        "entity", "record_id", "issue_type", "field",
+        "anomaly_id", "complaint_id", "severity", "description"
+    ]
+    with open(gt_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=csv_fieldnames)
+        writer.writeheader()
+        for item in injected:
+            writer.writerow({
+                "entity": item.table_name or "unknown",
+                "record_id": item.record_id or "",
+                "issue_type": item.anomaly_type,
+                "field": field_mapping.get(item.anomaly_type, "status"),
+                "anomaly_id": item.anomaly_id,
+                "complaint_id": item.complaint_id or "",
+                "severity": item.severity,
+                "description": item.description,
+            })
+
     return InjectAnomalyResponse(
         success=True,
         injected_count=len(injected),
         anomalies=injected,
-        message=f"Successfully injected {len(injected)} anomalies and saved ground truth to {gt_path.name}",
+        message=f"Successfully injected {len(injected)} anomalies and saved ground truth to {gt_path.name} and {gt_csv_path.name}",
     )

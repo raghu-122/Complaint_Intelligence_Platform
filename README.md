@@ -145,7 +145,9 @@ graph TD
 erDiagram
     CUSTOMERS ||--o{ ORDERS : places
     CUSTOMERS ||--o{ COMPLAINTS : submits
-    PRODUCTS ||--o{ ORDERS : contains
+    PRODUCTS ||--o{ ORDER_ITEMS : included_in
+    PRODUCTS ||--o{ COMPLAINTS : linked_to
+    ORDERS ||--o{ ORDER_ITEMS : contains
     ORDERS ||--o{ COMPLAINTS : references
     CATEGORIES ||--o{ COMPLAINTS : categorizes
     TEAMS ||--o{ AGENTS : employs
@@ -164,21 +166,22 @@ erDiagram
 | Table Name | Primary Key | Description |
 |---|---|---|
 | `categories` | `id` (int), `code` (string) | Canonical complaint categories and safety risk definitions |
-| `priority_rules` | `id` (int), `rule_id` (string) | Business rules governing priority escalation and weighting |
+| `priority_rules` | `id` (int), `rule_id` (string) | Business rules governing priority escalation and weighting (7 rules: PR-001–PR-007) |
 | `teams` | `id` (int), `team_id` (string) | Support squads with specializations and safety certifications |
 | `agents` | `id` (int), `agent_id` (string) | Customer service agents, roles, and open case counts |
 | `products` | `id` (int), `product_id` (string) | Catalog items, SKUs, brand, and unit prices |
 | `customers` | `id` (int), `customer_id` (string) | Customer profiles, tiers, loyalty, and vulnerability flags |
-| `orders` | `id` (int), `order_id` (string) | Sales transactions, line items, status, and tracking numbers |
-| `complaints` | `id` (int), `complaint_id` (string) | Core complaint tickets, classification, priority, status |
-| `complaint_messages` | `id` (int), `message_id` (string) | Chronological message thread between customer and agent |
+| `orders` | `id` (int), `order_id` (string) | Sales transactions, status, and tracking numbers |
+| `order_items` | `id` (int), `order_item_id` (string) | **Bridge table**: multi-product line items per order (qty, unit_price, discount, line_total) |
+| `complaints` | `id` (int), `complaint_id` (string) | Core complaint tickets, classification, priority, status, `product_id_fk` |
+| `complaint_messages` | `id` (int), `message_id` (string) | Chronological message thread between customer and agent (1–7 per complaint) |
 | `complaint_assignments` | `id` (int), `assignment_id` (string) | Assignment history and current active owner |
 | `sla_clocks` | `id` (int), `sla_id` (string) | SLA clock deadlines, pause state, and breach tracking |
-| `sla_events` | `id` (int) | Audit log of SLA events (created, paused, resumed, breached) |
-| `complaint_status_events`| `id` (int) | State transition history (open $\to$ in_progress $\to$ resolved $\to$ closed) |
+| `sla_events` | `id` (int) | Audit log of SLA events (`created`, `paused`, `resumed`, `escalated`, `breached`, `completed`) |
+| `complaint_status_events`| `id` (int) | State transition history (open → in_progress → resolved → closed) |
 | `resolutions` | `id` (int), `resolution_id` (string) | Formal resolution record, refund authorization, outcome |
-| `customer_surveys` | `id` (int), `survey_id` (string) | Post-resolution customer satisfaction scores (1-5) |
-| `complaint_relationships`| `id` (int) | Repeat complaint links and parent-child dependencies |
+| `customer_surveys` | `id` (int), `survey_id` (string) | Post-resolution customer satisfaction scores (1–5) |
+| `complaint_relationships`| `id` (int) | Repeat complaint links and parent-child dependencies (70 pairs) |
 | `generation_runs` | `id` (int), `run_id` (string) | Seed metadata and record counts for data generation runs |
 
 ---
@@ -418,7 +421,7 @@ UI runs at: **http://localhost:5173**
 
 ## Testing Suite
 
-All tests use `pytest` and an isolated in-memory SQLite database (`sqlite:///:memory:`) configured with `StaticPool` to ensure thread-safety and zero test side-effects. The test suite comprises **110 unit and integration tests** passing with **94% code coverage** in under 11 seconds.
+All tests use `pytest` and an isolated in-memory SQLite database (`sqlite:///:memory:`) configured with `StaticPool` to ensure thread-safety and zero test side-effects. The test suite comprises **112 unit and integration tests** passing with **94% code coverage** in under 12 seconds.
 
 To run the complete test suite:
 ```powershell
@@ -432,7 +435,7 @@ cd backend
 3. **`tests/test_priority.py`** (3 tests): Strict P1 override rule PR-001, sentiment scoring, high-value order escalation.
 4. **`tests/test_sla.py`** (18 tests): Policies P1-P4, deadline calculation, active breach evaluation, pause adjustments.
 5. **`tests/test_validation.py`** (1 test): Clean dataset validation asserting 0 failures across all 5 verification domains.
-6. **`tests/test_anomaly.py`** (11 tests): Zero anomalies on clean baseline, injection of all 6 scenarios, detection verification, 100% Precision / Recall / F1-score evaluation.
+6. **`tests/test_anomaly.py`** (13 tests): Zero anomalies on clean baseline, injection of all 6 scenarios, detection verification, 100% Precision / Recall / F1-score evaluation, detector independence from ground truth file, `ground_truth.csv` generation.
 7. **`tests/test_exports_reproducibility.py`** (15 tests): SHA-256 deterministic file hashing, 33/33 bitwise file matching, mismatch detection.
 8. **`tests/test_api.py`** (10 tests): Integration tests covering `/health`, complaints CRUD, customers, products, teams, dashboard KPIs, validation endpoint, anomaly detection, reports.
 9. **`tests/test_api_extended.py`** (29 tests): Extended integration coverage across edge cases, nested relationships, and lifecycle status changes.

@@ -1,0 +1,7 @@
+entity,record_id,issue_type,field,anomaly_id,complaint_id,severity,description
+complaints,1,PRIORITY_MISMATCH,priority,ANOM-001,CMP-2026-000001,high,Safety complaint incorrectly prioritized as P3 instead of P1
+sla_clocks,2,SLA_BACKDATED,original_deadline,ANOM-002,CMP-2026-000002,high,SLA deadline set in the past before complaint creation time
+surveys,,SURVEY_BEFORE_CLOSURE,submitted_at,ANOM-003,CMP-2026-000003,medium,Customer satisfaction survey submitted before complaint was closed
+assignments,,DUPLICATE_ASSIGNMENT,is_current,ANOM-004,CMP-2026-000004,medium,Complaint assigned to two agents simultaneously with is_current=True
+complaint_status_events,,MISSING_STATUS_EVENT,to_status,ANOM-005,CMP-2026-000005,high,Complaint has lifecycle events but lacks the initial 'open' status event
+resolutions,,REFUND_WITHOUT_RESOLUTION,resolution_type,ANOM-006,CMP-2026-000006,high,Refund recorded in status event but no formal Resolution record exists

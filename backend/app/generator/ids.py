@@ -36,6 +36,11 @@ def order_id(n: int, year: str = REFERENCE_YEAR) -> str:
     return f"ORD-{year}-{n:06d}"
 
 
+def order_item_id(order_num: int, seq: int, year: str = REFERENCE_YEAR) -> str:
+    """OIT-2026-000001-01"""
+    return f"OIT-{year}-{order_num:06d}-{seq:02d}"
+
+
 def complaint_id(n: int, year: str = REFERENCE_YEAR) -> str:
     """CMP-2026-000001"""
     return f"CMP-{year}-{n:06d}"
