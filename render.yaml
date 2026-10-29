@@ -1,3 +1,9 @@
+databases:
+  - name: complaint-postgres
+    databaseName: complaint_intelligence
+    user: complaint_user
+    plan: free
+
 services:
   - type: web
     name: yottaflex-backend
@@ -11,8 +17,24 @@ services:
       - key: APP_ENV
         value: production
       - key: DATABASE_URL
-        value: sqlite:///./complaint_intelligence.db
+        fromDatabase:
+          name: complaint-postgres
+          property: connectionString
       - key: PYTHON_VERSION
         value: 3.12.8
       - key: CORS_ORIGINS
         value: https://complaint-intelligence-frontend.onrender.com,http://localhost:5173,http://localhost:3000
+
+  - type: static
+    name: complaint-intelligence-frontend
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://yottaflex-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

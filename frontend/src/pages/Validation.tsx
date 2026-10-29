@@ -28,8 +28,10 @@ export default function Validation() {
     try {
       const res = await apiClient.getValidation();
       setReport(res.data);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Validation failed');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = err instanceof Error ? err.message : 'Validation failed';
+      setError(detail || msg);
     } finally {
       setLoading(false);
     }

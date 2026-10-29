@@ -151,6 +151,34 @@ def test_generate_endpoint_default_seed(client: TestClient):
     assert data["counts"]["agents"] > 0
 
 
+def test_generate_concurrency_lock_rejects_active_run(client: TestClient):
+    """POST /api/v1/generate returns 409 Conflict if an active generation run is in progress across workers."""
+    from datetime import datetime, timezone
+    from app.models.generation_run import GenerationRun
+    from tests.conftest import TestingSessionLocal
+
+    with TestingSessionLocal() as session:
+        active_run = GenerationRun(
+            run_id="RUN-TEST-LOCK-001",
+            scale="starter",
+            seed=12345,
+            generator_version="1.0.0",
+            config_version="1.0.0",
+            status="running",
+            started_at=datetime.now(timezone.utc),
+        )
+        session.add(active_run)
+        session.commit()
+
+        try:
+            response = client.post("/api/v1/generate", json={"scale": "starter", "seed": 42})
+            assert response.status_code == 409
+            assert "already in progress" in response.json()["detail"]
+        finally:
+            session.delete(active_run)
+            session.commit()
+
+
 # ---------------------------------------------------------------------------
 # Validate endpoint – filter parameters
 # ---------------------------------------------------------------------------
@@ -448,3 +476,31 @@ def test_generation_concurrency_lock(client: TestClient, monkeypatch):
         assert "already in progress" in res.json()["detail"].lower()
     finally:
         gen_module._generation_lock.release()
+
+
+def test_database_url_normalization():
+    """Verify postgres:// URLs from Render are normalized to postgresql://."""
+    from app.database import _normalize_database_url
+
+    render_url = "postgres://user:secret@dpg-xxxx.render.com/mydb_123"
+    assert _normalize_database_url(render_url) == "postgresql://user:secret@dpg-xxxx.render.com/mydb_123"
+
+    standard_url = "postgresql://user:secret@localhost:5432/mydb"
+    assert _normalize_database_url(standard_url) == standard_url
+
+    sqlite_url = "sqlite:///./complaint.db"
+    assert _normalize_database_url(sqlite_url) == sqlite_url
+
+
+def test_postgresql_ddl_compilation_all_models():
+    """Verify all 18 database models compile valid DDL under the PostgreSQL dialect."""
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.schema import CreateTable
+    from app.database import Base
+    import app.models  # noqa: F401
+
+    assert len(Base.metadata.sorted_tables) >= 18
+    pg_dialect = postgresql.dialect()
+    for table in Base.metadata.sorted_tables:
+        ddl = str(CreateTable(table).compile(dialect=pg_dialect))
+        assert f"CREATE TABLE {table.name}" in ddl or f'CREATE TABLE "{table.name}"' in ddl

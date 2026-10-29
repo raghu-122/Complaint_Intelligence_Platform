@@ -45,8 +45,10 @@ export default function Customers() {
       const res = await apiClient.getCustomers(params);
       setData(res.data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load customers');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = err instanceof Error ? err.message : 'Failed to load customers';
+      setError(detail || msg);
     } finally {
       setLoading(false);
     }

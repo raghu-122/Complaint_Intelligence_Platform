@@ -53,8 +53,10 @@ export default function Complaints() {
       const res = await apiClient.getComplaints(params);
       setData(res.data);
       setError(null);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load complaints');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = err instanceof Error ? err.message : 'Failed to load complaints';
+      setError(detail || msg);
     } finally {
       setLoading(false);
     }

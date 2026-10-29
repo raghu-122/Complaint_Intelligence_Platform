@@ -10,16 +10,34 @@ from typing import Generator
 from app.config import get_settings
 
 
+def _normalize_database_url(url: str) -> str:
+    """Normalize database URL for SQLAlchemy (Render and others use postgres:// by default)."""
+    if url.startswith("postgres://"):
+        return "postgresql://" + url[len("postgres://"):]
+    return url
+
+
 def _get_engine():
     settings = get_settings()
-    engine = create_engine(
-        settings.database_url,
-        echo=settings.database_echo,
-        connect_args={"check_same_thread": False} if "sqlite" in settings.database_url else {},
-    )
+    db_url = _normalize_database_url(settings.database_url)
+    is_sqlite = "sqlite" in db_url
+
+    engine_kwargs = {
+        "echo": settings.database_echo,
+        "pool_pre_ping": True,
+    }
+
+    if is_sqlite:
+        engine_kwargs["connect_args"] = {"check_same_thread": False}
+    else:
+        # PostgreSQL connection pool tuning for production web workloads
+        engine_kwargs["pool_size"] = 10
+        engine_kwargs["max_overflow"] = 20
+
+    engine = create_engine(db_url, **engine_kwargs)
 
     # Enable SQLite foreign key enforcement
-    if "sqlite" in settings.database_url:
+    if is_sqlite:
         @event.listens_for(engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             cursor = dbapi_connection.cursor()
@@ -49,11 +67,7 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_db() -> None:
     """Create all tables."""
-    from app.models import (  # noqa: F401 - import to register models
-        customer, product, order, complaint, message,
-        category, priority_rule, assignment, sla, resolution, survey,
-        agent, team, generation_run
-    )
+    import app.models  # noqa: F401 - import to register models
     Base.metadata.create_all(bind=engine)
 
 

@@ -19,8 +19,9 @@ async function downloadFile(filePath: string, fileName: string) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  } catch (err: any) {
-    alert(`Download failed: ${err.message}`);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    alert(`Download failed: ${msg}`);
   }
 }
 
@@ -66,8 +67,10 @@ export default function Reports() {
     try {
       const res = await apiClient.getReports();
       setReports(res.data as ReportsResponse);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Failed to load reports');
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = err instanceof Error ? err.message : 'Failed to load reports';
+      setError(detail || msg);
     } finally {
       setLoading(false);
     }
@@ -80,8 +83,10 @@ export default function Reports() {
       const res = await apiClient.generateData({ scale, seed: 20261022, clear_existing: true, export_baseline: true });
       setGenMsg(`✅ Generated ${res.data.counts.complaints || 0} complaints (scale: ${scale}). Refreshing reports…`);
       await fetchReports();
-    } catch (err: any) {
-      setGenMsg(`❌ ${err.response?.data?.detail || err.message}`);
+    } catch (err: unknown) {
+      const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
+      const msg = err instanceof Error ? err.message : 'Generation failed';
+      setGenMsg(`❌ ${detail || msg}`);
     } finally {
       setGenerating(false);
     }

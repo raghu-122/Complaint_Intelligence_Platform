@@ -29,6 +29,24 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 def get_dashboard_stats(db: Session = Depends(get_db)):
     """Summary KPI metrics for executive and operational dashboards."""
     # 1. Consolidated Complaint metrics (single query)
+    # Support dialect-specific date math (PostgreSQL vs SQLite)
+    is_pg = False
+    try:
+        bind = db.get_bind()
+        if bind and bind.dialect.name == "postgresql":
+            is_pg = True
+    except Exception:
+        pass
+
+    if is_pg:
+        duration_expr = (
+            func.extract("epoch", Complaint.resolved_at) - func.extract("epoch", Complaint.created_at)
+        ) / 3600.0
+    else:
+        duration_expr = (
+            func.julianday(Complaint.resolved_at) - func.julianday(Complaint.created_at)
+        ) * 24.0
+
     comp_row = db.execute(
         select(
             func.count(Complaint.id).label("total"),
@@ -44,7 +62,7 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
                 case(
                     (
                         Complaint.resolved_at.is_not(None),
-                        (func.julianday(Complaint.resolved_at) - func.julianday(Complaint.created_at)) * 24.0,
+                        duration_expr,
                     ),
                     else_=None,
                 )
