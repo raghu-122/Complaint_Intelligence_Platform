@@ -20,6 +20,8 @@ from app.models.team import Team
 from app.models.agent import Agent
 from app.models.assignment import Assignment
 from app.models.sla import SLAClock
+from app.models.resolution import Resolution
+from app.models.survey import Survey
 from app.engine import get_classifier, get_priority_engine, get_assignment_engine, get_sla_engine
 from app.schemas.complaint import (
     ComplaintDetail,
@@ -29,6 +31,10 @@ from app.schemas.complaint import (
     ComplaintMessageCreateRequest,
     ComplaintMessageSchema,
     ComplaintUpdateRequest,
+    ComplaintResolutionCreateRequest,
+    ComplaintSurveyCreateRequest,
+    ResolutionSchema,
+    SurveySchema,
 )
 from app.schemas.common import PaginatedResponse
 
@@ -506,3 +512,98 @@ def update_complaint(
     db.commit()
     db.refresh(c)
     return _to_list_item(c)
+
+
+@router.post("/{complaint_id}/resolutions", response_model=ResolutionSchema, status_code=status.HTTP_201_CREATED)
+def create_complaint_resolution(
+    complaint_id: str,
+    req: ComplaintResolutionCreateRequest,
+    db: Session = Depends(get_db),
+):
+    """Record a resolution for a complaint, completing its SLA clock and transitioning to resolved."""
+    if complaint_id.isdigit():
+        c = db.scalar(select(Complaint).where(Complaint.id == int(complaint_id)))
+    else:
+        c = db.scalar(select(Complaint).where(Complaint.complaint_id == complaint_id))
+
+    if not c:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Complaint '{complaint_id}' not found",
+        )
+
+    now_utc = datetime.now(timezone.utc)
+    res_id = f"RES-{c.complaint_id}"
+    resolution = Resolution(
+        resolution_id=res_id,
+        complaint_id_fk=c.id,
+        resolution_type=req.resolution_type,
+        description=req.description,
+        refund_amount=req.refund_amount,
+        resolved_at=now_utc,
+        created_at=now_utc,
+    )
+    db.add(resolution)
+
+    # Update complaint state
+    if c.status != "resolved":
+        db.add(ComplaintStatusEvent(
+            complaint_id_fk=c.id,
+            from_status=c.status,
+            to_status="resolved",
+            reason=f"Resolved via {req.resolution_type}: {req.description}",
+            changed_by="agent",
+            occurred_at=now_utc,
+        ))
+        c.status = "resolved"
+
+    c.resolved_at = now_utc
+    c.updated_at = now_utc
+    if c.sla_clock:
+        c.sla_clock.status = "completed"
+
+    db.commit()
+    db.refresh(resolution)
+    return resolution
+
+
+@router.post("/{complaint_id}/surveys", response_model=SurveySchema, status_code=status.HTTP_201_CREATED)
+def create_complaint_survey(
+    complaint_id: str,
+    req: ComplaintSurveyCreateRequest,
+    db: Session = Depends(get_db),
+):
+    """Submit customer satisfaction survey for a complaint."""
+    if complaint_id.isdigit():
+        c = db.scalar(select(Complaint).where(Complaint.id == int(complaint_id)))
+    else:
+        c = db.scalar(select(Complaint).where(Complaint.complaint_id == complaint_id))
+
+    if not c:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Complaint '{complaint_id}' not found",
+        )
+
+    now_utc = datetime.now(timezone.utc)
+    survey_count = db.scalar(
+        select(func.count(Survey.id)).where(Survey.complaint_id_fk == c.id)
+    ) or 0
+    survey_id = f"SRV-{c.complaint_id}-{(survey_count + 1):02d}"
+
+    is_before_closure = c.status not in ("closed", "resolved")
+    survey = Survey(
+        survey_id=survey_id,
+        complaint_id_fk=c.id,
+        rating=req.rating,
+        feedback=req.feedback,
+        submitted_by=req.submitted_by or "customer",
+        submitted_before_closure=is_before_closure,
+        submitted_at=now_utc,
+        created_at=now_utc,
+    )
+    db.add(survey)
+    c.updated_at = now_utc
+    db.commit()
+    db.refresh(survey)
+    return survey

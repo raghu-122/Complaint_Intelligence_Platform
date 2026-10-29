@@ -74,8 +74,9 @@ class AnomalyEvaluator:
     (ground_truth.json / ground_truth.csv).
 
     The AnomalyDetector itself NEVER accesses ground truth files.
-    Matching uses (anomaly_type, complaint_id) pair — NOT complaint_id alone —
-    to avoid inflated metrics from partial matches.
+    Matching ensures each ground-truth record is claimed at most once.
+    Calculates standard precision, recall, and F1 metrics with safe
+    zero-denominator handling. Recall can never exceed 100%.
     """
 
     def __init__(self, ground_truth_path: Optional[Path] = None):
@@ -92,95 +93,144 @@ class AnomalyEvaluator:
             except Exception:
                 pass
 
-        # Build GT lookup structures for precise matching
-        gt_by_anomaly_id: Dict[str, dict] = {}
-        gt_by_type_complaint: Dict[tuple, dict] = {}
-        for item in ground_truth_list:
-            aid = item.get("anomaly_id")
-            atype = item.get("anomaly_type", "")
-            cid = item.get("complaint_id", "")
-            if aid:
-                gt_by_anomaly_id[aid] = item
-            if atype and cid:
-                gt_by_type_complaint[(atype, cid)] = item
-
         gt_count = len(ground_truth_list)
-
-        # Match each detected item against GT — one match per GT record
-        matched_gt_keys: set = set()
-        fp_count = 0
-
-        for item in detected:
-            matched_key = None
-            # Priority: exact anomaly_id match
-            if item.anomaly_id and item.anomaly_id in gt_by_anomaly_id:
-                matched_key = ("aid", item.anomaly_id)
-            # Fallback: (anomaly_type, complaint_id) pair
-            elif item.anomaly_type and item.complaint_id:
-                tc_key = (item.anomaly_type, item.complaint_id)
-                if tc_key in gt_by_type_complaint:
-                    matched_key = ("tc", tc_key)
-
-            if matched_key:
-                if matched_key not in matched_gt_keys:
-                    matched_gt_keys.add(matched_key)
-                item.is_ground_truth = True
-            else:
-                fp_count += 1
-
-        tp = len(matched_gt_keys)
-        fp = fp_count
-        fn = max(0, gt_count - tp)
         detected_count = len(detected)
 
-        precision = round(tp / detected_count, 4) if detected_count > 0 else (1.0 if gt_count == 0 else 0.0)
-        recall = round(tp / gt_count, 4) if gt_count > 0 else 1.0
-        f1 = (
-            round(2 * (precision * recall) / (precision + recall), 4)
-            if (precision + recall) > 0
-            else (1.0 if gt_count == 0 else 0.0)
-        )
+        # Track which GT items have been matched by index (0 to gt_count - 1)
+        # to ensure each ground-truth record is claimed at most once.
+        matched_gt_indices: set[int] = set()
 
-        # Per-category metrics
+        for item in detected:
+            matched_idx: Optional[int] = None
+
+            # Priority 1: Match by exact anomaly_id if present
+            if item.anomaly_id:
+                for idx, gt in enumerate(ground_truth_list):
+                    if idx not in matched_gt_indices and gt.get("anomaly_id") == item.anomaly_id:
+                        matched_idx = idx
+                        break
+
+            # Priority 2: Fallback to (anomaly_type, complaint_id) match
+            if matched_idx is None and item.anomaly_type and item.complaint_id:
+                for idx, gt in enumerate(ground_truth_list):
+                    if (
+                        idx not in matched_gt_indices
+                        and gt.get("anomaly_type") == item.anomaly_type
+                        and gt.get("complaint_id") == item.complaint_id
+                    ):
+                        matched_idx = idx
+                        break
+
+            # Priority 3: Fallback to (anomaly_type, table_name, record_id) match
+            if matched_idx is None and item.anomaly_type and item.record_id and item.table_name:
+                for idx, gt in enumerate(ground_truth_list):
+                    if (
+                        idx not in matched_gt_indices
+                        and gt.get("anomaly_type") == item.anomaly_type
+                        and gt.get("table_name") == item.table_name
+                        and str(gt.get("record_id")) == str(item.record_id)
+                    ):
+                        matched_idx = idx
+                        break
+
+            if matched_idx is not None:
+                matched_gt_indices.add(matched_idx)
+                item.is_ground_truth = True
+            else:
+                item.is_ground_truth = False
+
+        tp = len(matched_gt_indices)
+        fp = max(0, detected_count - tp)
+        fn = max(0, gt_count - tp)
+
+        # Standard metrics with safe zero-denominator handling
+        if detected_count == 0 and gt_count == 0:
+            precision = 1.0
+            recall = 1.0
+            f1 = 1.0
+        elif detected_count == 0 and gt_count > 0:
+            precision = 0.0
+            recall = 0.0
+            f1 = 0.0
+        elif detected_count > 0 and gt_count == 0:
+            precision = 0.0
+            recall = 0.0
+            f1 = 0.0
+        else:
+            precision = round(tp / (tp + fp), 4) if (tp + fp) > 0 else 0.0
+            recall = round(tp / (tp + fn), 4) if (tp + fn) > 0 else 0.0
+            precision = min(1.0, max(0.0, precision))
+            recall = min(1.0, max(0.0, recall))
+            if (precision + recall) > 0:
+                f1 = round(2 * (precision * recall) / (precision + recall), 4)
+            else:
+                f1 = 0.0
+
+        # Per-category metrics with identical deduplicated evaluation logic
         category_metrics: Dict[str, CategoryMetric] = {}
         for cat in ALL_ANOMALY_CATEGORIES:
-            cat_gt = [g for g in ground_truth_list if g.get("anomaly_type") == cat]
-            cat_gt_by_aid = {g.get("anomaly_id") for g in cat_gt if g.get("anomaly_id")}
-            cat_gt_by_tc = {
-                (g.get("anomaly_type", ""), g.get("complaint_id", ""))
-                for g in cat_gt if g.get("complaint_id")
-            }
-
+            cat_gt_indexed = [(idx, g) for idx, g in enumerate(ground_truth_list) if g.get("anomaly_type") == cat]
+            cat_gt_count = len(cat_gt_indexed)
             cat_detected = [d for d in detected if d.anomaly_type == cat]
-            cat_matched_keys: set = set()
-            cat_tp = 0
-            cat_fp = 0
-            for d in cat_detected:
-                m_key = None
-                if d.anomaly_id and d.anomaly_id in cat_gt_by_aid:
-                    m_key = ("aid", d.anomaly_id)
-                elif d.complaint_id and (d.anomaly_type, d.complaint_id) in cat_gt_by_tc:
-                    m_key = ("tc", (d.anomaly_type, d.complaint_id))
-                if m_key:
-                    if m_key not in cat_matched_keys:
-                        cat_matched_keys.add(m_key)
-                    cat_tp += 1
-                else:
-                    cat_fp += 1
+            cat_detected_count = len(cat_detected)
 
-            cat_fn = max(0, len(cat_gt) - cat_tp)
-            cat_prec = round(cat_tp / len(cat_detected), 4) if cat_detected else (1.0 if not cat_gt else 0.0)
-            cat_rec = round(cat_tp / len(cat_gt), 4) if cat_gt else (1.0 if not cat_detected else 0.0)
-            cat_f1 = (
-                round(2 * (cat_prec * cat_rec) / (cat_prec + cat_rec), 4)
-                if (cat_prec + cat_rec) > 0
-                else (1.0 if cat_prec == 1.0 and cat_rec == 1.0 else 0.0)
-            )
+            cat_matched_indices: set[int] = set()
+
+            for d in cat_detected:
+                m_idx: Optional[int] = None
+                if d.anomaly_id:
+                    for orig_idx, gt in cat_gt_indexed:
+                        if orig_idx not in cat_matched_indices and gt.get("anomaly_id") == d.anomaly_id:
+                            m_idx = orig_idx
+                            break
+                if m_idx is None and d.complaint_id:
+                    for orig_idx, gt in cat_gt_indexed:
+                        if orig_idx not in cat_matched_indices and gt.get("complaint_id") == d.complaint_id:
+                            m_idx = orig_idx
+                            break
+                if m_idx is None and d.record_id and d.table_name:
+                    for orig_idx, gt in cat_gt_indexed:
+                        if (
+                            orig_idx not in cat_matched_indices
+                            and gt.get("table_name") == d.table_name
+                            and str(gt.get("record_id")) == str(d.record_id)
+                        ):
+                            m_idx = orig_idx
+                            break
+
+                if m_idx is not None:
+                    cat_matched_indices.add(m_idx)
+
+            cat_tp = len(cat_matched_indices)
+            cat_fp = max(0, cat_detected_count - cat_tp)
+            cat_fn = max(0, cat_gt_count - cat_tp)
+
+            if cat_detected_count == 0 and cat_gt_count == 0:
+                cat_prec = 1.0
+                cat_rec = 1.0
+                cat_f1 = 1.0
+            elif cat_detected_count == 0 and cat_gt_count > 0:
+                cat_prec = 0.0
+                cat_rec = 0.0
+                cat_f1 = 0.0
+            elif cat_detected_count > 0 and cat_gt_count == 0:
+                cat_prec = 0.0
+                cat_rec = 0.0
+                cat_f1 = 0.0
+            else:
+                cat_prec = round(cat_tp / (cat_tp + cat_fp), 4) if (cat_tp + cat_fp) > 0 else 0.0
+                cat_rec = round(cat_tp / (cat_tp + cat_fn), 4) if (cat_tp + cat_fn) > 0 else 0.0
+                cat_prec = min(1.0, max(0.0, cat_prec))
+                cat_rec = min(1.0, max(0.0, cat_rec))
+                if (cat_prec + cat_rec) > 0:
+                    cat_f1 = round(2 * (cat_prec * cat_rec) / (cat_prec + cat_rec), 4)
+                else:
+                    cat_f1 = 0.0
 
             category_metrics[cat] = CategoryMetric(
                 category=cat,
-                ground_truth_count=len(cat_gt),
-                detected_count=len(cat_detected),
+                ground_truth_count=cat_gt_count,
+                detected_count=cat_detected_count,
                 true_positives=cat_tp,
                 false_positives=cat_fp,
                 false_negatives=cat_fn,
@@ -271,6 +321,7 @@ class AnomalyDetector:
                 cre_dt = comp.created_at.replace(tzinfo=None) if comp.created_at.tzinfo else comp.created_at
                 if res_dt < cre_dt:
                     aid = (getattr(r, "anomaly_id", None) or
+                           getattr(comp, "anomaly_id", None) or
                            f"ANOM-RBC-{comp.complaint_id}")
                     results.append(AnomalyItem(
                         anomaly_id=aid,
@@ -418,7 +469,7 @@ class AnomalyDetector:
 
             if is_violation:
                 results.append(AnomalyItem(
-                    anomaly_id=s.anomaly_id or f"ANOM-SRV-{comp.complaint_id}",
+                    anomaly_id=s.anomaly_id or getattr(comp, "anomaly_id", None) or f"ANOM-SRV-{comp.complaint_id}",
                     anomaly_type="SURVEY_BEFORE_CLOSURE",
                     description=f"Survey {s.survey_id} submitted before complaint {comp.complaint_id} was closed",
                     severity="medium",
@@ -466,11 +517,127 @@ class AnomalyDetector:
         return results
 
 
-def inject_anomalies(db: Session, count: int = 6) -> InjectAnomalyResponse:
+def cleanup_anomalies(db: Session) -> int:
+    """
+    Reverts and removes previously injected anomaly records to ensure
+    database integrity and prevent orphan anomalies on repeated injections.
+    Returns the count of cleaned up anomaly complaints.
+    """
+    cleaned_count = 0
+
+    # 1. Look up a fallback customer ID to restore customer_id_fk if needed
+    first_customer = db.scalars(select(Customer.id).order_by(Customer.id)).first()
+
+    # 2. Revert any Complaint records flagged as anomalies
+    anom_complaints = db.scalars(
+        select(Complaint).where(
+            (Complaint.is_anomaly == True) |
+            (Complaint.anomaly_id.isnot(None)) |
+            (Complaint.anomaly_type.isnot(None))
+        )
+    ).all()
+
+    for comp in anom_complaints:
+        cleaned_count += 1
+        # Scenario 1: Restore customer_id_fk if nullified
+        if comp.customer_id_fk is None and first_customer is not None:
+            comp.customer_id_fk = first_customer
+
+        # Scenario 6: Restore priority if it was downgraded from PRODUCT_SAFETY
+        if comp.category_code == "PRODUCT_SAFETY" or comp.is_safety_incident:
+            if comp.priority in ("P3", "P4"):
+                comp.priority = "P1"
+
+        comp.is_anomaly = False
+        comp.anomaly_id = None
+        comp.anomaly_type = None
+
+    # 3. Clean up backdated / anomalous resolutions
+    anom_resolutions = db.scalars(
+        select(Resolution).where(
+            (Resolution.resolution_id.like("RES-ANOM-%")) |
+            (Resolution.description.like("ANOMALY:%"))
+        )
+    ).all()
+    for res in anom_resolutions:
+        db.delete(res)
+
+    # 4. Clean up anomalous SLA events
+    anom_sla_events = db.scalars(
+        select(SLAEvent).where(
+            (SLAEvent.is_anomaly == True) |
+            (SLAEvent.anomaly_id.isnot(None)) |
+            (SLAEvent.reason.like("ANOMALY:%"))
+        )
+    ).all()
+    for ev in anom_sla_events:
+        db.delete(ev)
+
+    # Reset SLA clocks
+    anom_clocks = db.scalars(
+        select(SLAClock).where(
+            (SLAClock.is_anomaly == True) |
+            (SLAClock.anomaly_id.isnot(None))
+        )
+    ).all()
+    for clk in anom_clocks:
+        clk.is_anomaly = False
+        clk.anomaly_id = None
+
+    # 5. Clean up anomalous surveys
+    anom_surveys = db.scalars(
+        select(Survey).where(
+            (Survey.is_anomaly == True) |
+            (Survey.anomaly_id.isnot(None)) |
+            (Survey.survey_id.like("SRV-ANOM-%")) |
+            (Survey.submitted_before_closure == True)
+        )
+    ).all()
+    for srv in anom_surveys:
+        db.delete(srv)
+
+    db.commit()
+    return cleaned_count
+
+
+def reset_anomalies(db: Session) -> dict:
+    """Reset all injected anomalies in the DB and clear ground truth files."""
+    cleaned = cleanup_anomalies(db)
+
+    gt_path = _get_ground_truth_path()
+    empty_gt = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "total_anomalies": 0,
+        "anomalies": [],
+        "note": "Ground truth reset — run inject-anomalies to populate.",
+    }
+    with open(gt_path, "w", encoding="utf-8") as f:
+        json.dump(empty_gt, f, indent=2)
+
+    gt_csv_path = _get_ground_truth_csv_path()
+    csv_fieldnames = [
+        "entity", "record_id", "issue_type", "field",
+        "anomaly_id", "complaint_id", "severity", "description"
+    ]
+    with open(gt_csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=csv_fieldnames)
+        writer.writeheader()
+
+    return {
+        "success": True,
+        "cleaned_count": cleaned,
+        "message": "All injected anomalies and ground truth reset successfully.",
+    }
+
+
+def inject_anomalies(db: Session, count: int = 6, clear_existing: bool = True) -> InjectAnomalyResponse:
     """
     Injects 6 distinct anomaly scenarios into the database.
     Uses a separate isolated set of records; does not corrupt clean canonical data
     except for the specific anomaly fields on the chosen records.
+    When clear_existing is True (default), previous injected test anomalies are
+    cleaned up before injecting new ones, preventing duplicate or orphan anomalies
+    on repeated runs.
 
     Scenarios injected:
     1. MISSING_CUSTOMER_RELATIONSHIP — nullify customer_id_fk
@@ -480,6 +647,8 @@ def inject_anomalies(db: Session, count: int = 6) -> InjectAnomalyResponse:
     5. SURVEY_BEFORE_CLOSURE — survey on still-open complaint
     6. SAFETY_LOW_PRIORITY — safety complaint downgraded to P4
     """
+    if clear_existing:
+        cleanup_anomalies(db)
     complaints = db.scalars(select(Complaint).order_by(Complaint.id)).all()
     if len(complaints) < 10:
         return InjectAnomalyResponse(
@@ -811,6 +980,6 @@ def inject_anomalies(db: Session, count: int = 6) -> InjectAnomalyResponse:
         anomalies=injected,
         message=(
             f"Successfully injected {len(injected)} anomalies covering all 6 required scenarios "
-            f"and saved ground truth to {gt_path.name} and {gt_csv_path.name}"
+            f"(previous test anomalies reset). Evaluation metrics reflect a single-batch test scenario."
         ),
     )

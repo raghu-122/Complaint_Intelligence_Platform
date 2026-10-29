@@ -45,6 +45,7 @@ class AnomalyDetectionResult(BaseModel):
 
 class InjectAnomalyRequest(BaseModel):
     count: int = Field(default=6, ge=1, le=50, description="Total number of anomalies to inject")
+    clear_existing: bool = Field(default=True, description="Reset previously injected anomalies before injecting")
 
 
 class InjectAnomalyResponse(BaseModel):

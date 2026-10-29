@@ -28,45 +28,67 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 @router.get("/stats", response_model=DashboardStats)
 def get_dashboard_stats(db: Session = Depends(get_db)):
     """Summary KPI metrics for executive and operational dashboards."""
-    total_complaints = db.scalar(select(func.count(Complaint.id))) or 0
-    open_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.status == "open")) or 0
-    in_progress_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.status == "in_progress")) or 0
-    resolved_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.status.in_(["resolved", "closed"]))) or 0
-    closed_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.status == "closed")) or 0
-    escalated_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.is_escalated == True)) or 0
-    reopened_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.is_reopened == True)) or 0
-    p1_complaints = db.scalar(select(func.count(Complaint.id)).where(Complaint.priority == "P1")) or 0
-    safety_incidents = db.scalar(select(func.count(Complaint.id)).where(Complaint.is_safety_incident == True)) or 0
+    # 1. Consolidated Complaint metrics (single query)
+    comp_row = db.execute(
+        select(
+            func.count(Complaint.id).label("total"),
+            func.sum(case((Complaint.status == "open", 1), else_=0)).label("open"),
+            func.sum(case((Complaint.status == "in_progress", 1), else_=0)).label("in_progress"),
+            func.sum(case((Complaint.status.in_(["resolved", "closed"]), 1), else_=0)).label("resolved"),
+            func.sum(case((Complaint.status == "closed", 1), else_=0)).label("closed"),
+            func.sum(case((Complaint.is_escalated == True, 1), else_=0)).label("escalated"),
+            func.sum(case((Complaint.is_reopened == True, 1), else_=0)).label("reopened"),
+            func.sum(case((Complaint.priority == "P1", 1), else_=0)).label("p1"),
+            func.sum(case((Complaint.is_safety_incident == True, 1), else_=0)).label("safety"),
+            func.avg(
+                case(
+                    (
+                        Complaint.resolved_at.is_not(None),
+                        (func.julianday(Complaint.resolved_at) - func.julianday(Complaint.created_at)) * 24.0,
+                    ),
+                    else_=None,
+                )
+            ).label("avg_res_hours"),
+        )
+    ).one()
 
-    # SLA stats
-    total_sla = db.scalar(select(func.count(SLAClock.id))) or 0
-    breached_sla = db.scalar(select(func.count(SLAClock.id)).where(SLAClock.is_breached == True)) or 0
+    total_complaints = int(comp_row.total or 0)
+    open_complaints = int(comp_row.open or 0)
+    in_progress_complaints = int(comp_row.in_progress or 0)
+    resolved_complaints = int(comp_row.resolved or 0)
+    closed_complaints = int(comp_row.closed or 0)
+    escalated_complaints = int(comp_row.escalated or 0)
+    reopened_complaints = int(comp_row.reopened or 0)
+    p1_complaints = int(comp_row.p1 or 0)
+    safety_incidents = int(comp_row.safety or 0)
+    avg_hours = round(float(comp_row.avg_res_hours), 1) if comp_row.avg_res_hours is not None else 0.0
+
+    # 2. Consolidated SLA stats (single query)
+    sla_row = db.execute(
+        select(
+            func.count(SLAClock.id).label("total"),
+            func.sum(case((SLAClock.is_breached == True, 1), else_=0)).label("breached"),
+        )
+    ).one()
+    total_sla = int(sla_row.total or 0)
+    breached_sla = int(sla_row.breached or 0)
     compliance_rate = round(((total_sla - breached_sla) / total_sla) * 100, 1) if total_sla > 0 else 100.0
 
-    # Resolution time calculation
-    # In SQLite, julianday(resolved_at) - julianday(created_at) * 24
-    resolved_times = db.execute(
-        select(Complaint.created_at, Complaint.resolved_at).where(Complaint.resolved_at.is_not(None))
-    ).all()
-    avg_hours = 0.0
-    if resolved_times:
-        hours_list = []
-        for c, r in resolved_times:
-            if c and r:
-                c_clean = c.replace(tzinfo=None) if c.tzinfo else c
-                r_clean = r.replace(tzinfo=None) if r.tzinfo else r
-                hours_list.append(max(0.0, (r_clean - c_clean).total_seconds() / 3600))
-        if hours_list:
-            avg_hours = round(sum(hours_list) / len(hours_list), 1)
+    # 3. Consolidated Customer stats (single query)
+    cust_row = db.execute(
+        select(
+            func.count(Customer.id).label("total"),
+            func.sum(case((Customer.vulnerability_flag == True, 1), else_=0)).label("vuln"),
+        )
+    ).one()
+    total_customers = int(cust_row.total or 0)
+    vuln_customers = int(cust_row.vuln or 0)
 
-    # CSAT average rating
+    # 4. Remaining metadata (fast counts)
+    total_orders = db.scalar(select(func.count(Order.id))) or 0
+    active_agents = db.scalar(select(func.count(Agent.id)).where(Agent.is_active == True)) or 0
     avg_csat = db.scalar(select(func.avg(Survey.rating)))
     csat_score = round(float(avg_csat), 2) if avg_csat is not None else 0.0
-
-    total_customers = db.scalar(select(func.count(Customer.id))) or 0
-    total_orders = db.scalar(select(func.count(Order.id))) or 0
-    vuln_customers = db.scalar(select(func.count(Customer.id)).where(Customer.vulnerability_flag == True)) or 0
-    active_agents = db.scalar(select(func.count(Agent.id)).where(Agent.is_active == True)) or 0
 
     return DashboardStats(
         total_complaints=total_complaints,
@@ -168,11 +190,22 @@ def get_dashboard_charts(db: Session = Depends(get_db)):
         for snt, count in snt_rows
     ]
 
-    # SLA stats - overall aggregate
-    total_clocks = db.scalar(select(func.count(SLAClock.id))) or 0
-    breached_count = db.scalar(select(func.count(SLAClock.id)).where(SLAClock.is_breached == True)) or 0
-    completed_count = db.scalar(select(func.count(SLAClock.id)).where(SLAClock.status == "completed")) or 0
-    running_count = db.scalar(select(func.count(SLAClock.id)).where(SLAClock.status == "running")) or 0
+    # SLA stats - overall aggregate (consolidated single query)
+    sla_agg = db.execute(
+        select(
+            func.count(SLAClock.id).label("total"),
+            func.sum(case((SLAClock.is_breached == True, 1), else_=0)).label("breached"),
+            func.sum(case((SLAClock.status == "completed", 1), else_=0)).label("completed"),
+            func.sum(case((SLAClock.status == "running", 1), else_=0)).label("running"),
+            func.avg(SLAClock.resolution_hours).label("avg_res_hours"),
+        )
+    ).one()
+
+    total_clocks = int(sla_agg.total or 0)
+    breached_count = int(sla_agg.breached or 0)
+    completed_count = int(sla_agg.completed or 0)
+    running_count = int(sla_agg.running or 0)
+    avg_sla_hours = round(float(sla_agg.avg_res_hours or 0.0), 1)
     compliance_rate = round(((total_clocks - breached_count) / total_clocks) * 100, 1) if total_clocks > 0 else 100.0
 
     sla_overview = SLAStats(
@@ -181,9 +214,7 @@ def get_dashboard_charts(db: Session = Depends(get_db)):
         completed_count=completed_count,
         running_count=running_count,
         compliance_rate=compliance_rate,
-        avg_resolution_hours=round(
-            float(db.scalar(select(func.avg(SLAClock.resolution_hours))) or 0.0), 1
-        ),
+        avg_resolution_hours=avg_sla_hours,
     )
 
     # SLA compliance broken down by priority tier for dashboard table

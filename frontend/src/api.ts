@@ -4,8 +4,26 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const api = axios.create({
   baseURL: API_BASE,
-  timeout: 30000,
+  timeout: 60000,
   headers: { 'Content-Type': 'application/json' },
+});
+
+interface RetryableConfig {
+  __isRetry?: boolean;
+}
+
+// Auto-retry once on network timeout or 5xx cold start for idempotent GET requests
+api.interceptors.response.use(undefined, async (error) => {
+  const config = error.config as (typeof error.config & RetryableConfig) | undefined;
+  if (!config || config.__isRetry || config.method?.toLowerCase() !== 'get') {
+    return Promise.reject(error);
+  }
+  if (error.code === 'ECONNABORTED' || !error.response || error.response.status >= 500) {
+    config.__isRetry = true;
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    return api(config);
+  }
+  return Promise.reject(error);
 });
 
 // Types
@@ -125,6 +143,7 @@ export interface AnomalyItem {
   severity: string;
   complaint_id?: string;
   table_name?: string;
+  record_id?: string;
   evidence?: Record<string, unknown>;
   is_ground_truth: boolean;
   detected_at?: string;
@@ -192,6 +211,7 @@ export const apiClient = {
 
   getAnomalies: () => api.get<AnomalyDetectionResult>('/api/v1/anomalies'),
   injectAnomalies: (count: number) => api.post('/api/v1/anomalies/inject', { count }),
+  resetAnomalies: () => api.post('/api/v1/anomalies/reset'),
 
   getValidation: () => api.get<ValidationReport>('/api/v1/validate'),
 

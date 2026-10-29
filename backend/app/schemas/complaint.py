@@ -215,3 +215,15 @@ class ComplaintUpdateRequest(BaseModel):
     status: Optional[str] = None
     priority: Optional[str] = None
     notes: Optional[str] = None
+
+
+class ComplaintResolutionCreateRequest(BaseModel):
+    resolution_type: str = "refund_issued"  # refund_issued, replacement_sent, explanation_provided, etc.
+    description: str
+    refund_amount: Optional[float] = None
+
+
+class ComplaintSurveyCreateRequest(BaseModel):
+    rating: int = Field(ge=1, le=5)
+    feedback: Optional[str] = None
+    submitted_by: Optional[str] = "customer"

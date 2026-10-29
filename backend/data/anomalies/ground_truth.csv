@@ -1,7 +1,1 @@
 entity,record_id,issue_type,field,anomaly_id,complaint_id,severity,description
-complaints,3,MISSING_CUSTOMER_RELATIONSHIP,customer_id_fk,ANOM-001,CMP-2026-000003,high,Complaint CMP-2026-000003 has no linked customer (customer_id_fk set to NULL)
-resolutions,1083,RESOLUTION_BEFORE_CREATION,resolved_at,ANOM-002,CMP-2026-000001,high,Resolution for CMP-2026-000001 has resolved_at (2026-08-23T22:58:03.865419) BEFORE complaint created_at (2026-08-24T22:58:03.865419)
-sla_events,2,SLA_PAUSE_RESUME_INCONSISTENCY,occurred_at,ANOM-003,CMP-2026-000002,high,SLA clock for CMP-2026-000002 has 'resumed' event at 2026-04-07T01:32:03.185088 BEFORE its 'paused' event at 2026-04-07T02:32:03.185088
-complaint_relationships,2001,REPEAT_COMPLAINT_NOT_LINKED,related_complaint_id_fk,ANOM-004,CMP-2026-002001,medium,Complaint CMP-2026-002001 is a repeat from same customer (FK=1) but has no ComplaintRelationship record linking it
-surveys,369,SURVEY_BEFORE_CLOSURE,submitted_at,ANOM-005,CMP-2026-000004,medium,Customer survey submitted for complaint CMP-2026-000004 which is still open (not closed)
-complaints,5,SAFETY_LOW_PRIORITY,priority,ANOM-006,CMP-2026-000005,high,Critical PRODUCT_SAFETY complaint CMP-2026-000005 incorrectly assigned priority P4 (must be P1 per rule PR-001)

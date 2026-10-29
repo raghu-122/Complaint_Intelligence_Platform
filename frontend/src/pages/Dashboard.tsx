@@ -19,7 +19,20 @@ const CATEGORY_COLORS = [
   '#ef4444', '#ec4899', '#3b82f6', '#14b8a6', '#f97316',
 ];
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem {
+  name: string;
+  value: string | number;
+  color?: string;
+  fill?: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
@@ -27,7 +40,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       borderRadius: 8, padding: '10px 14px', fontSize: 12,
     }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: 6 }}>{label}</p>
-      {payload.map((p: any, i: number) => (
+      {payload.map((p, i) => (
         <p key={i} style={{ color: p.color || p.fill }}>{p.name}: <strong>{p.value}</strong></p>
       ))}
     </div>
@@ -44,6 +57,7 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     try {
+      setLoading(true);
       setError(null);
       const [statsRes, chartsRes] = await Promise.all([
         apiClient.getDashboardStats(),
@@ -51,8 +65,13 @@ export default function Dashboard() {
       ]);
       setStats(statsRes.data);
       setCharts(chartsRes.data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard data');
+    } catch (err: unknown) {
+      const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : '';
+      if (msg.toLowerCase().includes('timeout') || msg.toLowerCase().includes('network')) {
+        setError('Backend is waking up (Render free tier cold start) or request timed out. Please retry.');
+      } else {
+        setError(msg || 'Failed to load dashboard data');
+      }
     } finally {
       setLoading(false);
     }
@@ -67,8 +86,11 @@ export default function Dashboard() {
       const res = await apiClient.generateData({ scale, seed: 20261022, clear_existing: true, export_baseline: true });
       setGenerateMsg(`✅ Generated ${res.data.counts.complaints || 0} complaints in ${res.data.duration_seconds.toFixed(1)}s (scale: ${scale})`);
       await fetchData();
-    } catch (err: any) {
-      setGenerateMsg(`❌ Generation failed: ${err.response?.data?.detail || err.message}`);
+    } catch (err: unknown) {
+      const detail = err && typeof err === 'object'
+        ? ((err as { response?: { data?: { detail?: string } }; message?: string }).response?.data?.detail || (err as { message?: string }).message)
+        : String(err);
+      setGenerateMsg(`❌ Generation failed: ${detail || 'Unknown error'}`);
     } finally {
       setGenerating(false);
     }

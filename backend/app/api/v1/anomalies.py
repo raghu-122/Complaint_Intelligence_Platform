@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Body
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.anomaly.detector import AnomalyDetector, inject_anomalies
+from app.anomaly.detector import AnomalyDetector, inject_anomalies, reset_anomalies
 from app.schemas.anomaly import (
     AnomalyDetectionResult, InjectAnomalyRequest, InjectAnomalyResponse
 )
@@ -31,5 +31,12 @@ def inject_anomaly_records(
 ):
     """Inject deliberate anomaly scenarios for detector testing and evaluation."""
     count = request.count if request and request.count else 6
-    return inject_anomalies(db=db, count=count)
+    clear_existing = request.clear_existing if request and request.clear_existing is not None else True
+    return inject_anomalies(db=db, count=count, clear_existing=clear_existing)
+
+
+@router.post("/reset")
+def reset_anomaly_records(db: Session = Depends(get_db)):
+    """Reset all injected test anomalies and clear ground truth files."""
+    return reset_anomalies(db=db)
 

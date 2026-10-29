@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import time
+import threading
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -19,6 +20,8 @@ from app.schemas.generate import GenerateRequest, GenerateResponse
 
 router = APIRouter(prefix="/generate", tags=["Generation"])
 
+_generation_lock = threading.Lock()
+
 
 @router.post("", response_model=GenerateResponse)
 def trigger_generation(
@@ -26,6 +29,12 @@ def trigger_generation(
     db: Session = Depends(get_db),
 ):
     """Trigger synthetic dataset generation, persist to DB, and optionally update baseline exports."""
+    if not _generation_lock.acquire(blocking=False):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A dataset generation task is already in progress. Please wait for it to complete.",
+        )
+
     start_time = time.time()
     run_code = generation_run_id()
 
@@ -49,6 +58,11 @@ def trigger_generation(
 
         # 2. Persist to DB
         counts = load_all(db=db, data=data, clear_first=request.clear_existing)
+
+        # When clearing database, also reset anomaly ground truth to prevent stale mismatch
+        if request.clear_existing:
+            from app.anomaly.detector import reset_anomalies
+            reset_anomalies(db=db)
 
         # 3. Export baseline files if requested
         manifest_hash = None
@@ -99,3 +113,5 @@ def trigger_generation(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Generation failed: {str(e)}",
         )
+    finally:
+        _generation_lock.release()

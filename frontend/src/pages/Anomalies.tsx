@@ -19,10 +19,19 @@ function MetricCard({ label, value, desc, accent }: { label: string; value: stri
   );
 }
 
+function extractErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === 'object') {
+    const maybeAxios = err as { response?: { data?: { detail?: string } }; message?: string };
+    return maybeAxios.response?.data?.detail || maybeAxios.message || fallback;
+  }
+  return fallback;
+}
+
 export default function Anomalies() {
   const [result, setResult] = useState<AnomalyDetectionResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [injecting, setInjecting] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
@@ -35,8 +44,8 @@ export default function Anomalies() {
       const res = await apiClient.getAnomalies();
       setResult(res.data);
       setMessage(`✅ Detection complete: found ${res.data.detected_count} anomalies`);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || err.message || 'Detection failed');
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, 'Detection failed'));
     } finally {
       setLoading(false);
     }
@@ -44,13 +53,29 @@ export default function Anomalies() {
 
   const injectAnomalies = async () => {
     setInjecting(true);
+    setError(null);
     try {
-      await apiClient.injectAnomalies(6);
-      setMessage('✅ 6 anomalies injected. Re-run detection to see updated results.');
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Injection failed');
+      const res = await apiClient.injectAnomalies(6);
+      setMessage(res.data?.message || '✅ 6 anomalies injected. Re-running detection…');
+      await runDetection();
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, 'Injection failed'));
     } finally {
       setInjecting(false);
+    }
+  };
+
+  const resetAnomalies = async () => {
+    setResetting(true);
+    setError(null);
+    try {
+      await apiClient.resetAnomalies();
+      setMessage('✅ Test anomalies reset to clean baseline. Re-running detection…');
+      await runDetection();
+    } catch (err: unknown) {
+      setError(extractErrorMessage(err, 'Reset failed'));
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -82,6 +107,15 @@ export default function Anomalies() {
           title="Inject test anomalies then re-run detection"
         >
           {injecting ? '⏳ Injecting…' : '💉 Inject Anomalies'}
+        </button>
+        <button
+          id="reset-anomalies-btn"
+          className="btn btn-secondary"
+          onClick={resetAnomalies}
+          disabled={resetting}
+          title="Reset injected test anomalies and return to clean baseline"
+        >
+          {resetting ? '⏳ Resetting…' : '🔄 Reset Anomalies'}
         </button>
         {result && (
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -127,7 +161,7 @@ export default function Anomalies() {
             <MetricCard
               label="Precision"
               value={`${(result.precision * 100).toFixed(1)}%`}
-              desc="True positive rate"
+              desc="Positive predictive value"
               accent={result.precision >= 0.8 ? 'var(--accent-emerald)' : 'var(--accent-amber)'}
             />
             <MetricCard
@@ -158,7 +192,7 @@ export default function Anomalies() {
                     </div>
                     <div style={{ background: 'var(--border)', borderRadius: 4, height: 8, overflow: 'hidden' }}>
                       <div style={{
-                        height: '100%', width: `${value * 100}%`, background: color,
+                        height: '100%', width: `${Math.min(100, Math.max(0, value * 100))}%`, background: color,
                         borderRadius: 4, transition: 'width 1s ease',
                       }} />
                     </div>

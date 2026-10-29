@@ -249,3 +249,234 @@ def test_ground_truth_csv_generation(db_session):
         assert row["entity"]
         assert row["issue_type"]
         assert row["field"]
+
+
+def test_perfect_detection(db_session):
+    """Perfect detection: all 6 ground-truth anomalies detected with 0 FP and 0 FN."""
+    generator = DataGenerator(seed=20261022, scale="starter")
+    data = generator.generate_all()
+    load_all(db_session, data, clear_first=True)
+
+    inject_anomalies(db_session, count=6)
+
+    detector = AnomalyDetector(db_session)
+    result = detector.detect()
+
+    assert result.detected_count == 6
+    assert result.ground_truth_count == 6
+    assert result.precision == 1.0
+    assert result.recall == 1.0
+    assert result.f1_score == 1.0
+
+    for cat, metric in result.category_metrics.items():
+        assert metric.true_positives == 1
+        assert metric.false_positives == 0
+        assert metric.false_negatives == 0
+        assert metric.precision == 1.0
+        assert metric.recall == 1.0
+        assert metric.f1_score == 1.0
+
+
+def test_false_positives_metric_handling(tmp_path):
+    """When detected count exceeds ground truth (false positives exist):
+
+    - Recall must NEVER exceed 1.0 (100%).
+    - Precision must correctly penalize false positives: TP / (TP + FP).
+    - F1 must be harmonic mean of precision and recall.
+    """
+    import json
+    from app.anomaly.detector import AnomalyEvaluator
+    from app.schemas.anomaly import AnomalyItem
+
+    gt_file = tmp_path / "ground_truth.json"
+    gt_data = {
+        "anomalies": [
+            {"anomaly_id": f"ANOM-00{i}", "anomaly_type": "MISSING_CUSTOMER_RELATIONSHIP", "complaint_id": f"CMP-{i}"}
+            for i in range(1, 7)
+        ]
+    }
+    gt_file.write_text(json.dumps(gt_data))
+
+    evaluator = AnomalyEvaluator(ground_truth_path=gt_file)
+
+    # 6 true positives + 2 false positives = 8 detected
+    detected = [
+        AnomalyItem(
+            anomaly_id=f"ANOM-00{i}",
+            anomaly_type="MISSING_CUSTOMER_RELATIONSHIP",
+            description="TP",
+            severity="high",
+            complaint_id=f"CMP-{i}",
+        )
+        for i in range(1, 7)
+    ]
+    detected.extend([
+        AnomalyItem(
+            anomaly_id="ANOM-FP-1",
+            anomaly_type="MISSING_CUSTOMER_RELATIONSHIP",
+            description="FP 1",
+            severity="high",
+            complaint_id="CMP-991",
+        ),
+        AnomalyItem(
+            anomaly_id="ANOM-FP-2",
+            anomaly_type="MISSING_CUSTOMER_RELATIONSHIP",
+            description="FP 2",
+            severity="high",
+            complaint_id="CMP-992",
+        ),
+    ])
+
+    result = evaluator.evaluate(detected)
+
+    assert result.detected_count == 8
+    assert result.ground_truth_count == 6
+    assert result.precision == round(6 / 8, 4)  # 0.75
+    assert result.recall == 1.0  # 6 / 6 — MUST NEVER EXCEED 1.0
+    assert result.recall <= 1.0
+    expected_f1 = round(2 * (0.75 * 1.0) / (0.75 + 1.0), 4)
+    assert result.f1_score == expected_f1  # 0.8571
+
+
+def test_false_negatives_metric_handling(tmp_path):
+    """When some ground truth anomalies are missed (false negatives exist):
+
+    - Precision = 1.0 (all detected were genuine).
+    - Recall = TP / GT < 1.0.
+    """
+    import json
+    from app.anomaly.detector import AnomalyEvaluator
+    from app.schemas.anomaly import AnomalyItem
+
+    gt_file = tmp_path / "ground_truth.json"
+    gt_data = {
+        "anomalies": [
+            {"anomaly_id": f"ANOM-00{i}", "anomaly_type": "MISSING_CUSTOMER_RELATIONSHIP", "complaint_id": f"CMP-{i}"}
+            for i in range(1, 7)
+        ]
+    }
+    gt_file.write_text(json.dumps(gt_data))
+
+    evaluator = AnomalyEvaluator(ground_truth_path=gt_file)
+
+    # Only 4 detected out of 6 GT
+    detected = [
+        AnomalyItem(
+            anomaly_id=f"ANOM-00{i}",
+            anomaly_type="MISSING_CUSTOMER_RELATIONSHIP",
+            description="TP",
+            severity="high",
+            complaint_id=f"CMP-{i}",
+        )
+        for i in range(1, 5)
+    ]
+
+    result = evaluator.evaluate(detected)
+
+    assert result.detected_count == 4
+    assert result.ground_truth_count == 6
+    assert result.precision == 1.0  # 4 / 4
+    assert result.recall == round(4 / 6, 4)  # 0.6667
+    expected_f1 = round(2 * (1.0 * (4 / 6)) / (1.0 + (4 / 6)), 4)
+    assert result.f1_score == expected_f1  # 0.8
+
+
+def test_no_detected_anomalies_metric_handling(tmp_path):
+    """Safe zero-denominator handling when 0 anomalies are detected."""
+    import json
+    from app.anomaly.detector import AnomalyEvaluator
+
+    evaluator_clean = AnomalyEvaluator(ground_truth_path=tmp_path / "nonexistent.json")
+    result_clean = evaluator_clean.evaluate([])
+    assert result_clean.detected_count == 0
+    assert result_clean.ground_truth_count == 0
+    assert result_clean.precision == 1.0
+    assert result_clean.recall == 1.0
+    assert result_clean.f1_score == 1.0
+
+    gt_file = tmp_path / "gt_with_items.json"
+    gt_file.write_text(json.dumps({"anomalies": [{"anomaly_id": "A1"}]}))
+    evaluator_missed = AnomalyEvaluator(ground_truth_path=gt_file)
+    result_missed = evaluator_missed.evaluate([])
+    assert result_missed.detected_count == 0
+    assert result_missed.ground_truth_count == 1
+    assert result_missed.precision == 0.0
+    assert result_missed.recall == 0.0
+    assert result_missed.f1_score == 0.0
+
+
+def test_no_ground_truth_anomalies_metric_handling(tmp_path):
+    """Safe zero-denominator handling when ground truth count is 0."""
+    from app.anomaly.detector import AnomalyEvaluator
+    from app.schemas.anomaly import AnomalyItem
+
+    evaluator = AnomalyEvaluator(ground_truth_path=tmp_path / "empty.json")
+
+    # Spurious detections when GT is 0 -> all false positives
+    detected = [
+        AnomalyItem(
+            anomaly_id="SPURIOUS-1",
+            anomaly_type="MISSING_CUSTOMER_RELATIONSHIP",
+            description="False alarm",
+            severity="low",
+            complaint_id="CMP-001",
+        )
+    ]
+    result = evaluator.evaluate(detected)
+    assert result.detected_count == 1
+    assert result.ground_truth_count == 0
+    assert result.precision == 0.0
+    assert result.recall == 0.0
+    assert result.f1_score == 0.0
+
+
+def test_repeated_injection_and_detection(db_session):
+    """Repeated calls to inject_anomalies must NOT create duplicate / orphan anomalies:
+
+    - Exact 6 anomalies detected each time.
+    - Recall must NEVER exceed 100% on any iteration.
+    - Precision and F1 remain consistent.
+    """
+    generator = DataGenerator(seed=20261022, scale="starter")
+    data = generator.generate_all()
+    load_all(db_session, data, clear_first=True)
+
+    detector = AnomalyDetector(db_session)
+
+    # 3 consecutive injection and detection cycles
+    for iteration in range(1, 4):
+        inject_resp = inject_anomalies(db_session, count=6)
+        assert inject_resp.success is True
+        assert inject_resp.injected_count == 6
+
+        result = detector.detect()
+        assert result.detected_count == 6, f"Iteration {iteration}: expected 6 detected, got {result.detected_count}"
+        assert result.ground_truth_count == 6, f"Iteration {iteration}: expected 6 GT, got {result.ground_truth_count}"
+        assert result.precision == 1.0, f"Iteration {iteration}: expected precision 1.0, got {result.precision}"
+        assert result.recall == 1.0, f"Iteration {iteration}: expected recall 1.0, got {result.recall}"
+        assert result.f1_score == 1.0, f"Iteration {iteration}: expected f1 1.0, got {result.f1_score}"
+        assert result.recall <= 1.0
+
+
+def test_reset_anomalies(db_session):
+    """reset_anomalies must revert all injected anomalies and return DB to clean state."""
+    from app.anomaly.detector import reset_anomalies
+
+    generator = DataGenerator(seed=20261022, scale="starter")
+    data = generator.generate_all()
+    load_all(db_session, data, clear_first=True)
+
+    inject_anomalies(db_session, count=6)
+    detector = AnomalyDetector(db_session)
+    result_before = detector.detect()
+    assert result_before.detected_count == 6
+
+    reset_res = reset_anomalies(db_session)
+    assert reset_res["success"] is True
+
+    result_after = detector.detect()
+    assert result_after.detected_count == 0
+    assert result_after.ground_truth_count == 0
+    assert result_after.precision == 1.0
+    assert result_after.recall == 1.0
+    assert result_after.f1_score == 1.0

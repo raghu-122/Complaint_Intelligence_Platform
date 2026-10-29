@@ -360,3 +360,91 @@ def test_dashboard_stats_all_kpi_fields(client: TestClient):
     ]
     for field in required_fields:
         assert field in stats, f"Missing field: {field}"
+
+
+def test_full_complaint_lifecycle(client: TestClient):
+    """End-to-end complaint lifecycle test:
+
+    1. Creation & Classification & Priority Assignment
+    2. Automated Team/Agent Routing & SLA Clock
+    3. Status Changes & Timeline Audit Trail
+    4. Customer Messages
+    5. Resolution
+    6. Post-resolution Survey
+    """
+    # 1. Create complaint
+    create_payload = {
+        "customer_id": 1,
+        "title": "Package never arrived",
+        "subject": "Missing Order Inquiry",
+        "description": "My delivery is missing and never arrived. I cannot locate it anywhere.",
+        "channel": "email",
+    }
+    create_res = client.post("/api/v1/complaints", json=create_payload)
+    assert create_res.status_code == 201
+    created_data = create_res.json()
+    cid = created_data["complaint_id"]
+    assert cid.startswith("CMP-2026-")
+    assert created_data["status"] == "open"
+    assert created_data["category_code"] == "MISSING_ORDER"
+
+    # 2. Add message
+    msg_res = client.post(
+        f"/api/v1/complaints/{cid}/messages",
+        json={"sender_type": "customer", "body": "Any update on my tracking status?", "channel": "email"},
+    )
+    assert msg_res.status_code == 201
+    assert msg_res.json()["body"] == "Any update on my tracking status?"
+
+    # 3. Transition status to in_progress
+    patch_res = client.patch(f"/api/v1/complaints/{cid}", json={"status": "in_progress", "notes": "Investigating with carrier"})
+    assert patch_res.status_code == 200
+    assert patch_res.json()["status"] == "in_progress"
+
+    # 4. Resolve complaint
+    res_res = client.post(
+        f"/api/v1/complaints/{cid}/resolutions",
+        json={"resolution_type": "refund_issued", "description": "Issued full refund for lost package", "refund_amount": 49.99},
+    )
+    assert res_res.status_code == 201
+    assert res_res.json()["resolution_id"].startswith("RES-")
+
+    # 5. Submit survey
+    survey_res = client.post(
+        f"/api/v1/complaints/{cid}/surveys",
+        json={"rating": 5, "feedback": "Prompt resolution and refund processed quickly."},
+    )
+    assert survey_res.status_code == 201
+    assert survey_res.json()["rating"] == 5
+
+    # 6. Verify full detail view
+    detail_res = client.get(f"/api/v1/complaints/{cid}")
+    assert detail_res.status_code == 200
+    detail = detail_res.json()
+    assert detail["status"] == "resolved"
+    assert detail["resolved_at"] is not None
+    assert len(detail["messages"]) >= 1
+    assert len(detail["resolutions"]) >= 1
+    assert len(detail["surveys"]) >= 1
+
+    # Verify timeline chronology
+    timeline = detail["status_events"]
+    assert len(timeline) >= 2  # open, in_progress, resolved
+    statuses = [event["to_status"] for event in timeline]
+    assert "open" in statuses
+    assert "in_progress" in statuses
+    assert "resolved" in statuses
+
+
+def test_generation_concurrency_lock(client: TestClient, monkeypatch):
+    """Accidental concurrent generation calls must return HTTP 409 Conflict."""
+    from app.api.v1 import generate as gen_module
+
+    # Acquire the lock to simulate an active generation
+    gen_module._generation_lock.acquire()
+    try:
+        res = client.post("/api/v1/generate", json={"scale": "starter", "seed": 20261022, "clear_existing": True})
+        assert res.status_code == 409
+        assert "already in progress" in res.json()["detail"].lower()
+    finally:
+        gen_module._generation_lock.release()
