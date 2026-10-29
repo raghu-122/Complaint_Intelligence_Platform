@@ -1,9 +1,19 @@
-# Python
+# ==============================================================================
+# .gitignore — Complaint Intelligence Platform
+# ==============================================================================
+
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.pyc
+*.pyo
+*.pyd
 .Python
+MANIFEST
+
+# Packaging
 build/
 develop-eggs/
 dist/
@@ -20,81 +30,105 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
-*.pyc
 
-# Virtual environments
+# ── Virtual Environments ──────────────────────────────────────────────────────
 venv/
 env/
 ENV/
 .venv/
+backend/venv/
+backend/env/
+
+# ── Environment / Secrets ─────────────────────────────────────────────────────
+# Never commit real credentials. Use .env.example for templates.
 .env
 backend/.env
+*.pem
+*.key
+secrets/
 
-# Database files
+# ── Database Files ────────────────────────────────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3
 *.db-shm
 *.db-wal
+complaint_intelligence.db
 
-# Distribution / packaging
-.Python
-dist/
-build/
-
-# Testing
+# ── Testing & Coverage ────────────────────────────────────────────────────────
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
+coverage/
 htmlcov/
 .tox/
 nosetests.xml
-coverage.xml
 
-# Node
+# ── Node / Frontend ───────────────────────────────────────────────────────────
 node_modules/
+frontend/node_modules/
 frontend/dist/
 frontend/build/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.npm/
 
-# OS
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# IDE
+# ── IDE / Editor ─────────────────────────────────────────────────────────────
 .vscode/settings.json
+.vscode/launch.json
 .idea/
 *.swp
 *.swo
 *~
+*.orig
 
-# Logs
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
 *.log
 logs/
+*.log.*
 
-# Secrets
-.env
-*.pem
-*.key
-secrets/
-
-# Generated data (large files)
-# Keep manifests and ground_truth, exclude large CSVs in full mode
+# ── Generated Data (large, reproducible) ─────────────────────────────────────
+# These files are excluded because they are deterministically regenerated from
+# seed 20261022 using: python cli.py generate --scale full --seed 20261022 --clear --export
+# The .gitkeep files mark the directories so they exist after clone.
 backend/data/baseline/csv/*.csv
 backend/data/baseline/json/*.json
 backend/data/baseline/sql/*.sql
 !backend/data/baseline/csv/.gitkeep
 !backend/data/baseline/json/.gitkeep
 !backend/data/baseline/sql/.gitkeep
+
+# Ephemeral exports (not required for submission)
 backend/data/exports/
+backend/data/manifests/
 
-# Docker
+# ── Docker Volumes ────────────────────────────────────────────────────────────
 docker-data/
+.docker/
 
-# Mypy
+# ── Type Checkers & Linters ───────────────────────────────────────────────────
 .mypy_cache/
 .dmypy.json
 dmypy.json
-
-# Ruff
 .ruff_cache/
+.pytype/
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
