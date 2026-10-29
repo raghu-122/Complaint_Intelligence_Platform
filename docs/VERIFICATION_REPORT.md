@@ -173,7 +173,7 @@ cd backend
 .\venv\Scripts\python.exe cli.py reproduce --scale full --seed 20261022
 ```
 
-**Result**: ✅ **100% BITWISE MATCH — 33/33 files identical SHA-256 hashes**
+**Result**: ✅ **100% BITWISE MATCH — 35/35 files identical SHA-256 hashes**
 
 ```
 Running Reproducibility Verification...
@@ -218,7 +218,7 @@ Running Reproducibility Verification...
 +-----------------------------------------------------------------------------+
 +------------------------------- Verdict: PASS -------------------------------+
 | 100% BITWISE MATCH DETECTED                                                 |
-| All 33 exported baseline files matched identical SHA-256 hashes.            |
+| All 35 exported baseline files matched identical SHA-256 hashes.            |
 +-----------------------------------------------------------------------------+
 ```
 
@@ -258,9 +258,9 @@ cd backend
 .\venv\Scripts\python.exe cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/baseline/sql/verify_import.db
 ```
 
-**Result**: ✅ **All 17 tables matched, 0 FK violations, Verdict: PASS**
+**Result**: ✅ **All 18 tables matched, 0 FK violations, Verdict: PASS**
 
-- SQL dump file: `backend/data/baseline/sql/complaint_intelligence_dump.sql` (9,148 KB)
+- SQL dump file: `backend/data/baseline/sql/complaint_intelligence_dump.sql` (~10,500 KB)
 - Generated fresh from the canonical full-scale database (seed=20261022).
 - Schema, constraints, primary keys, and foreign keys verified on fresh import.
 
@@ -313,7 +313,7 @@ The E2E script is now fully self-contained:
 
 ```
 [setup] Preparing isolated E2E environment ...
-  [setup] Copied canonical DB (8,852 KB) to e2e_test.db
+  [setup] Copied canonical DB (10,552 KB) to e2e_test.db
   [setup] Injected 6 anomaly records into isolated DB.
 [setup] Server ready.
 
@@ -331,7 +331,7 @@ YottaFlex E2E Verification  (Run #1)
   [PASS] E2E-09: Data validation engine passed (12/15 checks, 3 warnings)
   [PASS] E2E-10: Vulnerable customer filter verified (20 found)
   [PASS] E2E-11: Safety complaint filter verified (20 found)
-  [PASS] E2E-12: Baseline manifest report verified (33 files, scale=full)
+  [PASS] E2E-12: Baseline manifest report verified (35 files, scale=full)
 
 E2E RESULT (Run #1): 12 PASSED | 0 FAILED
 ALL E2E WORKFLOW CHECKS PASSED
@@ -396,8 +396,8 @@ The project can be reproduced from source in two ways:
 3. `pip install -r requirements.txt`
 4. `python cli.py generate --scale full --seed 20261022 --clear --export`
 5. `python cli.py validate` → 15/15 PASS
-6. `python cli.py reproduce --scale full --seed 20261022` → 100% BITWISE MATCH (33/33)
-7. `python cli.py dump-sql && python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/baseline/sql/verify_import.db` → 17/17 MATCH, 0 FK violations
+6. `python cli.py reproduce --scale full --seed 20261022` → 100% BITWISE MATCH (35/35)
+7. `python cli.py dump-sql && python cli.py import-sql data/baseline/sql/complaint_intelligence_dump.sql --target-db data/baseline/sql/verify_import.db` → 18/18 MATCH, 0 FK violations
 8. `python -m pytest tests/ -v` → 112/112 PASS (94% coverage)
 9. `python scripts/verify_e2e_live.py --run-n 1` → 12/12 E2E PASS (self-contained)
 10. `python scripts/verify_e2e_live.py --run-n 2` → 12/12 E2E PASS (repeatability confirmed)

@@ -456,18 +456,18 @@ This exercises 12 distinct operational workflow steps (health, stats, charts, co
 | ID | Requirement | Implementation Verification | Status |
 |---|---|---|---|
 | **AC-01** | Deterministic Generation | `app/generator/orchestrator.py` seeded PRNG; identical SHA-256 hashes verified via `cli.py reproduce` | **PASSED** |
-| **AC-02** | Priority & Triage Engine | `app/engine/priority.py` enforces PR-001 (safety $\to$ P1), PR-002, PR-003, PR-004 | **PASSED** |
+| **AC-02** | Priority & Triage Engine | `app/engine/priority.py` enforces PR-001–PR-007 (all 4 priority levels: P1:302 P2:170 P3:194 P4:1334) | **PASSED** |
 | **AC-03** | Keyword Classification | `app/engine/classifier.py` regex boundary matching over 10 categories with confidence | **PASSED** |
 | **AC-04** | SLA Monitoring | `app/engine/sla.py` tracks targets, countdowns, pause durations, and breach alerts | **PASSED** |
 | **AC-05** | Agent Assignment | `app/engine/assignment.py` matches squad capabilities and balances agent workload | **PASSED** |
 | **AC-06** | 5-Domain Validation | `app/validation/validator.py` executes 20+ checks; verified clean on starter & full datasets | **PASSED** |
-| **AC-07** | Anomaly Detection | `app/anomaly/detector.py` scans 6 anomaly types with precision, recall, and F1 scoring | **PASSED** |
+| **AC-07** | Anomaly Detection | `app/anomaly/detector.py` + `AnomalyEvaluator` separation; 6 types, ground_truth.csv, 100% P/R/F1 | **PASSED** |
 | **AC-08** | Click CLI | `backend/cli.py` implements `generate`, `validate`, `detect-anomalies`, `reproduce`, `server`, `export`, `dump-sql`, `import-sql` | **PASSED** |
 | **AC-09** | REST API | Complete endpoints with CORS, Pydantic schemas, and Swagger docs | **PASSED** |
 | **AC-10** | Modern Frontend | React 18 + Vite UI with dashboards, complaint tables, triage tools, and anomaly viewers | **PASSED** |
-| **AC-11** | Full-Scale Volume | 2,000 complaints, 5,000 customers, 8,000 orders, 6,000 messages generated & validated | **PASSED** |
-| **AC-12** | Portable SQL Dump | Complete SQLite dump export & verified import (`complaint_intelligence_dump.sql`, 9.15 MB) | **PASSED** |
-| **AC-13** | Reproducibility Manifest | 33/33 exported baseline files match SHA-256 hashes bit-for-bit | **PASSED** |
+| **AC-11** | Full-Scale Volume | 2,000 complaints, 5,000 customers, 8,000 orders, 11,240 order_items, 6,000 messages (1–7 per complaint), 70 repeat pairs | **PASSED** |
+| **AC-12** | Portable SQL Dump | Complete SQLite dump export & verified import (`complaint_intelligence_dump.sql`, ~10.7 MB) | **PASSED** |
+| **AC-13** | Reproducibility Manifest | 35/35 exported baseline files match SHA-256 hashes bit-for-bit | **PASSED** |
 | **AC-14** | Live E2E Verification | 12/12 automated live API tests passing across isolated server instances | **PASSED** |
 | **AC-15** | Data Ingestion Pipeline | CSV/JSON upload with validation, deduplication, and row-level error reporting (17 tests) | **PASSED** |
 | **AC-16** | Containerization | `docker-compose.yml` with backend (auto-seeded) and frontend services | **PASSED** |
