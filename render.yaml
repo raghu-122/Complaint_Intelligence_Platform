@@ -1,6 +1,7 @@
 services:
   - type: web
     name: yottaflex-backend
+    plan: free
     env: python
     rootDir: backend
     buildCommand: pip install -r requirements.txt
@@ -11,4 +12,3 @@ services:
         value: production
       - key: DATABASE_URL
         value: sqlite:///./complaint_intelligence.db
-
