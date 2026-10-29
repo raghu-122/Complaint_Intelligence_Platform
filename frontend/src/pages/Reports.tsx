@@ -1,6 +1,29 @@
 import { useState, useEffect } from 'react';
 import { apiClient } from '../api';
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
+
+async function downloadFile(filePath: string, fileName: string) {
+  try {
+    const resp = await fetch(`${API_BASE}/reports/download?file=${encodeURIComponent(filePath)}`);
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => `HTTP ${resp.status}`);
+      throw new Error(detail);
+    }
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (err: any) {
+    alert(`Download failed: ${err.message}`);
+  }
+}
+
 interface ReportFile {
   name: string;
   path: string;
@@ -199,6 +222,7 @@ export default function Reports() {
                       <th>Type</th>
                       <th>Size</th>
                       <th>Modified</th>
+                      <th style={{ width: 120, textAlign: 'center' }}>Export</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -216,6 +240,16 @@ export default function Reports() {
                         <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatSize(f.size_bytes || 0)}</td>
                         <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                           {f.modified_at ? new Date(f.modified_at).toLocaleString() : '—'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            title={`Download ${f.name}`}
+                            onClick={() => downloadFile(f.path, f.name)}
+                            style={{ fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }}
+                          >
+                            ⬇ Export CSV
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -240,6 +274,7 @@ export default function Reports() {
                       <th>Type</th>
                       <th>Size</th>
                       <th>Modified</th>
+                      <th style={{ width: 120, textAlign: 'center' }}>Export</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -257,6 +292,16 @@ export default function Reports() {
                         <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatSize(f.size_bytes || 0)}</td>
                         <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                           {f.modified_at ? new Date(f.modified_at).toLocaleString() : '—'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            title={`Download ${f.name}`}
+                            onClick={() => downloadFile(f.path, f.name)}
+                            style={{ fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }}
+                          >
+                            ⬇ Export JSON
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -280,6 +325,7 @@ export default function Reports() {
                       <th>File</th>
                       <th>Size</th>
                       <th>Modified</th>
+                      <th style={{ width: 120, textAlign: 'center' }}>Export</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -294,6 +340,16 @@ export default function Reports() {
                         <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatSize(f.size_bytes || 0)}</td>
                         <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                           {f.modified_at ? new Date(f.modified_at).toLocaleString() : '—'}
+                        </td>
+                        <td style={{ textAlign: 'center' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            title={`Download ${f.name}`}
+                            onClick={() => downloadFile(f.path, f.name)}
+                            style={{ fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }}
+                          >
+                            ⬇ Export
+                          </button>
                         </td>
                       </tr>
                     ))}

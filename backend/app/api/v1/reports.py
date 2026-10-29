@@ -7,8 +7,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import PlainTextResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse, PlainTextResponse
 
 from app.config import get_settings
 from app.schemas.report import ReportFile, ReportListItem, ReportListResponse
@@ -100,6 +100,42 @@ def list_reports():
         files=files,
         total_files=len(files),
         manifest=manifest_map,
+    )
+
+
+@router.get("/download")
+def download_report_file(file: str = Query(..., description="Relative path within baseline dir, e.g. csv/agents.csv")):
+    """Download a specific baseline export file by its relative path."""
+    settings = get_settings()
+    baseline_dir = (settings.data_dir / "baseline").resolve()
+
+    # Security: resolve and ensure path stays within baseline_dir
+    try:
+        target = (baseline_dir / file).resolve()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid file path.")
+
+    if not str(target).startswith(str(baseline_dir)):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied.")
+
+    if not target.exists() or not target.is_file():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"File not found: {file}")
+
+    # Determine media type
+    suffix = target.suffix.lower()
+    media_types = {
+        ".csv": "text/csv",
+        ".json": "application/json",
+        ".md": "text/markdown",
+        ".txt": "text/plain",
+    }
+    media_type = media_types.get(suffix, "application/octet-stream")
+
+    return FileResponse(
+        path=str(target),
+        filename=target.name,
+        media_type=media_type,
+        headers={"Content-Disposition": f'attachment; filename="{target.name}"'},
     )
 
 
