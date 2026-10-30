@@ -10,6 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 
+from app.config import get_settings
 from app.database import Base, get_db
 from app.main import app
 from app.generator.orchestrator import DataGenerator
@@ -27,7 +28,17 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 
 
 @pytest.fixture(scope="session", autouse=True)
-def setup_test_db():
+def isolate_test_data(tmp_path_factory):
+    """Keep generated anomaly and export files outside the repository data directory."""
+    settings = get_settings()
+    original_data_dir = settings.data_dir
+    settings.data_dir = tmp_path_factory.mktemp("yottaflex-test-data")
+    yield
+    settings.data_dir = original_data_dir
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_db(isolate_test_data):
     """Create all tables in memory once for the test session."""
     from app.models import (  # noqa: F401
         customer, product, order, complaint, message,
