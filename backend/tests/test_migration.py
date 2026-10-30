@@ -448,3 +448,70 @@ def test_migration_with_clean_destination_for_restore(source_sqlite_db, clean_de
     assert counts["complaints"] == 50
     assert counts["customers"] == 50
     dest_engine.dispose()
+
+
+def test_clean_destination_rolls_back_deletions_on_failure(source_sqlite_db, clean_dest_db, monkeypatch):
+    """Verify that if an error occurs during migration with clean_destination=True,
+    the transaction rollback rolls back BOTH the insertions AND the deletions,
+    preserving the original destination state.
+    """
+    dest_url = f"sqlite:///{clean_dest_db}"
+    dest_engine = create_engine(dest_url)
+    Base.metadata.create_all(bind=dest_engine)
+
+    # Insert a pre-existing record into 'categories'
+    with dest_engine.connect() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO categories (code, name, keywords, safety_risk, is_active, config_version, created_at) "
+                "VALUES ('ORIGINAL_CAT', 'Original Category', '[]', 0, 1, '1.0', '2026-01-01 00:00:00')"
+            )
+        )
+        conn.commit()
+
+    # Simulate an error during migration by monkeypatching destination insert to fail on 'orders'
+    from sqlalchemy.engine import Connection
+
+    orig_execute = Connection.execute
+
+    def failing_execute(self, statement, *args, **kwargs):
+        s_str = str(statement)
+        if "INSERT INTO orders" in s_str:
+            raise RuntimeError("Simulated network failure / database disk error during insert")
+        return orig_execute(self, statement, *args, **kwargs)
+
+    monkeypatch.setattr(Connection, "execute", failing_execute)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        migrate(
+            sqlite_path=source_sqlite_db,
+            pg_url=dest_url,
+            clean_destination=True,
+        )
+
+    assert "Simulated network failure" in str(exc_info.value)
+
+    # Unpatch and verify destination still has ORIGINAL_CAT because deletion was rolled back!
+    monkeypatch.undo()
+    with dest_engine.connect() as conn:
+        cat_code = conn.execute(text("SELECT code FROM categories")).scalar()
+        assert cat_code == "ORIGINAL_CAT"
+        # And complaints must be empty (nothing was partially committed)
+        complaint_count = conn.execute(text("SELECT COUNT(*) FROM complaints")).scalar()
+        assert complaint_count == 0
+
+    dest_engine.dispose()
+
+
+def test_migration_safety_rejects_matching_source_and_destination(source_sqlite_db):
+    """Verify that migrate rejects matching source and destination to prevent data corruption."""
+    from scripts.migrate_sqlite_to_pg import MigrationError
+
+    with pytest.raises(MigrationError) as exc_info:
+        migrate(
+            sqlite_path=str(source_sqlite_db),
+            pg_url=f"sqlite:///{source_sqlite_db}",
+            clean_destination=True,
+        )
+
+    assert "CRITICAL SAFETY ABORT" in str(exc_info.value)

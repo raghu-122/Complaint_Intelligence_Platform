@@ -105,11 +105,12 @@ def preflight_verify(
     sqlite_conn: Connection,
     pg_engine: Engine,
     tables: List[str] = TABLE_MIGRATION_ORDER,
+    clean_destination: bool = False,
 ) -> Dict[str, int]:
     """Strict preflight safety check:
     1. Verify all required tables exist in the source SQLite database.
     2. Ensure destination schema exists.
-    3. Verify that ALL destination tables are completely empty (0 records).
+    3. Verify that destination tables are empty (or report existing records if clean_destination=True).
     4. Abort on any query failure — never interpret errors as 0 records.
     """
     logger.info("Executing preflight verification...")
@@ -147,7 +148,7 @@ def preflight_verify(
             f"Preflight failed: Required table(s) missing from destination database: {', '.join(missing_dest)}"
         )
 
-    # 4. Check that all destination tables are strictly empty
+    # 4. Check destination table contents
     non_empty_tables: Dict[str, int] = {}
     with pg_engine.connect() as pg_conn:
         for table_name in tables:
@@ -168,15 +169,23 @@ def preflight_verify(
             if cnt > 0:
                 non_empty_tables[table_name] = cnt
 
-    if non_empty_tables:
+    if non_empty_tables and not clean_destination:
         details = ", ".join(f"'{tbl}' ({count} rows)" for tbl, count in non_empty_tables.items())
         raise MigrationPreflightError(
             f"Migration aborted for production safety: Destination database is not empty. "
             f"Found existing records in {len(non_empty_tables)} table(s): {details}. "
             f"Never silently skip tables. The destination database must be completely empty before migration."
         )
-
-    logger.info("Preflight verification PASSED: All %d destination tables are completely empty.", len(tables))
+    elif non_empty_tables and clean_destination:
+        details = ", ".join(f"'{tbl}' ({count} rows)" for tbl, count in non_empty_tables.items())
+        logger.info(
+            "Preflight restore notice: Destination currently contains %d non-empty table(s): %s. "
+            "These tables will be cleared atomically within the single-transaction restore.",
+            len(non_empty_tables),
+            details,
+        )
+    else:
+        logger.info("Preflight verification PASSED: All %d destination tables are completely empty.", len(tables))
 
     # Return source row counts
     source_counts: Dict[str, int] = {}
@@ -188,19 +197,6 @@ def preflight_verify(
             raise MigrationPreflightError(f"Failed to count rows in source table '{table_name}': {e}") from e
 
     return source_counts
-
-
-def _clean_destination_tables(pg_engine: Engine) -> None:
-    """Safely clear destination tables in reverse dependency order for database restore."""
-    reverse_tables = list(reversed(TABLE_MIGRATION_ORDER))
-    with pg_engine.connect() as conn:
-        for tbl in reverse_tables:
-            try:
-                conn.execute(text(f"DELETE FROM {tbl}"))
-                logger.info("Cleared destination table '%s' for restore.", tbl)
-            except Exception as e:
-                logger.warning("Could not clear table '%s': %s", tbl, e)
-        conn.commit()
 
 
 def migrate(
@@ -216,19 +212,27 @@ def migrate(
     if not sqlite_file.exists():
         raise FileNotFoundError(f"SQLite database file not found at: {sqlite_file}")
 
-    sqlite_engine = create_engine(f"sqlite:///{sqlite_file}", connect_args={"check_same_thread": False})
     norm_pg_url = _normalize_database_url(pg_url)
+
+    # Safety Check: Prevent pointing destination at the source SQLite file or unintended databases
+    if "sqlite" in norm_pg_url.lower():
+        src_resolved = Path(sqlite_path).resolve()
+        if norm_pg_url != "sqlite:///:memory:":
+            dest_file_str = norm_pg_url.replace("sqlite:///", "").replace("sqlite://", "")
+            dest_resolved = Path(dest_file_str).resolve()
+            if src_resolved == dest_resolved:
+                raise MigrationError(
+                    f"CRITICAL SAFETY ABORT: Source SQLite path and destination database URL point to the exact same file: "
+                    f"{src_resolved}. Migration aborted to protect source database."
+                )
+
+    sqlite_engine = create_engine(f"sqlite:///{sqlite_file}", connect_args={"check_same_thread": False})
     pg_engine = create_engine(norm_pg_url, pool_pre_ping=True)
 
     logger.info("Source SQLite: %s", sqlite_file)
     logger.info("Target Dialect: %s (%s)", pg_engine.dialect.name, norm_pg_url.split("@")[-1])
 
-    # 1. Clean destination tables if explicitly requested for restore
-    if clean_destination and not dry_run:
-        logger.info("Cleaning destination tables in reverse dependency order before restore...")
-        _clean_destination_tables(pg_engine)
-
-    # 2. Dry-run mode: read-only inspection of source
+    # 1. Dry-run mode: read-only inspection of source
     if dry_run:
         logger.info("Executing DRY-RUN inspection (read-only)...")
         source_counts: Dict[str, int] = {}
@@ -247,9 +251,13 @@ def migrate(
         logger.info("DRY-RUN completed. Total tables inspected: %d", len(source_counts))
         return source_counts
 
-    # 2. Preflight verification: verify source and target emptiness
+    # 2. Preflight verification: verify source and target readiness
     with sqlite_engine.connect() as sqlite_conn:
-        source_counts = preflight_verify(sqlite_conn=sqlite_conn, pg_engine=pg_engine)
+        source_counts = preflight_verify(
+            sqlite_conn=sqlite_conn,
+            pg_engine=pg_engine,
+            clean_destination=clean_destination,
+        )
 
     if preflight_only:
         logger.info("Preflight check completed successfully. No migration executed.")
@@ -266,8 +274,17 @@ def migrate(
         pg_meta = MetaData()
         pg_meta.reflect(bind=pg_engine)
 
-        # Execute all table insertions and assertions within a single atomic transaction
+        # Execute all table deletions (if restore), insertions, and assertions within a single atomic transaction
         with pg_engine.begin() as pg_conn:
+            # If clean_destination is requested for restore, clear destination tables
+            # in reverse dependency order inside the EXACT same atomic transaction.
+            # Any failure in deletion, insertion, or verification will roll back the entire transaction!
+            if clean_destination:
+                logger.info("Clearing destination tables in reverse foreign-key order within atomic transaction...")
+                for tbl in reversed(TABLE_MIGRATION_ORDER):
+                    pg_conn.execute(text(f"DELETE FROM {tbl}"))
+                    logger.info("Cleared destination table '%s' for restore.", tbl)
+
             for table_name in TABLE_MIGRATION_ORDER:
                 src_table = sqlite_meta.tables[table_name]
                 dst_table = pg_meta.tables[table_name]
@@ -358,6 +375,15 @@ def main():
     if not args.pg_url and not args.dry_run:
         logger.error("No PostgreSQL URL provided via --pg-url or DATABASE_URL environment variable.")
         sys.exit(1)
+
+    if args.clean_destination_for_restore and not args.dry_run:
+        if not args.pg_url or not (args.pg_url.startswith("postgresql://") or args.pg_url.startswith("postgres://")):
+            logger.error(
+                "CRITICAL SAFETY CHECK: --clean-destination-for-restore requires an explicit PostgreSQL connection URL "
+                "(starting with postgresql:// or postgres://). "
+                "It cannot run against SQLite or default local databases."
+            )
+            sys.exit(1)
 
     try:
         counts = migrate(
