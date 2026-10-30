@@ -263,3 +263,56 @@ def test_preflight_only_mode(source_sqlite_db, clean_dest_db):
             cnt = conn.execute(text(f"SELECT COUNT(*) FROM {tbl}")).scalar()
             assert cnt == 0
     dest_engine.dispose()
+
+
+def test_complaint_oversized_string_values_regression(clean_dest_db):
+    """Regression test: verify classification_rule_id with 21+ chars ('KEYWORD_CLASSIFIER_V1')
+    and long priority_rule_applied can be inserted without StringDataRightTruncation.
+    """
+    from sqlalchemy.dialects import postgresql
+    from sqlalchemy.schema import CreateTable
+    from app.models.complaint import Complaint
+
+    # 1. Verify PostgreSQL DDL compiles column as VARCHAR(100)
+    ddl = str(CreateTable(Complaint.__table__).compile(dialect=postgresql.dialect()))
+    assert "classification_rule_id VARCHAR(100)" in ddl
+    assert "classification_rule_version VARCHAR(50)" in ddl
+    assert "priority_rule_applied VARCHAR(100)" in ddl
+
+    # 2. Verify actual insertion with the exact 21-char value that failed
+    dest_url = f"sqlite:///{clean_dest_db}"
+    dest_engine = create_engine(dest_url)
+    Base.metadata.create_all(bind=dest_engine)
+
+    oversized_rule_id = "KEYWORD_CLASSIFIER_V1"  # Exactly 21 chars, previously truncated at VARCHAR(20)
+    assert len(oversized_rule_id) == 21
+
+    oversized_priority_rule = "PR-001+PR-002+PR-003+PR-004"  # 27 chars, previously truncated at VARCHAR(20)
+    assert len(oversized_priority_rule) == 27
+
+    from datetime import datetime, timezone
+    from sqlalchemy.orm import Session
+    with Session(dest_engine) as session:
+        complaint = Complaint(
+            complaint_id="CMP-TEST-REGRESSION-001",
+            subject="Regression test for oversized string values",
+            description="Testing column width expansion for rule IDs and priority expressions.",
+            channel="web",
+            status="open",
+            priority="P3",
+            created_at=datetime.now(timezone.utc),
+            classification_rule_id=oversized_rule_id,
+            classification_rule_version="1.0.0-beta.longversion",
+            priority_rule_applied=oversized_priority_rule,
+        )
+        session.add(complaint)
+        session.commit()
+
+        # Query back and verify integrity
+        queried = session.query(Complaint).filter_by(complaint_id="CMP-TEST-REGRESSION-001").one()
+        assert queried.classification_rule_id == oversized_rule_id
+        assert queried.priority_rule_applied == oversized_priority_rule
+        assert queried.classification_rule_version == "1.0.0-beta.longversion"
+
+    dest_engine.dispose()
+

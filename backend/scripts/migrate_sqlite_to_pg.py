@@ -78,6 +78,29 @@ class MigrationVerificationError(MigrationError):
     pass
 
 
+def _sync_column_types(pg_engine: Engine) -> None:
+    """Ensure PostgreSQL column lengths match or exceed the updated SQLAlchemy model lengths.
+
+    Handles existing databases that were already created with earlier, narrower VARCHAR limits.
+    """
+    if pg_engine.dialect.name != "postgresql":
+        return
+
+    alter_statements = [
+        "ALTER TABLE complaints ALTER COLUMN classification_rule_id TYPE VARCHAR(100);",
+        "ALTER TABLE complaints ALTER COLUMN classification_rule_version TYPE VARCHAR(50);",
+        "ALTER TABLE complaints ALTER COLUMN priority_rule_applied TYPE VARCHAR(100);",
+    ]
+    with pg_engine.connect() as conn:
+        for stmt in alter_statements:
+            try:
+                conn.execute(text(stmt))
+                conn.commit()
+                logger.info("Synchronized schema column: %s", stmt.strip())
+            except Exception as e:
+                logger.debug("Schema synchronization notice: %s", e)
+
+
 def preflight_verify(
     sqlite_conn: Connection,
     pg_engine: Engine,
@@ -104,9 +127,10 @@ def preflight_verify(
             f"Preflight failed: Required table(s) missing from source SQLite: {', '.join(missing_source)}"
         )
 
-    # 2. Destination schema initialization (ensure tables exist to inspect)
+    # 2. Destination schema initialization (ensure tables exist and column sizes are up to date)
     try:
         Base.metadata.create_all(bind=pg_engine)
+        _sync_column_types(pg_engine)
     except Exception as e:
         raise MigrationPreflightError(f"Failed to ensure destination schema exists: {e}") from e
 

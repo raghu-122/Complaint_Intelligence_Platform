@@ -74,11 +74,11 @@ class Complaint(Base):
     category_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     classification_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     classification_evidence: Mapped[str | None] = mapped_column(Text, nullable=True)  # JSON
-    classification_rule_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    classification_rule_version: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    classification_rule_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    classification_rule_version: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Priority decision
-    priority_rule_applied: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    priority_rule_applied: Mapped[str | None] = mapped_column(String(100), nullable=True)
     priority_explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Sentiment
