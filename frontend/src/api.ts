@@ -191,6 +191,34 @@ export interface GenerateResponse {
   message: string;
 }
 
+export interface ReportItem {
+  report_id: string;
+  title: string;
+  description: string;
+  category: string;
+  format: string;
+  generated_at?: string;
+  url?: string;
+}
+
+export interface ReportFile {
+  name: string;
+  path: string;
+  size_bytes: number;
+  type: string;
+  modified_at?: string;
+  sha256: string;
+}
+
+export interface ReportsResponse {
+  reports: ReportItem[];
+  total: number;
+  baseline_dir?: string;
+  files: ReportFile[];
+  total_files: number;
+  manifest?: Record<string, string>;
+}
+
 // API functions
 export const apiClient = {
   getDashboardStats: () => api.get<DashboardStats>('/api/v1/dashboard/stats'),
@@ -217,7 +245,13 @@ export const apiClient = {
 
   generateData: (req: GenerateRequest) => api.post<GenerateResponse>('/api/v1/generate', req),
 
-  getReports: () => api.get('/api/v1/reports'),
+  getReports: () => api.get<ReportsResponse>('/api/v1/reports'),
+  downloadReportFile: (filePath: string) =>
+    api.get<Blob>('/api/v1/reports/download', { params: { file: filePath }, responseType: 'blob' }),
+  downloadReport: (reportId: string) =>
+    api.get<Blob>(`/api/v1/reports/${reportId}/download`, { responseType: 'blob' }),
+  exportBaseline: (scale: 'starter' | 'full', seed: number = 20261022) =>
+    api.post('/api/v1/reports/export-baseline', null, { params: { scale, seed } }),
 
   getHealth: () => api.get('/health'),
 };

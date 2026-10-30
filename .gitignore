@@ -99,17 +99,8 @@ desktop.ini
 logs/
 *.log.*
 
-# ── Generated Data (large, reproducible) ─────────────────────────────────────
-# These files are excluded because they are deterministically regenerated from
-# seed 20261022 using: python cli.py generate --scale full --seed 20261022 --clear --export
-# The .gitkeep files mark the directories so they exist after clone.
-backend/data/baseline/csv/*.csv
-backend/data/baseline/json/*.json
-backend/data/baseline/sql/*.sql
-!backend/data/baseline/csv/.gitkeep
-!backend/data/baseline/json/.gitkeep
-!backend/data/baseline/sql/.gitkeep
-
+# ── Generated Data ────────────────────────────────────────────────────────────
+# Baseline exports (CSV, JSON, manifests) are committed to support download endpoints in deployment.
 # Ephemeral exports (not required for submission)
 backend/data/exports/
 backend/data/manifests/

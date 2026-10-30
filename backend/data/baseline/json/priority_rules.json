@@ -1,0 +1,86 @@
+[
+  {
+    "condition": "category.safety_risk == true",
+    "config_version": "1.0.0",
+    "description": "Any confirmed safety incident is always P1 regardless of other factors",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "safety_incident",
+    "precedence": 1,
+    "priority_code": "P1",
+    "priority_upgrade": 0,
+    "rule_id": "PR-001"
+  },
+  {
+    "condition": "customer.vulnerability_flag == true AND sentiment == 'negative'",
+    "config_version": "1.0.0",
+    "description": "Vulnerable customer with negative sentiment is P1",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "vulnerable_customer_negative_sentiment",
+    "precedence": 2,
+    "priority_code": "P1",
+    "priority_upgrade": 0,
+    "rule_id": "PR-002"
+  },
+  {
+    "condition": "order.total_amount > 500 AND sentiment == 'negative'",
+    "config_version": "1.0.0",
+    "description": "High-value order (>500) with negative sentiment is P2",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "high_value_negative_sentiment",
+    "precedence": 3,
+    "priority_code": "P2",
+    "priority_upgrade": 0,
+    "rule_id": "PR-003"
+  },
+  {
+    "condition": "customer.prior_complaint_count >= 3",
+    "config_version": "1.0.0",
+    "description": "Complaint from customer with 3+ prior complaints upgrades one level",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "recurrence_upgrade",
+    "precedence": 4,
+    "priority_code": null,
+    "priority_upgrade": 1,
+    "rule_id": "PR-004"
+  },
+  {
+    "condition": "order.total_amount >= 200 AND order.total_amount <= 500 AND sentiment == 'negative'",
+    "config_version": "1.0.0",
+    "description": "Medium-value order (200-500) with negative sentiment is P3",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "medium_value_negative",
+    "precedence": 5,
+    "priority_code": "P3",
+    "priority_upgrade": 0,
+    "rule_id": "PR-005"
+  },
+  {
+    "condition": "sentiment == 'negative'",
+    "config_version": "1.0.0",
+    "description": "Standard complaint with negative sentiment is P3",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "standard_negative_sentiment",
+    "precedence": 6,
+    "priority_code": "P3",
+    "priority_upgrade": 0,
+    "rule_id": "PR-006"
+  },
+  {
+    "condition": "sentiment != 'negative'",
+    "config_version": "1.0.0",
+    "description": "Low-severity inquiry or non-negative sentiment complaint is P4",
+    "effective_date": "2026-01-01",
+    "is_active": true,
+    "name": "general_inquiry_or_low_severity",
+    "precedence": 99,
+    "priority_code": "P4",
+    "priority_upgrade": 0,
+    "rule_id": "PR-007"
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "code": "DELIVERY_DELAY",
+    "config_version": "1.0.0",
+    "description": "Complaints about delayed or late deliveries",
+    "is_active": true,
+    "keywords": "[\"late\", \"delay\", \"delayed\", \"shipping\", \"not arrived\", \"overdue\", \"waiting\", \"where is my order\", \"slow delivery\", \"delivery time\", \"not delivered\", \"tracking\", \"expected delivery\"]",
+    "name": "Delivery Delay",
+    "safety_risk": false
+  },
+  {
+    "code": "DAMAGED_PRODUCT",
+    "config_version": "1.0.0",
+    "description": "Complaints about products received in damaged condition",
+    "is_active": true,
+    "keywords": "[\"damaged\", \"broken\", \"cracked\", \"dented\", \"smashed\", \"shattered\", \"crushed\", \"arrived broken\", \"package damaged\", \"defective on arrival\", \"bent\", \"torn\"]",
+    "name": "Damaged Product",
+    "safety_risk": false
+  },
+  {
+    "code": "PRODUCT_SAFETY",
+    "config_version": "1.0.0",
+    "description": "Complaints about product safety risks, injuries, or hazards",
+    "is_active": true,
+    "keywords": "[\"safety\", \"unsafe\", \"hazard\", \"dangerous\", \"injury\", \"injured\", \"hurt\", \"burn\", \"fire\", \"electric shock\", \"recall\", \"toxic\", \"poisonous\", \"health risk\", \"exploded\", \"smoke\", \"sparks\", \"overheating\"]",
+    "name": "Product Safety",
+    "safety_risk": true
+  },
+  {
+    "code": "REFUND",
+    "config_version": "1.0.0",
+    "description": "Complaints requesting refunds or reimbursements",
+    "is_active": true,
+    "keywords": "[\"refund\", \"money back\", \"reimbursement\", \"return\", \"credit\", \"charge back\", \"chargeback\", \"get my money\", \"full refund\", \"partial refund\"]",
+    "name": "Refund",
+    "safety_risk": false
+  },
+  {
+    "code": "PAYMENT",
+    "config_version": "1.0.0",
+    "description": "Complaints about payment issues, billing errors, or charges",
+    "is_active": true,
+    "keywords": "[\"payment\", \"billing\", \"charged\", \"overcharged\", \"double charged\", \"invoice\", \"bill\", \"credit card\", \"transaction\", \"unauthorized charge\", \"wrong amount\", \"incorrect charge\"]",
+    "name": "Payment",
+    "safety_risk": false
+  },
+  {
+    "code": "PRODUCT_QUALITY",
+    "config_version": "1.0.0",
+    "description": "Complaints about poor product quality or performance",
+    "is_active": true,
+    "keywords": "[\"quality\", \"poor quality\", \"not as described\", \"misleading\", \"substandard\", \"cheap\", \"fell apart\", \"stopped working\", \"malfunctioning\", \"not working\", \"faulty\", \"defective\", \"inferior\"]",
+    "name": "Product Quality",
+    "safety_risk": false
+  },
+  {
+    "code": "WRONG_ITEM",
+    "config_version": "1.0.0",
+    "description": "Complaints about receiving the wrong product or item",
+    "is_active": true,
+    "keywords": "[\"wrong item\", \"wrong product\", \"not what I ordered\", \"incorrect item\", \"different product\", \"substituted\", \"wrong size\", \"wrong color\", \"wrong model\", \"sent wrong\"]",
+    "name": "Wrong Item",
+    "safety_risk": false
+  },
+  {
+    "code": "MISSING_ORDER",
+    "config_version": "1.0.0",
+    "description": "Complaints about orders that did not arrive at all",
+    "is_active": true,
+    "keywords": "[\"missing\", \"never arrived\", \"not received\", \"lost\", \"disappeared\", \"cannot find\", \"no delivery\", \"package missing\", \"order missing\", \"never delivered\", \"stolen\"]",
+    "name": "Missing Order",
+    "safety_risk": false
+  },
+  {
+    "code": "ACCOUNT_SERVICE",
+    "config_version": "1.0.0",
+    "description": "Complaints about account issues, login problems, or customer service",
+    "is_active": true,
+    "keywords": "[\"account\", \"login\", \"password\", \"cannot access\", \"locked out\", \"customer service\", \"support\", \"rude\", \"unhelpful\", \"no response\", \"ignored\", \"profile\", \"subscription\"]",
+    "name": "Account or Service",
+    "safety_risk": false
+  },
+  {
+    "code": "OTHER",
+    "config_version": "1.0.0",
+    "description": "Complaints that do not fit any specific category",
+    "is_active": true,
+    "keywords": "[\"general\", \"other\", \"complaint\", \"issue\", \"problem\", \"concern\"]",
+    "name": "Other",
+    "safety_risk": false
+  }
+]

@@ -1,0 +1,68 @@
+[
+  {
+    "code": "SAFETY",
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "description": "Team handling PRODUCT_SAFETY",
+    "handles_priority": "[\"P1\", \"P2\"]",
+    "is_active": true,
+    "name": "Safety & Compliance Team",
+    "safety_capable": true,
+    "specializations": "[\"PRODUCT_SAFETY\"]",
+    "team_id": "TM-001"
+  },
+  {
+    "code": "DELIVERY",
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "description": "Team handling DELIVERY_DELAY, MISSING_ORDER",
+    "handles_priority": "[\"P1\", \"P2\", \"P3\", \"P4\"]",
+    "is_active": true,
+    "name": "Delivery Operations Team",
+    "safety_capable": false,
+    "specializations": "[\"DELIVERY_DELAY\", \"MISSING_ORDER\"]",
+    "team_id": "TM-002"
+  },
+  {
+    "code": "RETURNS",
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "description": "Team handling DAMAGED_PRODUCT, WRONG_ITEM, REFUND",
+    "handles_priority": "[\"P1\", \"P2\", \"P3\", \"P4\"]",
+    "is_active": true,
+    "name": "Returns & Refunds Team",
+    "safety_capable": false,
+    "specializations": "[\"DAMAGED_PRODUCT\", \"WRONG_ITEM\", \"REFUND\"]",
+    "team_id": "TM-003"
+  },
+  {
+    "code": "BILLING",
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "description": "Team handling PAYMENT",
+    "handles_priority": "[\"P1\", \"P2\", \"P3\", \"P4\"]",
+    "is_active": true,
+    "name": "Billing & Payments Team",
+    "safety_capable": false,
+    "specializations": "[\"PAYMENT\"]",
+    "team_id": "TM-004"
+  },
+  {
+    "code": "QUALITY",
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "description": "Team handling PRODUCT_QUALITY",
+    "handles_priority": "[\"P1\", \"P2\", \"P3\", \"P4\"]",
+    "is_active": true,
+    "name": "Product Quality Team",
+    "safety_capable": false,
+    "specializations": "[\"PRODUCT_QUALITY\"]",
+    "team_id": "TM-005"
+  },
+  {
+    "code": "GENERAL",
+    "created_at": "2026-01-01T00:00:00+00:00",
+    "description": "Team handling ACCOUNT_SERVICE, OTHER",
+    "handles_priority": "[\"P2\", \"P3\", \"P4\"]",
+    "is_active": true,
+    "name": "General Support Team",
+    "safety_capable": false,
+    "specializations": "[\"ACCOUNT_SERVICE\", \"OTHER\"]",
+    "team_id": "TM-006"
+  }
+]

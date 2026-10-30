@@ -60,13 +60,14 @@ The **YottaFlex Complaint Intelligence Platform** provides an automated operatio
   - Recharts (Data visualizations and trend charts)
   - Lucide React (System icons)
   - Axios (HTTP client with cold-start retry interceptors)
-  - React Router v6 (Client-side routing with static rewrite support)
+  - React Router v7 (Client-side routing with static rewrite support)
 - **Database**:
   - Production: Managed PostgreSQL on Render
   - Local / Testing: SQLite with WAL journaling and foreign key enforcement
 - **Testing & Quality**:
-  - Pytest & Pytest-Asyncio (136+ automated backend unit and integration tests)
+  - Pytest & Pytest-Asyncio (backend unit, integration, and regression tests)
   - ESLint (TypeScript linting)
+  - Vite production build and isolated API end-to-end verification
 
 ---
 
@@ -108,20 +109,20 @@ Complaint_Intelligence_Platform/
 │   ├── app/
 │   │   ├── anomaly/          # Anomaly detection & ground-truth evaluation
 │   │   ├── api/v1/           # FastAPI REST endpoints (complaints, dashboard, etc.)
-│   │   ├── classifier/       # Keyword-based category classification engine
+│   │   ├── engine/           # Classification, assignment, priority, lifecycle, and SLA logic
+│   │   ├── exports/          # CSV, JSON, SQL, and SHA-256 manifest generation
 │   │   ├── generator/        # Deterministic synthetic data generator & DB loader
-│   │   ├── ingestion/        # CSV/JSON ingestion pipeline & validation
+│   │   ├── reproducibility/  # Deterministic export comparison and audit reports
+│   │   ├── services/         # CSV/JSON ingestion services
 │   │   ├── models/           # 18 SQLAlchemy ORM models
-│   │   ├── priority/         # Priority assignment rules & safety overrides
 │   │   ├── schemas/          # Pydantic request/response schemas
-│   │   ├── sla/              # SLA deadline calculation & breach monitoring
-│   │   ├── validation/       # 15-check data quality validation engine
+│   │   ├── validation/       # Data quality validation engine
 │   │   ├── config.py         # Application settings & environment variables
 │   │   ├── database.py       # Engine creation, connection pooling & dialect detection
-│   │   └── main.py           # FastAPI application factory & health check
+│   │   └── main.py           # FastAPI application, CORS, lifespan, and health check
 │   ├── data/                 # Baseline dataset exports & anomaly benchmarks
 │   ├── scripts/              # Migration, verification & diagnostic scripts
-│   ├── tests/                # 136+ unit, integration & regression tests
+│   ├── tests/                # Unit, integration & regression tests
 │   ├── cli.py                # Command-line interface
 │   └── requirements.txt      # Python dependencies
 ├── frontend/
@@ -144,8 +145,9 @@ Complaint_Intelligence_Platform/
 Before setting up the project locally, verify that your development machine has the following tools installed:
 
 - **Git**: Version 2.30+ (`git --version`)
-- **Python**: Version 3.11, 3.12, or 3.13 (`python --version`)
-- **Node.js**: Version 18+ and npm 9+ (`node -v` and `npm -v`)
+- **Python**: Version 3.12 (the production Render runtime; Python 3.13 is also supported) (`python --version`)
+- **Node.js**: Version 20 LTS and npm 10+ (`node -v` and `npm -v`)
+- **PostgreSQL**: Optional for local work; SQLite is the default. Production uses the managed PostgreSQL database provisioned by Render.
 
 ---
 
@@ -154,7 +156,7 @@ Before setting up the project locally, verify that your development machine has 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/raghu-122/Complaint_Intelligence_Platform.git
+git clone --branch main --single-branch https://github.com/raghu-122/Complaint_Intelligence_Platform.git
 cd Complaint_Intelligence_Platform
 ```
 
@@ -184,7 +186,10 @@ cd Complaint_Intelligence_Platform
 
 4. Configure local environment variables:
    ```bash
-   # Copy template
+   # PowerShell
+   Copy-Item .env.example .env
+
+   # macOS / Linux
    cp .env.example .env
    ```
    *Note: By default, `DATABASE_URL` is configured to use a local SQLite database (`sqlite:///./complaint_intelligence.db`). No cloud credentials are required for local development.*
@@ -208,7 +213,7 @@ cd Complaint_Intelligence_Platform
 
 2. Install Node dependencies:
    ```bash
-   npm install
+   npm ci
    ```
 
 ---
@@ -267,20 +272,20 @@ To migrate an existing SQLite database into a managed PostgreSQL instance (e.g.,
 ## Test Execution
 
 ### 1. Full Backend Test Suite
-Run the complete test suite (136+ unit and integration tests):
+Run the complete backend unit and integration test suite:
 ```bash
 cd backend
-pytest
+python -m pytest -q
 ```
-*Expected output: `136 passed, 0 failures`.*
+The tests use isolated SQLite fixtures and do not write to the configured production database.
 
 ### 2. Live End-to-End Workflow Verification
-Execute the self-contained live verification script (creates an isolated database copy, verifies full complaint lifecycle, customer messaging, escalation, validation, and anomaly evaluation):
+Execute the self-contained live verification script (builds a full synthetic fixture database in a temporary directory, verifies complaint lifecycle, messaging, escalation, validation, anomaly detection, report downloads, and SHA-256 checksums):
 ```bash
 cd backend
 python scripts/verify_e2e_live.py
 ```
-*Expected output: `12 PASSED | 0 FAILED`.*
+The script does not read or modify the local or production database and removes its temporary database when complete.
 
 ### 3. Frontend Lint & Production Build
 ```bash
@@ -288,7 +293,19 @@ cd frontend
 npm run lint
 npm run build
 ```
-*Expected output: Exit code 0, 0 ESLint errors, production bundle compiled to `dist/`.*
+The static frontend is published from `frontend/dist/`.
+
+## Reports and Baseline Exports
+
+The Reports page lists the system reports and each committed CSV/JSON/Markdown baseline artifact. A report can be viewed or downloaded individually. The API returns a SHA-256 checksum for every downloadable file, and the browser verifies the checksum before saving the download.
+
+Use **Export Starter Baseline** or **Export Full Baseline** to generate synthetic CSV/JSON files and a manifest. This operation only writes export artifacts; it does not insert, update, or delete database records. Destructive database seeding remains a local-development-only operation guarded by the backend and CLI.
+
+## Deployment
+
+The Render Blueprint in `render.yaml` provisions a PostgreSQL database, the FastAPI service, and the static frontend. Connect the GitHub repository to Render and deploy the `main` branch; Render reads the service definitions and builds each service from its configured root directory. Set or confirm the production `CORS_ORIGINS` and `DATABASE_URL` in the Render dashboard if the generated Blueprint values differ.
+
+After deployment, verify the backend health endpoint reports `healthy` with a connected PostgreSQL database, then open the frontend and directly load `/complaints`, `/customers`, `/reports`, `/validation`, and `/anomalies` to confirm SPA rewrites and API connectivity. The application creates missing tables on startup but does not clear or reseed an existing database.
 
 ---
 

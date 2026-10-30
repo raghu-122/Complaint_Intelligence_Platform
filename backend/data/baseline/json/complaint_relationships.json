@@ -1,0 +1,492 @@
+[
+  {
+    "created_at": "2026-04-02T20:16:47.639738+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000309",
+    "related_complaint_id_fk_code": "CMP-2026-000506",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-30T09:40:20.579159+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000143",
+    "related_complaint_id_fk_code": "CMP-2026-000523",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-24T05:52:44.744488+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000186",
+    "related_complaint_id_fk_code": "CMP-2026-000558",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-06T17:52:51.762679+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000473",
+    "related_complaint_id_fk_code": "CMP-2026-000562",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-25T08:20:18.902610+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000529",
+    "related_complaint_id_fk_code": "CMP-2026-000569",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-09-11T16:04:01.726765+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000236",
+    "related_complaint_id_fk_code": "CMP-2026-000648",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-05T14:38:09.136744+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000071",
+    "related_complaint_id_fk_code": "CMP-2026-000660",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-01-06T11:07:49.269669+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000230",
+    "related_complaint_id_fk_code": "CMP-2026-000677",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-22T18:58:42.785649+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000524",
+    "related_complaint_id_fk_code": "CMP-2026-000690",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-10T08:49:37.826798+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000073",
+    "related_complaint_id_fk_code": "CMP-2026-000695",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-17T21:32:55.401608+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000527",
+    "related_complaint_id_fk_code": "CMP-2026-000730",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-11T05:41:52.940241+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000482",
+    "related_complaint_id_fk_code": "CMP-2026-000731",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-08T12:26:35.625753+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000607",
+    "related_complaint_id_fk_code": "CMP-2026-000738",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-27T15:16:03.775820+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000714",
+    "related_complaint_id_fk_code": "CMP-2026-000769",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-20T04:05:18.023927+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000651",
+    "related_complaint_id_fk_code": "CMP-2026-000782",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-09T09:41:14.460774+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000266",
+    "related_complaint_id_fk_code": "CMP-2026-000794",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-20T10:44:39.790053+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000291",
+    "related_complaint_id_fk_code": "CMP-2026-000812",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-17T03:08:29.283047+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000637",
+    "related_complaint_id_fk_code": "CMP-2026-000861",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-11T12:56:01.349407+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000386",
+    "related_complaint_id_fk_code": "CMP-2026-000884",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-31T05:41:33.826605+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000770",
+    "related_complaint_id_fk_code": "CMP-2026-000890",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-07T08:08:56.299857+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000877",
+    "related_complaint_id_fk_code": "CMP-2026-000917",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-09-18T13:39:51.446184+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000040",
+    "related_complaint_id_fk_code": "CMP-2026-000942",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-09-08T19:55:15.910754+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000935",
+    "related_complaint_id_fk_code": "CMP-2026-000965",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-09-24T00:14:24.468447+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000353",
+    "related_complaint_id_fk_code": "CMP-2026-000989",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-15T03:56:47.838758+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000683",
+    "related_complaint_id_fk_code": "CMP-2026-001009",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-01-02T06:25:02.027711+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000312",
+    "related_complaint_id_fk_code": "CMP-2026-001019",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-08T04:19:01.422031+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000294",
+    "related_complaint_id_fk_code": "CMP-2026-001036",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-01-02T05:15:40.161212+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000453",
+    "related_complaint_id_fk_code": "CMP-2026-001048",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-02T15:52:29.219736+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001052",
+    "related_complaint_id_fk_code": "CMP-2026-001058",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-11T19:05:36.532014+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000135",
+    "related_complaint_id_fk_code": "CMP-2026-001103",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-15T03:07:03.522334+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000927",
+    "related_complaint_id_fk_code": "CMP-2026-001149",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-28T06:07:42.272801+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000764",
+    "related_complaint_id_fk_code": "CMP-2026-001164",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-08T12:13:01.956339+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000677",
+    "related_complaint_id_fk_code": "CMP-2026-001205",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-09T18:13:32.211339+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001066",
+    "related_complaint_id_fk_code": "CMP-2026-001243",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-07T16:47:27.919778+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000581",
+    "related_complaint_id_fk_code": "CMP-2026-001260",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-31T07:51:49.190771+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000468",
+    "related_complaint_id_fk_code": "CMP-2026-001273",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-19T17:16:22.090770+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001173",
+    "related_complaint_id_fk_code": "CMP-2026-001280",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-24T05:38:28.511138+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001019",
+    "related_complaint_id_fk_code": "CMP-2026-001288",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-05T02:28:23.706702+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000870",
+    "related_complaint_id_fk_code": "CMP-2026-001315",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-10T16:56:35.668595+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001204",
+    "related_complaint_id_fk_code": "CMP-2026-001361",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-17T17:18:36.816509+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000336",
+    "related_complaint_id_fk_code": "CMP-2026-001373",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-08T21:39:43.016241+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001004",
+    "related_complaint_id_fk_code": "CMP-2026-001382",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-23T08:59:31.624775+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000008",
+    "related_complaint_id_fk_code": "CMP-2026-001388",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-24T16:14:53.204227+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000542",
+    "related_complaint_id_fk_code": "CMP-2026-001423",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-05T16:15:13.055432+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001114",
+    "related_complaint_id_fk_code": "CMP-2026-001449",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-01-13T12:31:27.907893+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000183",
+    "related_complaint_id_fk_code": "CMP-2026-001467",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-21T06:26:52.410997+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001369",
+    "related_complaint_id_fk_code": "CMP-2026-001500",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-28T15:12:38.340710+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001064",
+    "related_complaint_id_fk_code": "CMP-2026-001504",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-05T17:43:28.552910+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000656",
+    "related_complaint_id_fk_code": "CMP-2026-001505",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-25T10:03:48.148395+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000969",
+    "related_complaint_id_fk_code": "CMP-2026-001517",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-01-05T22:12:41.761783+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000093",
+    "related_complaint_id_fk_code": "CMP-2026-001521",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-14T20:29:51.174929+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000797",
+    "related_complaint_id_fk_code": "CMP-2026-001534",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-14T12:47:29.956867+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001475",
+    "related_complaint_id_fk_code": "CMP-2026-001551",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-12T06:53:10.984901+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000002",
+    "related_complaint_id_fk_code": "CMP-2026-001565",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-03T20:46:54.789082+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000957",
+    "related_complaint_id_fk_code": "CMP-2026-001674",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-03-06T01:29:15.960544+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001550",
+    "related_complaint_id_fk_code": "CMP-2026-001684",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-23T12:00:53.591484+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001390",
+    "related_complaint_id_fk_code": "CMP-2026-001722",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-09-22T02:16:38.133628+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001789",
+    "related_complaint_id_fk_code": "CMP-2026-001792",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-02T20:38:29.319000+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001320",
+    "related_complaint_id_fk_code": "CMP-2026-001817",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-01-16T05:53:39.152501+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000883",
+    "related_complaint_id_fk_code": "CMP-2026-001831",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-02-11T14:55:20.305138+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000437",
+    "related_complaint_id_fk_code": "CMP-2026-001849",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-23T22:28:38.315146+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000364",
+    "related_complaint_id_fk_code": "CMP-2026-001853",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-05-03T12:02:33.067481+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001498",
+    "related_complaint_id_fk_code": "CMP-2026-001863",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-06-27T14:05:27.390703+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001604",
+    "related_complaint_id_fk_code": "CMP-2026-001879",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-20T12:40:27.934907+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000864",
+    "related_complaint_id_fk_code": "CMP-2026-001897",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-09-24T01:32:22.481298+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000096",
+    "related_complaint_id_fk_code": "CMP-2026-001908",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-04-24T06:25:10.621187+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000787",
+    "related_complaint_id_fk_code": "CMP-2026-001911",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-07-25T14:37:11.857236+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-000844",
+    "related_complaint_id_fk_code": "CMP-2026-001920",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-07T07:50:02.743838+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001535",
+    "related_complaint_id_fk_code": "CMP-2026-001972",
+    "relationship_type": "repeat"
+  },
+  {
+    "created_at": "2026-08-16T08:32:11.185460+00:00",
+    "notes": "Repeat complaint from same customer on similar issue",
+    "primary_complaint_id_fk_code": "CMP-2026-001662",
+    "related_complaint_id_fk_code": "CMP-2026-001980",
+    "relationship_type": "repeat"
+  }
+]

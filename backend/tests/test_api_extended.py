@@ -236,6 +236,12 @@ def test_reports_enriched_response_structure(client: TestClient):
     assert "total_files" in data
     assert "manifest" in data
     assert data["total"] >= 4
+    assert {item["report_id"] for item in data["reports"]} >= {
+        "baseline_manifest",
+        "reproducibility_report",
+        "validation_report",
+        "anomaly_report",
+    }
 
 
 def test_reports_baseline_manifest_sub_report(client: TestClient):
@@ -252,6 +258,83 @@ def test_reports_unknown_report_id_returns_404(client: TestClient):
     """GET /api/v1/reports/{unknown} returns 404."""
     response = client.get("/api/v1/reports/nonexistent_report_xyz")
     assert response.status_code == 404
+
+
+def test_reports_file_download_checksum_and_path_containment(client: TestClient, monkeypatch, tmp_path):
+    import hashlib
+    import json
+    from types import SimpleNamespace
+
+    import app.api.v1.reports as reports_api
+
+    baseline_dir = tmp_path / "baseline"
+    csv_dir = baseline_dir / "csv"
+    csv_dir.mkdir(parents=True)
+    content = b"id,value\n1,example\n"
+    (csv_dir / "sample.csv").write_bytes(content)
+    (baseline_dir / "manifest.json").write_text(
+        json.dumps({"files": {"csv/sample.csv": {"sha256": hashlib.sha256(content).hexdigest()}}}),
+        encoding="utf-8",
+    )
+    sibling = tmp_path / "baseline-secrets"
+    sibling.mkdir()
+    (sibling / "private.txt").write_text("private", encoding="utf-8")
+    monkeypatch.setattr(reports_api, "get_settings", lambda: SimpleNamespace(data_dir=tmp_path))
+
+    listing = client.get("/api/v1/reports")
+    assert listing.status_code == 200
+    sample = next(item for item in listing.json()["files"] if item["path"] == "csv/sample.csv")
+    expected_hash = hashlib.sha256(content).hexdigest()
+    assert sample["sha256"] == expected_hash
+
+    download = client.get("/api/v1/reports/download", params={"file": "csv/sample.csv"})
+    assert download.status_code == 200
+    assert download.content == content
+    assert download.headers["x-checksum-sha256"] == expected_hash
+
+    traversal = client.get(
+        "/api/v1/reports/download",
+        params={"file": "../baseline-secrets/private.txt"},
+    )
+    assert traversal.status_code == 403
+
+
+def test_virtual_reports_can_be_viewed_and_downloaded(client: TestClient):
+    import hashlib
+
+    for report_id in ("validation_report", "anomaly_report"):
+        view = client.get(f"/api/v1/reports/{report_id}")
+        assert view.status_code == 200
+
+        download = client.get(f"/api/v1/reports/{report_id}/download")
+        assert download.status_code == 200
+        assert download.headers["content-disposition"].endswith(f'{report_id}.json"')
+        assert download.headers["x-checksum-sha256"] == hashlib.sha256(download.content).hexdigest()
+
+
+def test_export_baseline_leaves_database_records_unchanged(client: TestClient, monkeypatch, tmp_path):
+    from app.config import settings
+    from app.exports.exporter import BaselineExporter
+
+    class IsolatedBaselineExporter(BaselineExporter):
+        def __init__(self, base_dir=None):
+            super().__init__(base_dir=base_dir or tmp_path / "baseline")
+
+    monkeypatch.setattr(settings, "app_env", "production")
+    monkeypatch.setattr("app.exports.exporter.BaselineExporter", IsolatedBaselineExporter)
+    before = client.get("/api/v1/dashboard/stats").json()
+
+    response = client.post(
+        "/api/v1/reports/export-baseline",
+        params={"scale": "starter", "seed": 20261022},
+    )
+
+    after = client.get("/api/v1/dashboard/stats").json()
+    assert response.status_code == 200
+    assert response.json()["reproducibility"]["status"] == "SUCCESS"
+    assert before["total_complaints"] == after["total_complaints"]
+    assert before["total_customers"] == after["total_customers"]
+    assert (tmp_path / "baseline" / "reproducibility_report.md").exists()
 
 
 # ---------------------------------------------------------------------------

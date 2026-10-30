@@ -1,20 +1,23 @@
 """
 End-to-end verification script for YottaFlex Complaint Intelligence Platform.
 
-Self-contained: injects anomalies into an isolated copy of the production DB,
-exercises all 12 critical API workflows, then cleans up the temp DB.
+Self-contained: creates a full synthetic fixture database in a temporary
+directory, injects anomalies there, exercises the full complaint and report
+workflows, then cleans up the temporary database.
 
 Usage:
     python scripts/verify_e2e_live.py [--run-n N]
 
 Design:
-- Creates a temp DB copy, injects anomalies, runs API server against the temp DB.
-- Never modifies the canonical baseline database.
+- Creates a full synthetic fixture DB in a temporary directory, injects anomalies,
+  and runs the API server against that isolated DB.
+- Never connects to or modifies the production database.
 - Fully repeatable — second run produces the same results.
 """
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import shutil
 import subprocess
@@ -23,6 +26,7 @@ import tempfile
 import time
 import urllib.request
 import urllib.error
+from urllib.parse import urlencode
 from pathlib import Path
 
 # Ensure UTF-8 output on Windows console
@@ -31,7 +35,6 @@ if sys.platform == "win32":
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-CANONICAL_DB = BACKEND_DIR / "complaint_intelligence.db"
 # Use port 8001 to avoid conflicts with any development server running on 8000
 API_URL = "http://127.0.0.1:8001"
 
@@ -53,6 +56,12 @@ def http_get(path):
     req = urllib.request.Request(f"{API_URL}{path}")
     with urllib.request.urlopen(req, timeout=15) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def http_get_bytes(path):
+    req = urllib.request.Request(f"{API_URL}{path}")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return resp.read()
 
 
 def http_post(path, data):
@@ -182,6 +191,35 @@ def run_tests(run_n=1):
     assert manifest_rep.get("scale") == "full", f"Expected scale='full', got {manifest_rep.get('scale')}"
     ok("E2E-12", f"Baseline manifest report verified ({len(manifest_rep['files'])} files, scale={manifest_rep['scale']})")
 
+    # 13. Report catalog and file checksums
+    report_list = http_get("/api/v1/reports")
+    report_ids = {report["report_id"] for report in report_list["reports"]}
+    assert {
+        "baseline_manifest",
+        "reproducibility_report",
+        "validation_report",
+        "anomaly_report",
+    }.issubset(report_ids)
+    assert report_list["total_files"] == len(report_list["files"])
+    assert report_list["files"], "No downloadable report files were listed"
+    for report_file in report_list["files"]:
+        content = http_get_bytes(
+            "/api/v1/reports/download?" + urlencode({"file": report_file["path"]})
+        )
+        checksum = hashlib.sha256(content).hexdigest()
+        assert checksum == report_file["sha256"], (
+            f"SHA-256 mismatch for {report_file['path']}: {checksum}"
+        )
+    ok("E2E-13", f"Report catalog verified; downloaded and checksum-validated all {report_list['total_files']} files")
+
+    # 14. Dynamic reports can be viewed and individually downloaded
+    for report_id in ("validation_report", "anomaly_report"):
+        report = http_get(f"/api/v1/reports/{report_id}")
+        assert report, f"{report_id} returned no report content"
+        downloaded = http_get_bytes(f"/api/v1/reports/{report_id}/download")
+        assert downloaded, f"{report_id} download returned no content"
+    ok("E2E-14", "Validation and anomaly reports are viewable and individually downloadable")
+
     print()
     print("=" * 60)
     print(f"E2E RESULT (Run #{run_n}): {passed} PASSED | {failed} FAILED")
@@ -192,23 +230,35 @@ def run_tests(run_n=1):
 
 
 def prepare_isolated_db(temp_dir: Path) -> Path:
-    """Copy canonical DB to isolated temp path, inject anomalies, return path."""
+    """Build a full synthetic fixture DB in a temp directory and inject anomalies."""
     test_db = temp_dir / "e2e_test.db"
-    shutil.copy2(CANONICAL_DB, test_db)
-    print(f"  [setup] Copied canonical DB ({CANONICAL_DB.stat().st_size // 1024:,} KB) to {test_db.name}")
-
-    # Inject anomalies via SQLAlchemy against the isolated copy
+    isolated_data_dir = temp_dir / "data"
+    (isolated_data_dir / "anomalies").mkdir(parents=True)
+    shutil.copytree(BACKEND_DIR / "data" / "baseline", isolated_data_dir / "baseline")
+    os.environ["DATA_DIR"] = str(isolated_data_dir)
     sys.path.insert(0, str(BACKEND_DIR))
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
     from app.anomaly.detector import inject_anomalies
+    from app.database import Base
+    from app.generator.loader import load_all
+    from app.generator.orchestrator import DataGenerator
+    import app.models  # noqa: F401
 
     engine = create_engine(
         f"sqlite:///{test_db}",
         connect_args={"check_same_thread": False},
     )
+    Base.metadata.create_all(bind=engine)
     Session = sessionmaker(bind=engine)
     with Session() as session:
+        data = DataGenerator(seed=20261022, scale="full").generate_all()
+        counts = load_all(session, data, clear_first=True)
+        session.commit()
+        print(
+            f"  [setup] Created isolated full fixture ({counts.get('complaints', 0):,} complaints, "
+            f"{counts.get('customers', 0):,} customers)."
+        )
         result = inject_anomalies(session, count=6)
         session.commit()
     print(f"  [setup] Injected {result.injected_count} anomaly records into isolated DB.")
@@ -221,11 +271,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YottaFlex E2E Live Verification")
     parser.add_argument("--run-n", type=int, default=1, help="Run number label (for repeated runs)")
     args = parser.parse_args()
-
-    if not CANONICAL_DB.exists():
-        print(f"ERROR: Canonical database not found at {CANONICAL_DB}", file=sys.stderr)
-        print("Run:  python cli.py generate --scale full --seed 20261022 --clear --export", file=sys.stderr)
-        sys.exit(1)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="yottaflex_e2e_"))
     success = False

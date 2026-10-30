@@ -1,43 +1,45 @@
 import { useState, useEffect } from 'react';
 import { apiClient, api } from '../api';
+import type { ReportsResponse } from '../api';
 
-async function downloadFile(filePath: string, fileName: string) {
-  try {
-    const resp = await fetch(
-      `${api.defaults.baseURL}/api/v1/reports/download?file=${encodeURIComponent(filePath)}`
-    );
-    if (!resp.ok) {
-      const detail = await resp.text().catch(() => `HTTP ${resp.status}`);
-      throw new Error(detail);
+async function saveDownload(blob: Blob, fileName: string, expectedSha256?: string) {
+  if (expectedSha256) {
+    const bytes = await blob.arrayBuffer();
+    const digest = await crypto.subtle.digest('SHA-256', bytes);
+    const actualSha256 = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+    if (actualSha256 !== expectedSha256) {
+      throw new Error(`Checksum mismatch for ${fileName}`);
     }
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  }
+
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+async function downloadFile(filePath: string, fileName: string, sha256: string) {
+  try {
+    const response = await apiClient.downloadReportFile(filePath);
+    await saveDownload(response.data, fileName, sha256);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     alert(`Download failed: ${msg}`);
   }
 }
 
-interface ReportFile {
-  name: string;
-  path: string;
-  size_bytes: number;
-  type: string;
-  modified_at?: string;
-}
-
-interface ReportsResponse {
-  baseline_dir: string;
-  files: ReportFile[];
-  total_files: number;
-  manifest?: Record<string, string>;
+async function downloadReport(reportId: string, fileName: string) {
+  try {
+    const response = await apiClient.downloadReport(reportId);
+    await saveDownload(response.data, fileName, response.headers['x-checksum-sha256']);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Unknown error';
+    alert(`Download failed: ${msg}`);
+  }
 }
 
 function formatSize(bytes: number) {
@@ -66,7 +68,7 @@ export default function Reports() {
     setError(null);
     try {
       const res = await apiClient.getReports();
-      setReports(res.data as ReportsResponse);
+      setReports(res.data);
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
       const msg = err instanceof Error ? err.message : 'Failed to load reports';
@@ -77,19 +79,15 @@ export default function Reports() {
   };
 
   const generateAndExport = async (scale: 'starter' | 'full') => {
-    if (!import.meta.env.DEV) {
-      setGenMsg('❌ Dataset generation is disabled in production to protect existing records.');
-      return;
-    }
     setGenerating(true);
     setGenMsg(null);
     try {
-      const res = await apiClient.generateData({ scale, seed: 20261022, clear_existing: true, export_baseline: true });
-      setGenMsg(`✅ Generated ${res.data.counts.complaints || 0} complaints (scale: ${scale}). Refreshing reports…`);
+      await apiClient.exportBaseline(scale, 20261022);
+      setGenMsg(`✅ Exported baseline dataset files (scale: ${scale}). Refreshing reports…`);
       await fetchReports();
     } catch (err: unknown) {
       const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
-      const msg = err instanceof Error ? err.message : 'Generation failed';
+      const msg = err instanceof Error ? err.message : 'Export failed';
       setGenMsg(`❌ ${detail || msg}`);
     } finally {
       setGenerating(false);
@@ -114,32 +112,30 @@ export default function Reports() {
         >
           ↻ Refresh
         </button>
-        {import.meta.env.DEV ? (
-          <>
-            <button
-              id="generate-starter-btn"
-              className="btn btn-secondary"
-              onClick={() => generateAndExport('starter')}
-              disabled={generating}
-            >
-              {generating ? '⏳ Generating…' : '🔄 Regenerate Starter'}
-            </button>
-            <button
-              id="generate-full-btn"
-              className="btn btn-primary"
-              onClick={() => generateAndExport('full')}
-              disabled={generating}
-            >
-              {generating ? '⏳ Generating…' : '🚀 Generate Full Dataset'}
-            </button>
-          </>
-        ) : (
+        <button
+          id="generate-starter-btn"
+          className="btn btn-secondary"
+          onClick={() => generateAndExport('starter')}
+          disabled={generating}
+        >
+          {generating ? '⏳ Exporting…' : '🔄 Export Starter Baseline'}
+        </button>
+        <button
+          id="generate-full-btn"
+          className="btn btn-primary"
+          onClick={() => generateAndExport('full')}
+          disabled={generating}
+          title="Generates CSV and JSON exports only; it does not modify database records."
+        >
+          {generating ? '⏳ Exporting…' : '🚀 Export Full Baseline'}
+        </button>
+        {!import.meta.env.DEV && (
           <div
             className="topbar-chip"
             style={{ fontSize: 11, color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-            title="Dataset generation is restricted to local development to protect production data."
+            title="Baseline export generation does not modify production database records."
           >
-            🛡️ Production Mode (Dataset Protected)
+            🛡️ Production Database Protected
           </div>
         )}
         {reports?.baseline_dir && (
@@ -181,6 +177,62 @@ export default function Reports() {
               {formatSize(reports.files?.reduce((a, f) => a + (f.size_bytes || 0), 0) || 0)}
             </div>
             <div className="stat-card-change">on disk</div>
+          </div>
+        </div>
+      )}
+
+      {reports?.reports && reports.reports.length > 0 && (
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div className="card-header">
+            <div className="card-title">📑 System Reports</div>
+            <div className="card-subtitle">{reports.reports.length} available reports</div>
+          </div>
+          <div className="table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Report</th>
+                  <th>Category</th>
+                  <th>Format</th>
+                  <th>Generated</th>
+                  <th style={{ width: 180, textAlign: 'center' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.reports.map(report => (
+                  <tr key={report.report_id}>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{report.title}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{report.description}</div>
+                    </td>
+                    <td>{report.category}</td>
+                    <td><span className="badge badge-neutral">{report.format.toUpperCase()}</span></td>
+                    <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                      {report.generated_at ? new Date(report.generated_at).toLocaleString() : '—'}
+                    </td>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      {report.url && (
+                        <a
+                          className="btn btn-secondary btn-sm"
+                          href={new URL(report.url, `${api.defaults.baseURL}/`).toString()}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ marginRight: 6 }}
+                        >
+                          View
+                        </a>
+                      )}
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => downloadReport(report.report_id, `${report.report_id}.${report.format === 'markdown' ? 'md' : 'json'}`)}
+                      >
+                        ⬇ Download
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -266,7 +318,7 @@ export default function Reports() {
                           <button
                             className="btn btn-secondary btn-sm"
                             title={`Download ${f.name}`}
-                            onClick={() => downloadFile(f.path, f.name)}
+                            onClick={() => downloadFile(f.path, f.name, f.sha256)}
                             style={{ fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }}
                           >
                             ⬇ Export CSV
@@ -318,7 +370,7 @@ export default function Reports() {
                           <button
                             className="btn btn-secondary btn-sm"
                             title={`Download ${f.name}`}
-                            onClick={() => downloadFile(f.path, f.name)}
+                            onClick={() => downloadFile(f.path, f.name, f.sha256)}
                             style={{ fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }}
                           >
                             ⬇ Export JSON
@@ -366,7 +418,7 @@ export default function Reports() {
                           <button
                             className="btn btn-secondary btn-sm"
                             title={`Download ${f.name}`}
-                            onClick={() => downloadFile(f.path, f.name)}
+                            onClick={() => downloadFile(f.path, f.name, f.sha256)}
                             style={{ fontSize: 11, padding: '3px 10px', whiteSpace: 'nowrap' }}
                           >
                             ⬇ Export

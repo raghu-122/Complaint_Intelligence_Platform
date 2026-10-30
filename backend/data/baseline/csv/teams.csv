@@ -1,0 +1,7 @@
+code,created_at,description,handles_priority,is_active,name,safety_capable,specializations,team_id
+SAFETY,2026-01-01T00:00:00+00:00,Team handling PRODUCT_SAFETY,"[""P1"", ""P2""]",True,Safety & Compliance Team,True,"[""PRODUCT_SAFETY""]",TM-001
+DELIVERY,2026-01-01T00:00:00+00:00,"Team handling DELIVERY_DELAY, MISSING_ORDER","[""P1"", ""P2"", ""P3"", ""P4""]",True,Delivery Operations Team,False,"[""DELIVERY_DELAY"", ""MISSING_ORDER""]",TM-002
+RETURNS,2026-01-01T00:00:00+00:00,"Team handling DAMAGED_PRODUCT, WRONG_ITEM, REFUND","[""P1"", ""P2"", ""P3"", ""P4""]",True,Returns & Refunds Team,False,"[""DAMAGED_PRODUCT"", ""WRONG_ITEM"", ""REFUND""]",TM-003
+BILLING,2026-01-01T00:00:00+00:00,Team handling PAYMENT,"[""P1"", ""P2"", ""P3"", ""P4""]",True,Billing & Payments Team,False,"[""PAYMENT""]",TM-004
+QUALITY,2026-01-01T00:00:00+00:00,Team handling PRODUCT_QUALITY,"[""P1"", ""P2"", ""P3"", ""P4""]",True,Product Quality Team,False,"[""PRODUCT_QUALITY""]",TM-005
+GENERAL,2026-01-01T00:00:00+00:00,"Team handling ACCOUNT_SERVICE, OTHER","[""P2"", ""P3"", ""P4""]",True,General Support Team,False,"[""ACCOUNT_SERVICE"", ""OTHER""]",TM-006

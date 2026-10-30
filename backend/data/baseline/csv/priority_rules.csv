@@ -1,0 +1,8 @@
+condition,config_version,description,effective_date,is_active,name,precedence,priority_code,priority_upgrade,rule_id
+category.safety_risk == true,1.0.0,Any confirmed safety incident is always P1 regardless of other factors,2026-01-01,True,safety_incident,1,P1,0,PR-001
+customer.vulnerability_flag == true AND sentiment == 'negative',1.0.0,Vulnerable customer with negative sentiment is P1,2026-01-01,True,vulnerable_customer_negative_sentiment,2,P1,0,PR-002
+order.total_amount > 500 AND sentiment == 'negative',1.0.0,High-value order (>500) with negative sentiment is P2,2026-01-01,True,high_value_negative_sentiment,3,P2,0,PR-003
+customer.prior_complaint_count >= 3,1.0.0,Complaint from customer with 3+ prior complaints upgrades one level,2026-01-01,True,recurrence_upgrade,4,,1,PR-004
+order.total_amount >= 200 AND order.total_amount <= 500 AND sentiment == 'negative',1.0.0,Medium-value order (200-500) with negative sentiment is P3,2026-01-01,True,medium_value_negative,5,P3,0,PR-005
+sentiment == 'negative',1.0.0,Standard complaint with negative sentiment is P3,2026-01-01,True,standard_negative_sentiment,6,P3,0,PR-006
+sentiment != 'negative',1.0.0,Low-severity inquiry or non-negative sentiment complaint is P4,2026-01-01,True,general_inquiry_or_low_severity,99,P4,0,PR-007

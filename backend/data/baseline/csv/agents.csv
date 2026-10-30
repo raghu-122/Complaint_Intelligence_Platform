@@ -1,0 +1,49 @@
+agent_id,created_at,email,is_active,max_concurrent_cases,name,open_complaint_count,role,team_code,team_id_fk_code
+AGT-000001,2026-01-01T00:00:00+00:00,erin.riley.1@yottaflex-support.local,True,15,Erin Riley,0,Agent,SAFETY,SAFETY
+AGT-000002,2026-01-01T00:00:00+00:00,melissa.williams.2@yottaflex-support.local,True,15,Melissa Williams,0,Agent,SAFETY,SAFETY
+AGT-000003,2026-01-01T00:00:00+00:00,madison.hall.3@yottaflex-support.local,True,15,Madison Hall,0,Agent,SAFETY,SAFETY
+AGT-000004,2026-01-01T00:00:00+00:00,aaron.petersen.4@yottaflex-support.local,True,15,Aaron Petersen,0,Agent,SAFETY,SAFETY
+AGT-000005,2026-01-01T00:00:00+00:00,david.gonzalez.5@yottaflex-support.local,True,15,David Gonzalez,0,Senior Agent,SAFETY,SAFETY
+AGT-000006,2026-01-01T00:00:00+00:00,kyle.miles.6@yottaflex-support.local,True,15,Kyle Miles,0,Agent,SAFETY,SAFETY
+AGT-000007,2026-01-01T00:00:00+00:00,diane.rodriguez.7@yottaflex-support.local,True,15,Diane Rodriguez,0,Agent,SAFETY,SAFETY
+AGT-000008,2026-01-01T00:00:00+00:00,james.hernandez.8@yottaflex-support.local,True,15,James Hernandez,0,Agent,SAFETY,SAFETY
+AGT-000009,2026-01-01T00:00:00+00:00,darrell.garza.9@yottaflex-support.local,True,15,Darrell Garza,0,Agent,DELIVERY,DELIVERY
+AGT-000010,2026-01-01T00:00:00+00:00,adam.wilson.10@yottaflex-support.local,True,15,Adam Wilson,0,Senior Agent,DELIVERY,DELIVERY
+AGT-000011,2026-01-01T00:00:00+00:00,donald.bailey.11@yottaflex-support.local,True,15,Donald Bailey,0,Agent,DELIVERY,DELIVERY
+AGT-000012,2026-01-01T00:00:00+00:00,brian.bass.12@yottaflex-support.local,True,15,Brian Bass,0,Agent,DELIVERY,DELIVERY
+AGT-000013,2026-01-01T00:00:00+00:00,eddie.ellis.13@yottaflex-support.local,True,15,Eddie Ellis,0,Agent,DELIVERY,DELIVERY
+AGT-000014,2026-01-01T00:00:00+00:00,ruth.hart.14@yottaflex-support.local,True,15,Ruth Hart,0,Agent,DELIVERY,DELIVERY
+AGT-000015,2026-01-01T00:00:00+00:00,william.palmer.15@yottaflex-support.local,True,15,William Palmer,0,Senior Agent,DELIVERY,DELIVERY
+AGT-000016,2026-01-01T00:00:00+00:00,cody.thompson.16@yottaflex-support.local,True,15,Cody Thompson,0,Agent,DELIVERY,DELIVERY
+AGT-000017,2026-01-01T00:00:00+00:00,christina.butler.17@yottaflex-support.local,True,15,Christina Butler,0,Agent,RETURNS,RETURNS
+AGT-000018,2026-01-01T00:00:00+00:00,christopher.bryant.18@yottaflex-support.local,True,15,Christopher Bryant,0,Agent,RETURNS,RETURNS
+AGT-000019,2026-01-01T00:00:00+00:00,kathy.williams.19@yottaflex-support.local,True,15,Kathy Williams,0,Agent,RETURNS,RETURNS
+AGT-000020,2026-01-01T00:00:00+00:00,melissa.bradshaw.20@yottaflex-support.local,True,15,Melissa Bradshaw,0,Senior Agent,RETURNS,RETURNS
+AGT-000021,2026-01-01T00:00:00+00:00,jared.brown.21@yottaflex-support.local,True,15,Jared Brown,0,Agent,RETURNS,RETURNS
+AGT-000022,2026-01-01T00:00:00+00:00,charles.davis.22@yottaflex-support.local,True,15,Charles Davis,0,Agent,RETURNS,RETURNS
+AGT-000023,2026-01-01T00:00:00+00:00,william.smith.23@yottaflex-support.local,True,15,William Smith,0,Agent,RETURNS,RETURNS
+AGT-000024,2026-01-01T00:00:00+00:00,charles.robinson.24@yottaflex-support.local,True,15,Charles Robinson,0,Agent,RETURNS,RETURNS
+AGT-000025,2026-01-01T00:00:00+00:00,victoria.mendoza.25@yottaflex-support.local,True,15,Victoria Mendoza,0,Senior Agent,BILLING,BILLING
+AGT-000026,2026-01-01T00:00:00+00:00,charles.patel.26@yottaflex-support.local,True,15,Charles Patel,0,Agent,BILLING,BILLING
+AGT-000027,2026-01-01T00:00:00+00:00,katherine.diaz.27@yottaflex-support.local,True,15,Katherine Diaz,0,Agent,BILLING,BILLING
+AGT-000028,2026-01-01T00:00:00+00:00,kelsey.watkins.28@yottaflex-support.local,True,15,Kelsey Watkins,0,Agent,BILLING,BILLING
+AGT-000029,2026-01-01T00:00:00+00:00,vickie.smith.29@yottaflex-support.local,True,15,Vickie Smith,0,Agent,BILLING,BILLING
+AGT-000030,2026-01-01T00:00:00+00:00,timothy.young.30@yottaflex-support.local,True,15,Timothy Young,0,Senior Agent,BILLING,BILLING
+AGT-000031,2026-01-01T00:00:00+00:00,anthony.fletcher.31@yottaflex-support.local,True,15,Anthony Fletcher,0,Agent,BILLING,BILLING
+AGT-000032,2026-01-01T00:00:00+00:00,kevin.black.32@yottaflex-support.local,True,15,Kevin Black,0,Agent,BILLING,BILLING
+AGT-000033,2026-01-01T00:00:00+00:00,joanna.ortega.33@yottaflex-support.local,True,15,Joanna Ortega,0,Agent,QUALITY,QUALITY
+AGT-000034,2026-01-01T00:00:00+00:00,jessica.vincent.34@yottaflex-support.local,True,15,Jessica Vincent,0,Agent,QUALITY,QUALITY
+AGT-000035,2026-01-01T00:00:00+00:00,taylor.richard.35@yottaflex-support.local,True,15,Taylor Richard,0,Senior Agent,QUALITY,QUALITY
+AGT-000036,2026-01-01T00:00:00+00:00,david.barrera.36@yottaflex-support.local,True,15,David Barrera,0,Agent,QUALITY,QUALITY
+AGT-000037,2026-01-01T00:00:00+00:00,bonnie.williams.37@yottaflex-support.local,True,15,Bonnie Williams,0,Agent,QUALITY,QUALITY
+AGT-000038,2026-01-01T00:00:00+00:00,bradley.wagner.38@yottaflex-support.local,True,15,Bradley Wagner,0,Agent,QUALITY,QUALITY
+AGT-000039,2026-01-01T00:00:00+00:00,alexis.palmer.39@yottaflex-support.local,True,15,Alexis Palmer,0,Agent,QUALITY,QUALITY
+AGT-000040,2026-01-01T00:00:00+00:00,ryan.stevens.40@yottaflex-support.local,True,15,Ryan Stevens,0,Senior Agent,QUALITY,QUALITY
+AGT-000041,2026-01-01T00:00:00+00:00,matthew.harris.41@yottaflex-support.local,True,15,Matthew Harris,0,Agent,GENERAL,GENERAL
+AGT-000042,2026-01-01T00:00:00+00:00,valerie.davidson.42@yottaflex-support.local,True,15,Valerie Davidson,0,Agent,GENERAL,GENERAL
+AGT-000043,2026-01-01T00:00:00+00:00,carrie.vance.43@yottaflex-support.local,True,15,Carrie Vance,0,Agent,GENERAL,GENERAL
+AGT-000044,2026-01-01T00:00:00+00:00,ellen.hardy.44@yottaflex-support.local,True,15,Ellen Hardy,0,Agent,GENERAL,GENERAL
+AGT-000045,2026-01-01T00:00:00+00:00,sara.ramirez.45@yottaflex-support.local,True,15,Sara Ramirez,0,Senior Agent,GENERAL,GENERAL
+AGT-000046,2026-01-01T00:00:00+00:00,elizabeth.scott.46@yottaflex-support.local,True,15,Elizabeth Scott,0,Agent,GENERAL,GENERAL
+AGT-000047,2026-01-01T00:00:00+00:00,xavier.sanders.47@yottaflex-support.local,True,15,Xavier Sanders,0,Agent,GENERAL,GENERAL
+AGT-000048,2026-01-01T00:00:00+00:00,laura.roth.48@yottaflex-support.local,True,15,Laura Roth,0,Agent,GENERAL,GENERAL

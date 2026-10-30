@@ -1,0 +1,23 @@
+{
+  "exported_at": "2026-01-01T00:00:00+00:00",
+  "record_counts": {
+    "agents": 48,
+    "assignments": 2000,
+    "categories": 10,
+    "complaint_relationships": 70,
+    "complaints": 2000,
+    "customers": 5000,
+    "messages": 6000,
+    "order_items": 11240,
+    "orders": 8000,
+    "priority_rules": 7,
+    "products": 200,
+    "resolutions": 1081,
+    "sla_clocks": 2000,
+    "sla_events": 4361,
+    "status_events": 5499,
+    "surveys": 368,
+    "teams": 6
+  },
+  "total_entities": 17
+}

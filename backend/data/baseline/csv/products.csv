@@ -1,0 +1,201 @@
+brand,category,created_at,currency,description,is_active,is_safety_flagged,name,product_id,sku,stock_quantity,subcategory,unit_price,updated_at
+Moran-Mcbride,Toys,2026-01-01T00:00:00+00:00,USD,High quality lego set from Moran-Mcbride.,True,False,Moran-Mcbride LEGO Set,PRD-000001,SKU-TOYS-000001,88,LEGO Set,174.07,2026-01-01T00:00:00+00:00
+Thompson-Mason,Electronics,2026-01-01T00:00:00+00:00,USD,High quality speaker from Thompson-Mason.,True,False,Thompson-Mason Speaker,PRD-000002,SKU-ELEC-000002,120,Speaker,149.49,2026-01-01T00:00:00+00:00
+Robertson-Hayes,Electronics,2026-01-01T00:00:00+00:00,USD,High quality camera from Robertson-Hayes.,True,False,Robertson-Hayes Camera,PRD-000003,SKU-ELEC-000003,67,Camera,496.34,2026-01-01T00:00:00+00:00
+"Bright,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality laptop from Bright,.",True,False,"Bright, Laptop",PRD-000004,SKU-ELEC-000004,327,Laptop,120.87,2026-01-01T00:00:00+00:00
+Holt-Adams,Clothing,2026-01-01T00:00:00+00:00,USD,High quality socks from Holt-Adams.,True,False,Holt-Adams Socks,PRD-000005,SKU-CLOT-000005,76,Socks,120.89,2026-01-01T00:00:00+00:00
+"Chang,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality jeans from Chang,.",True,False,"Chang, Jeans",PRD-000006,SKU-CLOT-000006,2,Jeans,356.59,2026-01-01T00:00:00+00:00
+Pope,Clothing,2026-01-01T00:00:00+00:00,USD,High quality jacket from Pope.,True,False,Pope Jacket,PRD-000007,SKU-CLOT-000007,178,Jacket,89.7,2026-01-01T00:00:00+00:00
+Parks-Trevino,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality coffee beans from Parks-Trevino.,True,False,Parks-Trevino Coffee Beans,PRD-000008,SKU-FOOD-000008,493,Coffee Beans,42.59,2026-01-01T00:00:00+00:00
+Hernandez,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality coffee maker from Hernandez.,True,False,Hernandez Coffee Maker,PRD-000009,SKU-HOME-000009,468,Coffee Maker,277.7,2026-01-01T00:00:00+00:00
+"Dennis,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality shoes from Dennis,.",True,False,"Dennis, Shoes",PRD-000010,SKU-CLOT-000010,471,Shoes,139.06,2026-01-01T00:00:00+00:00
+Davis-Sullivan,Toys,2026-01-01T00:00:00+00:00,USD,High quality action figure from Davis-Sullivan.,True,False,Davis-Sullivan Action Figure,PRD-000011,SKU-TOYS-000011,223,Action Figure,506.28,2026-01-01T00:00:00+00:00
+Edwards,Beauty,2026-01-01T00:00:00+00:00,USD,High quality shampoo from Edwards.,True,False,Edwards Shampoo,PRD-000012,SKU-BEAU-000012,363,Shampoo,259.18,2026-01-01T00:00:00+00:00
+"Parks,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality laptop from Parks,.",True,False,"Parks, Laptop",PRD-000013,SKU-ELEC-000013,473,Laptop,513.05,2026-01-01T00:00:00+00:00
+Gray-Schmidt,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Gray-Schmidt.,True,False,Gray-Schmidt Gloves,PRD-000014,SKU-SPOR-000014,36,Gloves,40.36,2026-01-01T00:00:00+00:00
+Weber,Toys,2026-01-01T00:00:00+00:00,USD,High quality action figure from Weber.,True,False,Weber Action Figure,PRD-000015,SKU-TOYS-000015,98,Action Figure,182.72,2026-01-01T00:00:00+00:00
+Robinson,Electronics,2026-01-01T00:00:00+00:00,USD,High quality smartphone from Robinson.,True,False,Robinson Smartphone,PRD-000016,SKU-ELEC-000016,112,Smartphone,50.63,2026-01-01T00:00:00+00:00
+Rollins-Garcia,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality protein powder from Rollins-Garcia.,True,False,Rollins-Garcia Protein Powder,PRD-000017,SKU-FOOD-000017,378,Protein Powder,377.73,2026-01-01T00:00:00+00:00
+Kennedy,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Kennedy.,True,False,Kennedy Tablet,PRD-000018,SKU-ELEC-000018,455,Tablet,30.51,2026-01-01T00:00:00+00:00
+Velez-Wood,Beauty,2026-01-01T00:00:00+00:00,USD,High quality shampoo from Velez-Wood.,True,False,Velez-Wood Shampoo,PRD-000019,SKU-BEAU-000019,18,Shampoo,438.69,2026-01-01T00:00:00+00:00
+"Myers,",Sports,2026-01-01T00:00:00+00:00,USD,"High quality running shoes from Myers,.",True,False,"Myers, Running Shoes",PRD-000020,SKU-SPOR-000020,82,Running Shoes,454.15,2026-01-01T00:00:00+00:00
+Williams,Books,2026-01-01T00:00:00+00:00,USD,High quality dictionary from Williams.,True,False,Williams Dictionary,PRD-000021,SKU-BOOK-000021,377,Dictionary,312.82,2026-01-01T00:00:00+00:00
+"Chavez,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality remote car from Chavez,.",True,False,"Chavez, Remote Car",PRD-000022,SKU-TOYS-000022,157,Remote Car,31.14,2026-01-01T00:00:00+00:00
+Kramer-Newton,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality coffee beans from Kramer-Newton.,True,False,Kramer-Newton Coffee Beans,PRD-000023,SKU-FOOD-000023,61,Coffee Beans,507.58,2026-01-01T00:00:00+00:00
+Patterson-Foster,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Patterson-Foster.,True,False,Patterson-Foster Tablet,PRD-000024,SKU-ELEC-000024,25,Tablet,351.46,2026-01-01T00:00:00+00:00
+Carlson,Electronics,2026-01-01T00:00:00+00:00,USD,High quality camera from Carlson.,True,False,Carlson Camera,PRD-000025,SKU-ELEC-000025,7,Camera,305.89,2026-01-01T00:00:00+00:00
+Kelley,Beauty,2026-01-01T00:00:00+00:00,USD,High quality face mask from Kelley.,True,False,Kelley Face Mask,PRD-000026,SKU-BEAU-000026,10,Face Mask,172.81,2026-01-01T00:00:00+00:00
+Price,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality honey from Price.,True,False,Price Honey,PRD-000027,SKU-FOOD-000027,102,Honey,207.57,2026-01-01T00:00:00+00:00
+Wang-Morales,Toys,2026-01-01T00:00:00+00:00,USD,High quality remote car from Wang-Morales.,True,False,Wang-Morales Remote Car,PRD-000028,SKU-TOYS-000028,285,Remote Car,530.62,2026-01-01T00:00:00+00:00
+"Duncan,",Food & Beverage,2026-01-01T00:00:00+00:00,USD,"High quality chocolate box from Duncan,.",True,False,"Duncan, Chocolate Box",PRD-000029,SKU-FOOD-000029,437,Chocolate Box,449.99,2026-01-01T00:00:00+00:00
+Jones,Books,2026-01-01T00:00:00+00:00,USD,High quality cookbook from Jones.,True,False,Jones Cookbook,PRD-000030,SKU-BOOK-000030,203,Cookbook,311.64,2026-01-01T00:00:00+00:00
+"Hardin,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality remote car from Hardin,.",True,False,"Hardin, Remote Car",PRD-000031,SKU-TOYS-000031,428,Remote Car,442.4,2026-01-01T00:00:00+00:00
+"Mullen,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality board game from Mullen,.",True,False,"Mullen, Board Game",PRD-000032,SKU-TOYS-000032,77,Board Game,95.66,2026-01-01T00:00:00+00:00
+"Morgan,",Food & Beverage,2026-01-01T00:00:00+00:00,USD,"High quality olive oil from Morgan,.",True,False,"Morgan, Olive Oil",PRD-000033,SKU-FOOD-000033,77,Olive Oil,179.38,2026-01-01T00:00:00+00:00
+"Carpenter,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality smartphone from Carpenter,.",True,False,"Carpenter, Smartphone",PRD-000034,SKU-ELEC-000034,423,Smartphone,475.5,2026-01-01T00:00:00+00:00
+Arnold,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality honey from Arnold.,True,False,Arnold Honey,PRD-000035,SKU-FOOD-000035,344,Honey,352.28,2026-01-01T00:00:00+00:00
+Torres,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Torres.,True,False,Torres Gloves,PRD-000036,SKU-SPOR-000036,407,Gloves,423.89,2026-01-01T00:00:00+00:00
+Kelly-Brown,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality protein powder from Kelly-Brown.,True,False,Kelly-Brown Protein Powder,PRD-000037,SKU-FOOD-000037,439,Protein Powder,413.88,2026-01-01T00:00:00+00:00
+Norris,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality coffee maker from Norris.,True,False,Norris Coffee Maker,PRD-000038,SKU-HOME-000038,290,Coffee Maker,291.86,2026-01-01T00:00:00+00:00
+Elliott-Parker,Electronics,2026-01-01T00:00:00+00:00,USD,High quality smart watch from Elliott-Parker.,True,False,Elliott-Parker Smart Watch,PRD-000039,SKU-ELEC-000039,295,Smart Watch,262.37,2026-01-01T00:00:00+00:00
+"Stewart,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality action figure from Stewart,.",True,False,"Stewart, Action Figure",PRD-000040,SKU-TOYS-000040,172,Action Figure,115.77,2026-01-01T00:00:00+00:00
+Johnson,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Johnson.,True,False,Johnson Tablet,PRD-000041,SKU-ELEC-000041,55,Tablet,520.5,2026-01-01T00:00:00+00:00
+Chapman,Sports,2026-01-01T00:00:00+00:00,USD,High quality running shoes from Chapman.,True,False,Chapman Running Shoes,PRD-000042,SKU-SPOR-000042,368,Running Shoes,441.09,2026-01-01T00:00:00+00:00
+Castillo-Barker,Toys,2026-01-01T00:00:00+00:00,USD,High quality doll from Castillo-Barker.,True,False,Castillo-Barker Doll,PRD-000043,SKU-TOYS-000043,235,Doll,364.53,2026-01-01T00:00:00+00:00
+Morgan,Clothing,2026-01-01T00:00:00+00:00,USD,High quality shoes from Morgan.,True,False,Morgan Shoes,PRD-000044,SKU-CLOT-000044,78,Shoes,366.79,2026-01-01T00:00:00+00:00
+Webb-Hudson,Sports,2026-01-01T00:00:00+00:00,USD,High quality water bottle from Webb-Hudson.,True,False,Webb-Hudson Water Bottle,PRD-000045,SKU-SPOR-000045,471,Water Bottle,454.7,2026-01-01T00:00:00+00:00
+"Townsend,",Beauty,2026-01-01T00:00:00+00:00,USD,"High quality shampoo from Townsend,.",True,False,"Townsend, Shampoo",PRD-000046,SKU-BEAU-000046,104,Shampoo,64.45,2026-01-01T00:00:00+00:00
+"Vasquez,",Food & Beverage,2026-01-01T00:00:00+00:00,USD,"High quality tea set from Vasquez,.",True,False,"Vasquez, Tea Set",PRD-000047,SKU-FOOD-000047,452,Tea Set,557.88,2026-01-01T00:00:00+00:00
+Wilson-Cook,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality lamp from Wilson-Cook.,True,False,Wilson-Cook Lamp,PRD-000048,SKU-HOME-000048,189,Lamp,545.17,2026-01-01T00:00:00+00:00
+Smith-Gentry,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality rug from Smith-Gentry.,True,False,Smith-Gentry Rug,PRD-000049,SKU-HOME-000049,310,Rug,237.79,2026-01-01T00:00:00+00:00
+"James,",Books,2026-01-01T00:00:00+00:00,USD,"High quality dictionary from James,.",True,False,"James, Dictionary",PRD-000050,SKU-BOOK-000050,49,Dictionary,36.4,2026-01-01T00:00:00+00:00
+"Stephens,",Food & Beverage,2026-01-01T00:00:00+00:00,USD,"High quality olive oil from Stephens,.",True,False,"Stephens, Olive Oil",PRD-000051,SKU-FOOD-000051,64,Olive Oil,138.44,2026-01-01T00:00:00+00:00
+Wolf,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Wolf.,True,False,Wolf Tablet,PRD-000052,SKU-ELEC-000052,380,Tablet,474.47,2026-01-01T00:00:00+00:00
+Garcia-Phillips,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality protein powder from Garcia-Phillips.,True,False,Garcia-Phillips Protein Powder,PRD-000053,SKU-FOOD-000053,202,Protein Powder,260.13,2026-01-01T00:00:00+00:00
+"Castro,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality action figure from Castro,.",True,False,"Castro, Action Figure",PRD-000054,SKU-TOYS-000054,279,Action Figure,360.32,2026-01-01T00:00:00+00:00
+Hartman-Smith,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality chair from Hartman-Smith.,True,False,Hartman-Smith Chair,PRD-000055,SKU-HOME-000055,113,Chair,587.88,2026-01-01T00:00:00+00:00
+Burgess,Beauty,2026-01-01T00:00:00+00:00,USD,High quality face mask from Burgess.,True,False,Burgess Face Mask,PRD-000056,SKU-BEAU-000056,392,Face Mask,336.62,2026-01-01T00:00:00+00:00
+Hoffman,Clothing,2026-01-01T00:00:00+00:00,USD,High quality dress from Hoffman.,True,False,Hoffman Dress,PRD-000057,SKU-CLOT-000057,292,Dress,307.25,2026-01-01T00:00:00+00:00
+Jackson-Gomez,Clothing,2026-01-01T00:00:00+00:00,USD,High quality jeans from Jackson-Gomez.,True,False,Jackson-Gomez Jeans,PRD-000058,SKU-CLOT-000058,38,Jeans,504.31,2026-01-01T00:00:00+00:00
+"Brown,",Food & Beverage,2026-01-01T00:00:00+00:00,USD,"High quality coffee beans from Brown,.",True,False,"Brown, Coffee Beans",PRD-000059,SKU-FOOD-000059,118,Coffee Beans,442.21,2026-01-01T00:00:00+00:00
+Garcia,Books,2026-01-01T00:00:00+00:00,USD,High quality textbook from Garcia.,True,False,Garcia Textbook,PRD-000060,SKU-BOOK-000060,128,Textbook,340.6,2026-01-01T00:00:00+00:00
+"Green,",Home & Garden,2026-01-01T00:00:00+00:00,USD,"High quality chair from Green,.",True,False,"Green, Chair",PRD-000061,SKU-HOME-000061,297,Chair,168.48,2026-01-01T00:00:00+00:00
+Klein-Johnson,Toys,2026-01-01T00:00:00+00:00,USD,High quality stuffed animal from Klein-Johnson.,True,False,Klein-Johnson Stuffed Animal,PRD-000062,SKU-TOYS-000062,282,Stuffed Animal,29.64,2026-01-01T00:00:00+00:00
+"Conner,",Books,2026-01-01T00:00:00+00:00,USD,"High quality textbook from Conner,.",True,False,"Conner, Textbook",PRD-000063,SKU-BOOK-000063,145,Textbook,187.62,2026-01-01T00:00:00+00:00
+Palmer-Robinson,Toys,2026-01-01T00:00:00+00:00,USD,High quality puzzle from Palmer-Robinson.,True,False,Palmer-Robinson Puzzle,PRD-000064,SKU-TOYS-000064,462,Puzzle,396.24,2026-01-01T00:00:00+00:00
+Brown,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality rug from Brown.,True,False,Brown Rug,PRD-000065,SKU-HOME-000065,451,Rug,371.58,2026-01-01T00:00:00+00:00
+Compton,Beauty,2026-01-01T00:00:00+00:00,USD,High quality face mask from Compton.,True,False,Compton Face Mask,PRD-000066,SKU-BEAU-000066,230,Face Mask,113.05,2026-01-01T00:00:00+00:00
+"Smith,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality doll from Smith,.",True,False,"Smith, Doll",PRD-000067,SKU-TOYS-000067,495,Doll,125.3,2026-01-01T00:00:00+00:00
+"Smith,",Sports,2026-01-01T00:00:00+00:00,USD,"High quality running shoes from Smith,.",True,False,"Smith, Running Shoes",PRD-000068,SKU-SPOR-000068,434,Running Shoes,124.95,2026-01-01T00:00:00+00:00
+Stewart,Clothing,2026-01-01T00:00:00+00:00,USD,High quality shoes from Stewart.,True,False,Stewart Shoes,PRD-000069,SKU-CLOT-000069,180,Shoes,211.29,2026-01-01T00:00:00+00:00
+Gomez-Jackson,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality chocolate box from Gomez-Jackson.,True,False,Gomez-Jackson Chocolate Box,PRD-000070,SKU-FOOD-000070,66,Chocolate Box,414.93,2026-01-01T00:00:00+00:00
+"Herman,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality lego set from Herman,.",True,False,"Herman, LEGO Set",PRD-000071,SKU-TOYS-000071,247,LEGO Set,122.18,2026-01-01T00:00:00+00:00
+"Andersen,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality shoes from Andersen,.",True,False,"Andersen, Shoes",PRD-000072,SKU-CLOT-000072,394,Shoes,589.43,2026-01-01T00:00:00+00:00
+Weaver-Jackson,Toys,2026-01-01T00:00:00+00:00,USD,High quality action figure from Weaver-Jackson.,True,False,Weaver-Jackson Action Figure,PRD-000073,SKU-TOYS-000073,406,Action Figure,407.65,2026-01-01T00:00:00+00:00
+Castillo-Boyer,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality nuts from Castillo-Boyer.,True,False,Castillo-Boyer Nuts,PRD-000074,SKU-FOOD-000074,149,Nuts,299.2,2026-01-01T00:00:00+00:00
+"Martinez,",Books,2026-01-01T00:00:00+00:00,USD,"High quality novel from Martinez,.",True,False,"Martinez, Novel",PRD-000075,SKU-BOOK-000075,284,Novel,550.16,2026-01-01T00:00:00+00:00
+Herman,Books,2026-01-01T00:00:00+00:00,USD,High quality novel from Herman.,True,False,Herman Novel,PRD-000076,SKU-BOOK-000076,343,Novel,264.07,2026-01-01T00:00:00+00:00
+Wilson,Beauty,2026-01-01T00:00:00+00:00,USD,High quality lipstick from Wilson.,True,False,Wilson Lipstick,PRD-000077,SKU-BEAU-000077,58,Lipstick,27.05,2026-01-01T00:00:00+00:00
+Johnson-Simon,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality chair from Johnson-Simon.,True,False,Johnson-Simon Chair,PRD-000078,SKU-HOME-000078,307,Chair,329.49,2026-01-01T00:00:00+00:00
+Hudson,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality coffee maker from Hudson.,True,False,Hudson Coffee Maker,PRD-000079,SKU-HOME-000079,31,Coffee Maker,61.69,2026-01-01T00:00:00+00:00
+Baker-Rosales,Toys,2026-01-01T00:00:00+00:00,USD,High quality stuffed animal from Baker-Rosales.,True,False,Baker-Rosales Stuffed Animal,PRD-000080,SKU-TOYS-000080,132,Stuffed Animal,171.1,2026-01-01T00:00:00+00:00
+"Barber,",Books,2026-01-01T00:00:00+00:00,USD,"High quality children's book from Barber,.",True,False,"Barber, Children's Book",PRD-000081,SKU-BOOK-000081,286,Children's Book,543.07,2026-01-01T00:00:00+00:00
+Parsons,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality chair from Parsons.,True,False,Parsons Chair,PRD-000082,SKU-HOME-000082,199,Chair,129.11,2026-01-01T00:00:00+00:00
+Flores-Mcfarland,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Flores-Mcfarland.,True,False,Flores-Mcfarland Tablet,PRD-000083,SKU-ELEC-000083,435,Tablet,69.76,2026-01-01T00:00:00+00:00
+Wilson,Toys,2026-01-01T00:00:00+00:00,USD,High quality action figure from Wilson.,True,False,Wilson Action Figure,PRD-000084,SKU-TOYS-000084,232,Action Figure,339.2,2026-01-01T00:00:00+00:00
+Hernandez,Books,2026-01-01T00:00:00+00:00,USD,High quality textbook from Hernandez.,True,False,Hernandez Textbook,PRD-000085,SKU-BOOK-000085,191,Textbook,197.21,2026-01-01T00:00:00+00:00
+Foster,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Foster.,True,False,Foster Tablet,PRD-000086,SKU-ELEC-000086,449,Tablet,480.09,2026-01-01T00:00:00+00:00
+Leonard,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality coffee beans from Leonard.,True,False,Leonard Coffee Beans,PRD-000087,SKU-FOOD-000087,75,Coffee Beans,66.94,2026-01-01T00:00:00+00:00
+Holloway,Books,2026-01-01T00:00:00+00:00,USD,High quality children's book from Holloway.,True,False,Holloway Children's Book,PRD-000088,SKU-BOOK-000088,126,Children's Book,221.39,2026-01-01T00:00:00+00:00
+Valencia-Davis,Toys,2026-01-01T00:00:00+00:00,USD,High quality remote car from Valencia-Davis.,True,False,Valencia-Davis Remote Car,PRD-000089,SKU-TOYS-000089,117,Remote Car,58.68,2026-01-01T00:00:00+00:00
+Lewis,Books,2026-01-01T00:00:00+00:00,USD,High quality textbook from Lewis.,True,False,Lewis Textbook,PRD-000090,SKU-BOOK-000090,412,Textbook,57.24,2026-01-01T00:00:00+00:00
+"Mendez,",Books,2026-01-01T00:00:00+00:00,USD,"High quality self-help book from Mendez,.",True,False,"Mendez, Self-Help Book",PRD-000091,SKU-BOOK-000091,203,Self-Help Book,39.93,2026-01-01T00:00:00+00:00
+Elliott,Clothing,2026-01-01T00:00:00+00:00,USD,High quality t-shirt from Elliott.,True,False,Elliott T-Shirt,PRD-000092,SKU-CLOT-000092,365,T-Shirt,205.34,2026-01-01T00:00:00+00:00
+Roberts,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality blender from Roberts.,True,False,Roberts Blender,PRD-000093,SKU-HOME-000093,118,Blender,443.89,2026-01-01T00:00:00+00:00
+Acosta,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality protein powder from Acosta.,True,False,Acosta Protein Powder,PRD-000094,SKU-FOOD-000094,383,Protein Powder,527.67,2026-01-01T00:00:00+00:00
+"Parsons,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality smart watch from Parsons,.",True,False,"Parsons, Smart Watch",PRD-000095,SKU-ELEC-000095,326,Smart Watch,400.21,2026-01-01T00:00:00+00:00
+Burton,Electronics,2026-01-01T00:00:00+00:00,USD,High quality tablet from Burton.,True,False,Burton Tablet,PRD-000096,SKU-ELEC-000096,211,Tablet,557.68,2026-01-01T00:00:00+00:00
+Moore-Brown,Toys,2026-01-01T00:00:00+00:00,USD,High quality remote car from Moore-Brown.,True,False,Moore-Brown Remote Car,PRD-000097,SKU-TOYS-000097,468,Remote Car,106.68,2026-01-01T00:00:00+00:00
+Rose,Sports,2026-01-01T00:00:00+00:00,USD,High quality dumbbells from Rose.,True,False,Rose Dumbbells,PRD-000098,SKU-SPOR-000098,228,Dumbbells,474.76,2026-01-01T00:00:00+00:00
+Rice,Beauty,2026-01-01T00:00:00+00:00,USD,High quality face mask from Rice.,True,False,Rice Face Mask,PRD-000099,SKU-BEAU-000099,193,Face Mask,189.98,2026-01-01T00:00:00+00:00
+Ellis-Martinez,Books,2026-01-01T00:00:00+00:00,USD,High quality biography from Ellis-Martinez.,True,False,Ellis-Martinez Biography,PRD-000100,SKU-BOOK-000100,379,Biography,30.58,2026-01-01T00:00:00+00:00
+"Mccoy,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality t-shirt from Mccoy,.",True,False,"Mccoy, T-Shirt",PRD-000101,SKU-CLOT-000101,429,T-Shirt,467.76,2026-01-01T00:00:00+00:00
+Davis-Thornton,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality blender from Davis-Thornton.,True,False,Davis-Thornton Blender,PRD-000102,SKU-HOME-000102,165,Blender,549.68,2026-01-01T00:00:00+00:00
+Castillo-Cox,Sports,2026-01-01T00:00:00+00:00,USD,High quality running shoes from Castillo-Cox.,True,False,Castillo-Cox Running Shoes,PRD-000103,SKU-SPOR-000103,21,Running Shoes,38.11,2026-01-01T00:00:00+00:00
+Stewart-Keller,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality coffee beans from Stewart-Keller.,True,False,Stewart-Keller Coffee Beans,PRD-000104,SKU-FOOD-000104,147,Coffee Beans,190.34,2026-01-01T00:00:00+00:00
+Hancock,Electronics,2026-01-01T00:00:00+00:00,USD,High quality smart watch from Hancock.,True,False,Hancock Smart Watch,PRD-000105,SKU-ELEC-000105,414,Smart Watch,424.92,2026-01-01T00:00:00+00:00
+Hart,Toys,2026-01-01T00:00:00+00:00,USD,High quality puzzle from Hart.,True,False,Hart Puzzle,PRD-000106,SKU-TOYS-000106,320,Puzzle,58.9,2026-01-01T00:00:00+00:00
+"Lee,",Home & Garden,2026-01-01T00:00:00+00:00,USD,"High quality chair from Lee,.",True,False,"Lee, Chair",PRD-000107,SKU-HOME-000107,235,Chair,469.14,2026-01-01T00:00:00+00:00
+Terry,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality pillow from Terry.,True,False,Terry Pillow,PRD-000108,SKU-HOME-000108,192,Pillow,275.1,2026-01-01T00:00:00+00:00
+"Burke,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality remote car from Burke,.",True,False,"Burke, Remote Car",PRD-000109,SKU-TOYS-000109,69,Remote Car,557.69,2026-01-01T00:00:00+00:00
+"Matthews,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality jeans from Matthews,.",True,False,"Matthews, Jeans",PRD-000110,SKU-CLOT-000110,38,Jeans,548.43,2026-01-01T00:00:00+00:00
+Parker,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality rug from Parker.,True,False,Parker Rug,PRD-000111,SKU-HOME-000111,29,Rug,134.9,2026-01-01T00:00:00+00:00
+"Wong,",Beauty,2026-01-01T00:00:00+00:00,USD,"High quality shampoo from Wong,.",True,False,"Wong, Shampoo",PRD-000112,SKU-BEAU-000112,85,Shampoo,188.39,2026-01-01T00:00:00+00:00
+Sanchez,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality coffee maker from Sanchez.,True,False,Sanchez Coffee Maker,PRD-000113,SKU-HOME-000113,44,Coffee Maker,34.75,2026-01-01T00:00:00+00:00
+Cantrell-Rollins,Sports,2026-01-01T00:00:00+00:00,USD,High quality dumbbells from Cantrell-Rollins.,True,False,Cantrell-Rollins Dumbbells,PRD-000114,SKU-SPOR-000114,47,Dumbbells,517.2,2026-01-01T00:00:00+00:00
+Wolf,Electronics,2026-01-01T00:00:00+00:00,USD,High quality laptop from Wolf.,True,False,Wolf Laptop,PRD-000115,SKU-ELEC-000115,135,Laptop,132.86,2026-01-01T00:00:00+00:00
+"Jackson,",Beauty,2026-01-01T00:00:00+00:00,USD,"High quality moisturizer from Jackson,.",True,False,"Jackson, Moisturizer",PRD-000116,SKU-BEAU-000116,475,Moisturizer,145.57,2026-01-01T00:00:00+00:00
+"Castro,",Sports,2026-01-01T00:00:00+00:00,USD,"High quality bicycle from Castro,.",True,False,"Castro, Bicycle",PRD-000117,SKU-SPOR-000117,95,Bicycle,315.5,2026-01-01T00:00:00+00:00
+"Kelly,",Books,2026-01-01T00:00:00+00:00,USD,"High quality children's book from Kelly,.",True,False,"Kelly, Children's Book",PRD-000118,SKU-BOOK-000118,372,Children's Book,11.79,2026-01-01T00:00:00+00:00
+Dougherty-Wright,Beauty,2026-01-01T00:00:00+00:00,USD,High quality eye liner from Dougherty-Wright.,True,False,Dougherty-Wright Eye Liner,PRD-000119,SKU-BEAU-000119,436,Eye Liner,466.97,2026-01-01T00:00:00+00:00
+Sampson,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality lamp from Sampson.,True,False,Sampson Lamp,PRD-000120,SKU-HOME-000120,103,Lamp,496.52,2026-01-01T00:00:00+00:00
+"Nelson,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality puzzle from Nelson,.",True,False,"Nelson, Puzzle",PRD-000121,SKU-TOYS-000121,80,Puzzle,577.01,2026-01-01T00:00:00+00:00
+Walker-Cordova,Electronics,2026-01-01T00:00:00+00:00,USD,High quality smart watch from Walker-Cordova.,True,False,Walker-Cordova Smart Watch,PRD-000122,SKU-ELEC-000122,270,Smart Watch,544.14,2026-01-01T00:00:00+00:00
+Stone-Coleman,Beauty,2026-01-01T00:00:00+00:00,USD,High quality lipstick from Stone-Coleman.,True,False,Stone-Coleman Lipstick,PRD-000123,SKU-BEAU-000123,296,Lipstick,125.3,2026-01-01T00:00:00+00:00
+Ball,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality protein powder from Ball.,True,False,Ball Protein Powder,PRD-000124,SKU-FOOD-000124,451,Protein Powder,439.31,2026-01-01T00:00:00+00:00
+Gonzalez,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality tea set from Gonzalez.,True,False,Gonzalez Tea Set,PRD-000125,SKU-FOOD-000125,459,Tea Set,185.47,2026-01-01T00:00:00+00:00
+Brooks,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality coffee beans from Brooks.,True,False,Brooks Coffee Beans,PRD-000126,SKU-FOOD-000126,388,Coffee Beans,483.39,2026-01-01T00:00:00+00:00
+Weaver,Toys,2026-01-01T00:00:00+00:00,USD,High quality doll from Weaver.,True,False,Weaver Doll,PRD-000127,SKU-TOYS-000127,376,Doll,554.61,2026-01-01T00:00:00+00:00
+Johnson-Larsen,Beauty,2026-01-01T00:00:00+00:00,USD,High quality lipstick from Johnson-Larsen.,True,False,Johnson-Larsen Lipstick,PRD-000128,SKU-BEAU-000128,322,Lipstick,210.83,2026-01-01T00:00:00+00:00
+Bell-Burke,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Bell-Burke.,True,False,Bell-Burke Gloves,PRD-000129,SKU-SPOR-000129,113,Gloves,207.0,2026-01-01T00:00:00+00:00
+Ryan-Warren,Sports,2026-01-01T00:00:00+00:00,USD,High quality bicycle from Ryan-Warren.,True,False,Ryan-Warren Bicycle,PRD-000130,SKU-SPOR-000130,198,Bicycle,119.24,2026-01-01T00:00:00+00:00
+Tanner,Electronics,2026-01-01T00:00:00+00:00,USD,High quality smartphone from Tanner.,True,False,Tanner Smartphone,PRD-000131,SKU-ELEC-000131,356,Smartphone,57.98,2026-01-01T00:00:00+00:00
+Deleon-Foley,Beauty,2026-01-01T00:00:00+00:00,USD,High quality lipstick from Deleon-Foley.,True,False,Deleon-Foley Lipstick,PRD-000132,SKU-BEAU-000132,463,Lipstick,307.72,2026-01-01T00:00:00+00:00
+"Vasquez,",Sports,2026-01-01T00:00:00+00:00,USD,"High quality dumbbells from Vasquez,.",True,False,"Vasquez, Dumbbells",PRD-000133,SKU-SPOR-000133,300,Dumbbells,56.11,2026-01-01T00:00:00+00:00
+Roberts,Sports,2026-01-01T00:00:00+00:00,USD,High quality running shoes from Roberts.,True,False,Roberts Running Shoes,PRD-000134,SKU-SPOR-000134,157,Running Shoes,514.85,2026-01-01T00:00:00+00:00
+Johnston,Electronics,2026-01-01T00:00:00+00:00,USD,High quality smart watch from Johnston.,True,False,Johnston Smart Watch,PRD-000135,SKU-ELEC-000135,341,Smart Watch,390.85,2026-01-01T00:00:00+00:00
+Cohen,Books,2026-01-01T00:00:00+00:00,USD,High quality cookbook from Cohen.,True,False,Cohen Cookbook,PRD-000136,SKU-BOOK-000136,87,Cookbook,592.97,2026-01-01T00:00:00+00:00
+Joyce-Thomas,Sports,2026-01-01T00:00:00+00:00,USD,High quality water bottle from Joyce-Thomas.,True,False,Joyce-Thomas Water Bottle,PRD-000137,SKU-SPOR-000137,499,Water Bottle,170.17,2026-01-01T00:00:00+00:00
+Bradley-Shields,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality tea set from Bradley-Shields.,True,False,Bradley-Shields Tea Set,PRD-000138,SKU-FOOD-000138,372,Tea Set,457.35,2026-01-01T00:00:00+00:00
+Martinez-Mendez,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality coffee maker from Martinez-Mendez.,True,False,Martinez-Mendez Coffee Maker,PRD-000139,SKU-HOME-000139,136,Coffee Maker,476.05,2026-01-01T00:00:00+00:00
+"Decker,",Sports,2026-01-01T00:00:00+00:00,USD,"High quality helmet from Decker,.",True,False,"Decker, Helmet",PRD-000140,SKU-SPOR-000140,181,Helmet,167.71,2026-01-01T00:00:00+00:00
+Hanson-Barker,Beauty,2026-01-01T00:00:00+00:00,USD,High quality moisturizer from Hanson-Barker.,True,False,Hanson-Barker Moisturizer,PRD-000141,SKU-BEAU-000141,387,Moisturizer,37.4,2026-01-01T00:00:00+00:00
+Hatfield-Nichols,Beauty,2026-01-01T00:00:00+00:00,USD,High quality perfume from Hatfield-Nichols.,True,False,Hatfield-Nichols Perfume,PRD-000142,SKU-BEAU-000142,86,Perfume,153.73,2026-01-01T00:00:00+00:00
+Smith,Books,2026-01-01T00:00:00+00:00,USD,High quality biography from Smith.,True,False,Smith Biography,PRD-000143,SKU-BOOK-000143,53,Biography,263.19,2026-01-01T00:00:00+00:00
+Howard,Beauty,2026-01-01T00:00:00+00:00,USD,High quality moisturizer from Howard.,True,False,Howard Moisturizer,PRD-000144,SKU-BEAU-000144,207,Moisturizer,304.87,2026-01-01T00:00:00+00:00
+Stokes-Robinson,Beauty,2026-01-01T00:00:00+00:00,USD,High quality face mask from Stokes-Robinson.,True,False,Stokes-Robinson Face Mask,PRD-000145,SKU-BEAU-000145,397,Face Mask,284.42,2026-01-01T00:00:00+00:00
+Lopez,Sports,2026-01-01T00:00:00+00:00,USD,High quality helmet from Lopez.,True,False,Lopez Helmet,PRD-000146,SKU-SPOR-000146,228,Helmet,71.16,2026-01-01T00:00:00+00:00
+Thornton,Electronics,2026-01-01T00:00:00+00:00,USD,High quality laptop from Thornton.,True,False,Thornton Laptop,PRD-000147,SKU-ELEC-000147,329,Laptop,513.55,2026-01-01T00:00:00+00:00
+"Ellison,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality jacket from Ellison,.",True,False,"Ellison, Jacket",PRD-000148,SKU-CLOT-000148,103,Jacket,48.02,2026-01-01T00:00:00+00:00
+Phillips-Miller,Books,2026-01-01T00:00:00+00:00,USD,High quality biography from Phillips-Miller.,True,False,Phillips-Miller Biography,PRD-000149,SKU-BOOK-000149,430,Biography,28.84,2026-01-01T00:00:00+00:00
+"Wilkinson,",Books,2026-01-01T00:00:00+00:00,USD,"High quality cookbook from Wilkinson,.",True,False,"Wilkinson, Cookbook",PRD-000150,SKU-BOOK-000150,436,Cookbook,171.86,2026-01-01T00:00:00+00:00
+Stein,Toys,2026-01-01T00:00:00+00:00,USD,High quality lego set from Stein.,True,False,Stein LEGO Set,PRD-000151,SKU-TOYS-000151,468,LEGO Set,503.43,2026-01-01T00:00:00+00:00
+Davis-Roth,Sports,2026-01-01T00:00:00+00:00,USD,High quality helmet from Davis-Roth.,True,False,Davis-Roth Helmet,PRD-000152,SKU-SPOR-000152,399,Helmet,158.21,2026-01-01T00:00:00+00:00
+Villarreal,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality tea set from Villarreal.,True,False,Villarreal Tea Set,PRD-000153,SKU-FOOD-000153,208,Tea Set,412.67,2026-01-01T00:00:00+00:00
+"Scott,",Home & Garden,2026-01-01T00:00:00+00:00,USD,"High quality vacuum from Scott,.",True,False,"Scott, Vacuum",PRD-000154,SKU-HOME-000154,482,Vacuum,387.96,2026-01-01T00:00:00+00:00
+Anderson-Strickland,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality chair from Anderson-Strickland.,True,False,Anderson-Strickland Chair,PRD-000155,SKU-HOME-000155,88,Chair,558.75,2026-01-01T00:00:00+00:00
+Terry-Hill,Books,2026-01-01T00:00:00+00:00,USD,High quality children's book from Terry-Hill.,True,False,Terry-Hill Children's Book,PRD-000156,SKU-BOOK-000156,475,Children's Book,89.81,2026-01-01T00:00:00+00:00
+Waller-Perez,Books,2026-01-01T00:00:00+00:00,USD,High quality self-help book from Waller-Perez.,True,False,Waller-Perez Self-Help Book,PRD-000157,SKU-BOOK-000157,433,Self-Help Book,285.66,2026-01-01T00:00:00+00:00
+Cole,Toys,2026-01-01T00:00:00+00:00,USD,High quality action figure from Cole.,True,False,Cole Action Figure,PRD-000158,SKU-TOYS-000158,443,Action Figure,71.11,2026-01-01T00:00:00+00:00
+Pruitt-Bennett,Sports,2026-01-01T00:00:00+00:00,USD,High quality yoga mat from Pruitt-Bennett.,True,False,Pruitt-Bennett Yoga Mat,PRD-000159,SKU-SPOR-000159,49,Yoga Mat,235.93,2026-01-01T00:00:00+00:00
+Patton-Powell,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality olive oil from Patton-Powell.,True,False,Patton-Powell Olive Oil,PRD-000160,SKU-FOOD-000160,264,Olive Oil,93.21,2026-01-01T00:00:00+00:00
+Young,Books,2026-01-01T00:00:00+00:00,USD,High quality children's book from Young.,True,False,Young Children's Book,PRD-000161,SKU-BOOK-000161,41,Children's Book,323.54,2026-01-01T00:00:00+00:00
+Miller-Lee,Electronics,2026-01-01T00:00:00+00:00,USD,High quality camera from Miller-Lee.,True,False,Miller-Lee Camera,PRD-000162,SKU-ELEC-000162,183,Camera,351.86,2026-01-01T00:00:00+00:00
+Thompson,Sports,2026-01-01T00:00:00+00:00,USD,High quality bicycle from Thompson.,True,False,Thompson Bicycle,PRD-000163,SKU-SPOR-000163,413,Bicycle,509.31,2026-01-01T00:00:00+00:00
+Bell,Sports,2026-01-01T00:00:00+00:00,USD,High quality yoga mat from Bell.,True,False,Bell Yoga Mat,PRD-000164,SKU-SPOR-000164,95,Yoga Mat,42.06,2026-01-01T00:00:00+00:00
+Carson-Lyons,Toys,2026-01-01T00:00:00+00:00,USD,High quality stuffed animal from Carson-Lyons.,True,False,Carson-Lyons Stuffed Animal,PRD-000165,SKU-TOYS-000165,361,Stuffed Animal,153.16,2026-01-01T00:00:00+00:00
+Tran,Clothing,2026-01-01T00:00:00+00:00,USD,High quality socks from Tran.,True,False,Tran Socks,PRD-000166,SKU-CLOT-000166,148,Socks,52.1,2026-01-01T00:00:00+00:00
+Vasquez,Books,2026-01-01T00:00:00+00:00,USD,High quality dictionary from Vasquez.,True,False,Vasquez Dictionary,PRD-000167,SKU-BOOK-000167,293,Dictionary,57.52,2026-01-01T00:00:00+00:00
+Allen,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Allen.,True,False,Allen Gloves,PRD-000168,SKU-SPOR-000168,43,Gloves,48.85,2026-01-01T00:00:00+00:00
+Osborne-Hanson,Beauty,2026-01-01T00:00:00+00:00,USD,High quality shampoo from Osborne-Hanson.,True,False,Osborne-Hanson Shampoo,PRD-000169,SKU-BEAU-000169,157,Shampoo,163.17,2026-01-01T00:00:00+00:00
+"Young,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality speaker from Young,.",True,False,"Young, Speaker",PRD-000170,SKU-ELEC-000170,472,Speaker,121.21,2026-01-01T00:00:00+00:00
+Weber,Books,2026-01-01T00:00:00+00:00,USD,High quality children's book from Weber.,True,False,Weber Children's Book,PRD-000171,SKU-BOOK-000171,29,Children's Book,275.66,2026-01-01T00:00:00+00:00
+Francis,Electronics,2026-01-01T00:00:00+00:00,USD,High quality headphones from Francis.,True,False,Francis Headphones,PRD-000172,SKU-ELEC-000172,398,Headphones,81.98,2026-01-01T00:00:00+00:00
+"Tucker,",Books,2026-01-01T00:00:00+00:00,USD,"High quality children's book from Tucker,.",True,False,"Tucker, Children's Book",PRD-000173,SKU-BOOK-000173,301,Children's Book,486.61,2026-01-01T00:00:00+00:00
+Davis,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality coffee beans from Davis.,True,False,Davis Coffee Beans,PRD-000174,SKU-FOOD-000174,476,Coffee Beans,140.62,2026-01-01T00:00:00+00:00
+Morgan,Electronics,2026-01-01T00:00:00+00:00,USD,High quality headphones from Morgan.,True,False,Morgan Headphones,PRD-000175,SKU-ELEC-000175,226,Headphones,280.82,2026-01-01T00:00:00+00:00
+King-Patel,Beauty,2026-01-01T00:00:00+00:00,USD,High quality shampoo from King-Patel.,True,False,King-Patel Shampoo,PRD-000176,SKU-BEAU-000176,133,Shampoo,165.96,2026-01-01T00:00:00+00:00
+"Walsh,",Beauty,2026-01-01T00:00:00+00:00,USD,"High quality shampoo from Walsh,.",True,False,"Walsh, Shampoo",PRD-000177,SKU-BEAU-000177,119,Shampoo,521.63,2026-01-01T00:00:00+00:00
+Luna-Williams,Books,2026-01-01T00:00:00+00:00,USD,High quality dictionary from Luna-Williams.,True,False,Luna-Williams Dictionary,PRD-000178,SKU-BOOK-000178,41,Dictionary,275.87,2026-01-01T00:00:00+00:00
+"Ayers,",Sports,2026-01-01T00:00:00+00:00,USD,"High quality yoga mat from Ayers,.",True,False,"Ayers, Yoga Mat",PRD-000179,SKU-SPOR-000179,90,Yoga Mat,212.64,2026-01-01T00:00:00+00:00
+"Conway,",Clothing,2026-01-01T00:00:00+00:00,USD,"High quality hat from Conway,.",True,False,"Conway, Hat",PRD-000180,SKU-CLOT-000180,441,Hat,350.65,2026-01-01T00:00:00+00:00
+"Brown,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality tablet from Brown,.",True,False,"Brown, Tablet",PRD-000181,SKU-ELEC-000181,196,Tablet,179.14,2026-01-01T00:00:00+00:00
+"Miller,",Beauty,2026-01-01T00:00:00+00:00,USD,"High quality nail polish from Miller,.",True,False,"Miller, Nail Polish",PRD-000182,SKU-BEAU-000182,114,Nail Polish,495.74,2026-01-01T00:00:00+00:00
+Herring-Melton,Sports,2026-01-01T00:00:00+00:00,USD,High quality bicycle from Herring-Melton.,True,False,Herring-Melton Bicycle,PRD-000183,SKU-SPOR-000183,454,Bicycle,434.06,2026-01-01T00:00:00+00:00
+Yates,Electronics,2026-01-01T00:00:00+00:00,USD,High quality headphones from Yates.,True,False,Yates Headphones,PRD-000184,SKU-ELEC-000184,122,Headphones,527.66,2026-01-01T00:00:00+00:00
+Jenkins-Bryant,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Jenkins-Bryant.,True,False,Jenkins-Bryant Gloves,PRD-000185,SKU-SPOR-000185,398,Gloves,356.69,2026-01-01T00:00:00+00:00
+Russell,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Russell.,True,False,Russell Gloves,PRD-000186,SKU-SPOR-000186,438,Gloves,120.94,2026-01-01T00:00:00+00:00
+Carpenter,Sports,2026-01-01T00:00:00+00:00,USD,High quality gloves from Carpenter.,True,False,Carpenter Gloves,PRD-000187,SKU-SPOR-000187,69,Gloves,126.68,2026-01-01T00:00:00+00:00
+"Hall,",Home & Garden,2026-01-01T00:00:00+00:00,USD,"High quality coffee maker from Hall,.",True,False,"Hall, Coffee Maker",PRD-000188,SKU-HOME-000188,431,Coffee Maker,449.27,2026-01-01T00:00:00+00:00
+Thomas-Guerra,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality tea set from Thomas-Guerra.,True,False,Thomas-Guerra Tea Set,PRD-000189,SKU-FOOD-000189,208,Tea Set,26.73,2026-01-01T00:00:00+00:00
+Cox,Home & Garden,2026-01-01T00:00:00+00:00,USD,High quality blender from Cox.,True,False,Cox Blender,PRD-000190,SKU-HOME-000190,201,Blender,308.96,2026-01-01T00:00:00+00:00
+"Bowen,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality tablet from Bowen,.",True,False,"Bowen, Tablet",PRD-000191,SKU-ELEC-000191,253,Tablet,146.71,2026-01-01T00:00:00+00:00
+Anderson,Books,2026-01-01T00:00:00+00:00,USD,High quality novel from Anderson.,True,False,Anderson Novel,PRD-000192,SKU-BOOK-000192,376,Novel,322.25,2026-01-01T00:00:00+00:00
+Bates-Glover,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality tea set from Bates-Glover.,True,False,Bates-Glover Tea Set,PRD-000193,SKU-FOOD-000193,274,Tea Set,16.54,2026-01-01T00:00:00+00:00
+Griffin,Food & Beverage,2026-01-01T00:00:00+00:00,USD,High quality honey from Griffin.,True,False,Griffin Honey,PRD-000194,SKU-FOOD-000194,146,Honey,569.38,2026-01-01T00:00:00+00:00
+"Hartman,",Electronics,2026-01-01T00:00:00+00:00,USD,"High quality smartphone from Hartman,.",True,False,"Hartman, Smartphone",PRD-000195,SKU-ELEC-000195,44,Smartphone,118.59,2026-01-01T00:00:00+00:00
+"Holt,",Books,2026-01-01T00:00:00+00:00,USD,"High quality textbook from Holt,.",True,False,"Holt, Textbook",PRD-000196,SKU-BOOK-000196,388,Textbook,244.68,2026-01-01T00:00:00+00:00
+Lopez-Armstrong,Electronics,2026-01-01T00:00:00+00:00,USD,High quality speaker from Lopez-Armstrong.,True,False,Lopez-Armstrong Speaker,PRD-000197,SKU-ELEC-000197,459,Speaker,355.15,2026-01-01T00:00:00+00:00
+Knapp-Woods,Clothing,2026-01-01T00:00:00+00:00,USD,High quality hat from Knapp-Woods.,True,False,Knapp-Woods Hat,PRD-000198,SKU-CLOT-000198,396,Hat,49.22,2026-01-01T00:00:00+00:00
+"Johnson,",Toys,2026-01-01T00:00:00+00:00,USD,"High quality board game from Johnson,.",True,False,"Johnson, Board Game",PRD-000199,SKU-TOYS-000199,1,Board Game,521.95,2026-01-01T00:00:00+00:00
+"Williams,",Food & Beverage,2026-01-01T00:00:00+00:00,USD,"High quality nuts from Williams,.",True,False,"Williams, Nuts",PRD-000200,SKU-FOOD-000200,210,Nuts,43.23,2026-01-01T00:00:00+00:00

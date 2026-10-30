@@ -25,6 +25,7 @@ class ReportFile(BaseModel):
     size_bytes: int
     type: str
     modified_at: Optional[str] = None
+    sha256: str
 
 
 class ReportListResponse(BaseModel):
