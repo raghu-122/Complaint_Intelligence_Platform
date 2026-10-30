@@ -447,8 +447,18 @@ def _clear_tables(db: Session) -> None:
         "customers", "products", "agents", "teams",
         "priority_rules", "categories",
     ]
-    db.execute(text("PRAGMA foreign_keys=OFF"))
+    is_sqlite = False
+    try:
+        bind = db.get_bind()
+        if bind and bind.dialect.name == "sqlite":
+            is_sqlite = True
+    except Exception:
+        pass
+
+    if is_sqlite:
+        db.execute(text("PRAGMA foreign_keys=OFF"))
     for table in tables:
         db.execute(text(f"DELETE FROM {table}"))
-    db.execute(text("PRAGMA foreign_keys=ON"))
+    if is_sqlite:
+        db.execute(text("PRAGMA foreign_keys=ON"))
     db.commit()

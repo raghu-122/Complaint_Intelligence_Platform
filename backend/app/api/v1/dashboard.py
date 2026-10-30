@@ -256,12 +256,32 @@ def get_dashboard_charts(db: Session = Depends(get_db)):
             )
         )
 
+    # Dialect-specific date formatting (PostgreSQL to_char vs SQLite strftime)
+    is_pg = False
+    try:
+        bind = db.get_bind()
+        if bind and bind.dialect.name == "postgresql":
+            is_pg = True
+    except Exception:
+        pass
+
+    if is_pg:
+        month_expr = func.to_char(Complaint.created_at, "YYYY-MM")
+        daily_expr = func.to_char(Complaint.created_at, "YYYY-MM-DD")
+    else:
+        month_expr = func.strftime("%Y-%m", Complaint.created_at)
+        daily_expr = func.strftime("%Y-%m-%d", Complaint.created_at)
+
     # Monthly trends
-    trend_query = select(
-        func.strftime("%Y-%m", Complaint.created_at).label("month"),
-        func.count(Complaint.id).label("total"),
-        func.sum(case((Complaint.status.in_(["resolved", "closed"]), 1), else_=0)).label("resolved"),
-    ).group_by("month").order_by("month")
+    trend_query = (
+        select(
+            month_expr.label("month"),
+            func.count(Complaint.id).label("total"),
+            func.sum(case((Complaint.status.in_(["resolved", "closed"]), 1), else_=0)).label("resolved"),
+        )
+        .group_by(month_expr)
+        .order_by(month_expr)
+    )
 
     trend_rows = db.execute(trend_query).all()
     monthly_trends = [
@@ -275,10 +295,14 @@ def get_dashboard_charts(db: Session = Depends(get_db)):
     ]
 
     # Daily trends (last 30 active days for line chart)
-    daily_query = select(
-        func.strftime("%Y-%m-%d", Complaint.created_at).label("dt"),
-        func.count(Complaint.id).label("total"),
-    ).group_by("dt").order_by("dt")
+    daily_query = (
+        select(
+            daily_expr.label("dt"),
+            func.count(Complaint.id).label("total"),
+        )
+        .group_by(daily_expr)
+        .order_by(daily_expr)
+    )
     daily_rows = db.execute(daily_query).all()
     daily_trends = [
         DailyTrendItem(date=str(r[0] or "N/A"), count=int(r[1] or 0))

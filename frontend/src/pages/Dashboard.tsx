@@ -59,12 +59,31 @@ export default function Dashboard() {
     try {
       setLoading(true);
       setError(null);
-      const [statsRes, chartsRes] = await Promise.all([
+      const [statsRes, chartsRes] = await Promise.allSettled([
         apiClient.getDashboardStats(),
         apiClient.getDashboardCharts(),
       ]);
-      setStats(statsRes.data);
-      setCharts(chartsRes.data);
+
+      if (statsRes.status === 'fulfilled') {
+        setStats(statsRes.value.data);
+      }
+      if (chartsRes.status === 'fulfilled') {
+        setCharts(chartsRes.value.data);
+      }
+
+      if (statsRes.status === 'rejected' && chartsRes.status === 'rejected') {
+        const err = statsRes.reason;
+        const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : '';
+        if (msg.toLowerCase().includes('timeout') || msg.toLowerCase().includes('network')) {
+          setError('Backend is waking up (Render free tier cold start) or request timed out. Please retry.');
+        } else {
+          setError(msg || 'Failed to load dashboard data');
+        }
+      } else if (statsRes.status === 'rejected') {
+        setError('Failed to load dashboard summary statistics.');
+      } else if (chartsRes.status === 'rejected') {
+        setError('Failed to load dashboard charts.');
+      }
     } catch (err: unknown) {
       const msg = err && typeof err === 'object' && 'message' in err ? String((err as { message: unknown }).message) : '';
       if (msg.toLowerCase().includes('timeout') || msg.toLowerCase().includes('network')) {

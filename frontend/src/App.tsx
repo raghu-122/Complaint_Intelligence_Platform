@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom';
+import { apiClient } from './api';
 import Dashboard from './pages/Dashboard';
 import Complaints from './pages/Complaints';
 import ComplaintDetail from './pages/ComplaintDetail';
@@ -85,6 +87,46 @@ function Sidebar() {
 
 function Topbar() {
   const location = useLocation();
+  const [dbInfo, setDbInfo] = useState<{ dialect: string; status: string }>({
+    dialect: 'Detecting...',
+    status: 'checking',
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchDbDialect = async () => {
+      try {
+        const res = await apiClient.getHealth();
+        if (mounted && res.data?.database) {
+          const rawDialect = (res.data.database.dialect || '').toLowerCase();
+          const dialect =
+            rawDialect === 'postgresql'
+              ? 'PostgreSQL'
+              : rawDialect === 'sqlite'
+              ? 'SQLite'
+              : rawDialect
+              ? rawDialect.toUpperCase()
+              : 'Unknown';
+          setDbInfo({
+            dialect,
+            status: res.data.database.status || 'connected',
+          });
+        }
+      } catch {
+        if (mounted) {
+          setDbInfo({ dialect: 'Offline', status: 'disconnected' });
+        }
+      }
+    };
+
+    fetchDbDialect();
+    const interval = setInterval(fetchDbDialect, 30000);
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const titleMap: Record<string, { title: string; desc: string }> = {
     '/': { title: 'Dashboard', desc: 'Real-time complaint intelligence overview' },
     '/complaints': { title: 'Complaints', desc: 'Browse, filter, and manage all complaints' },
@@ -109,9 +151,9 @@ function Topbar() {
           <span>Seed</span>
           <span className="chip-label">20261022</span>
         </div>
-        <div className="topbar-chip">
+        <div className="topbar-chip" title={`Database status: ${dbInfo.status}`}>
           <span>DB</span>
-          <span className="chip-label">SQLite</span>
+          <span className="chip-label">{dbInfo.dialect}</span>
         </div>
       </div>
     </header>

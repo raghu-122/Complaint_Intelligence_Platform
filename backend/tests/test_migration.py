@@ -316,3 +316,106 @@ def test_complaint_oversized_string_values_regression(clean_dest_db):
 
     dest_engine.dispose()
 
+
+
+def test_clear_tables_on_simulated_postgres_avoids_pragma():
+    """Verify that _clear_tables on PostgreSQL dialect does not execute SQLite PRAGMA."""
+    from unittest.mock import MagicMock
+    from app.generator.loader import _clear_tables
+
+    mock_db = MagicMock()
+    mock_bind = MagicMock()
+    mock_bind.dialect.name = "postgresql"
+    mock_db.get_bind.return_value = mock_bind
+
+    executed_statements = []
+
+    def record_execute(stmt, *args, **kwargs):
+        executed_statements.append(str(stmt))
+
+    mock_db.execute.side_effect = record_execute
+
+    _clear_tables(mock_db)
+
+    # Must NOT have any PRAGMA statements
+    for stmt in executed_statements:
+        assert "PRAGMA" not in stmt, f"PostgreSQL must not execute PRAGMA: {stmt}"
+
+    # Must execute DELETE for data tables
+    assert any("DELETE FROM complaints" in s for s in executed_statements)
+    assert any("DELETE FROM customers" in s for s in executed_statements)
+
+
+def test_clear_tables_on_sqlite_executes_pragma():
+    """Verify that _clear_tables on SQLite dialect executes PRAGMA foreign_keys."""
+    from unittest.mock import MagicMock
+    from app.generator.loader import _clear_tables
+
+    mock_db = MagicMock()
+    mock_bind = MagicMock()
+    mock_bind.dialect.name = "sqlite"
+    mock_db.get_bind.return_value = mock_bind
+
+    executed_statements = []
+
+    def record_execute(stmt, *args, **kwargs):
+        executed_statements.append(str(stmt))
+
+    mock_db.execute.side_effect = record_execute
+
+    _clear_tables(mock_db)
+
+    # Must contain foreign_keys OFF and ON
+    assert any("PRAGMA foreign_keys=OFF" in s for s in executed_statements)
+    assert any("PRAGMA foreign_keys=ON" in s for s in executed_statements)
+
+
+def test_dashboard_charts_dialect_awareness():
+    """Verify that dashboard charts endpoint date queries compile to to_char on PostgreSQL
+    and strftime on SQLite without throwing syntax errors.
+    """
+    from sqlalchemy.dialects import postgresql, sqlite
+    from app.models.complaint import Complaint
+    from sqlalchemy import select, func, case
+
+    # PostgreSQL compilation test
+    month_expr_pg = func.to_char(Complaint.created_at, "YYYY-MM")
+    daily_expr_pg = func.to_char(Complaint.created_at, "YYYY-MM-DD")
+
+    q_monthly_pg = (
+        select(
+            month_expr_pg.label("month"),
+            func.count(Complaint.id).label("total"),
+            func.sum(case((Complaint.status.in_(["resolved", "closed"]), 1), else_=0)).label("resolved"),
+        )
+        .group_by(month_expr_pg)
+        .order_by(month_expr_pg)
+    )
+    compiled_pg = str(q_monthly_pg.compile(dialect=postgresql.dialect()))
+    assert "to_char(complaints.created_at" in compiled_pg
+    assert "strftime" not in compiled_pg
+
+    q_daily_pg = (
+        select(
+            daily_expr_pg.label("dt"),
+            func.count(Complaint.id).label("total"),
+        )
+        .group_by(daily_expr_pg)
+        .order_by(daily_expr_pg)
+    )
+    compiled_daily_pg = str(q_daily_pg.compile(dialect=postgresql.dialect()))
+    assert "to_char(complaints.created_at" in compiled_daily_pg
+    assert "strftime" not in compiled_daily_pg
+
+    # SQLite compilation test
+    month_expr_sqlite = func.strftime("%Y-%m", Complaint.created_at)
+    q_monthly_sqlite = (
+        select(
+            month_expr_sqlite.label("month"),
+            func.count(Complaint.id).label("total"),
+        )
+        .group_by(month_expr_sqlite)
+        .order_by(month_expr_sqlite)
+    )
+    compiled_sqlite = str(q_monthly_sqlite.compile(dialect=sqlite.dialect()))
+    assert "strftime(" in compiled_sqlite
