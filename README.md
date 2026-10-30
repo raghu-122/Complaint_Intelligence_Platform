@@ -1,265 +1,293 @@
-# Complaint Intelligence Platform
+# YottaFlex Complaint Intelligence Platform
 
-An enterprise customer complaint intelligence system featuring deterministic synthetic data generation, automated category classification, rule-based priority triage, SLA countdown monitoring, agent assignment routing, data quality validation, and anomaly detection with ground-truth evaluation.
+An enterprise-grade customer complaint intelligence and operations platform. Features deterministic synthetic dataset generation, automated 10-category classification, rule-based priority triage with absolute safety overrides, SLA countdown monitoring, skill-based agent routing, automated data validation, and operational anomaly detection evaluated against ground-truth benchmarks.
+
+---
+
+## Live Deployments & Documentation
+
+- **Web Dashboard**: [https://complaint-intelligence-frontend.onrender.com](https://complaint-intelligence-frontend.onrender.com)
+- **Production API**: [https://yottaflex-backend.onrender.com](https://yottaflex-backend.onrender.com)
+- **Interactive Swagger Documentation**: [https://yottaflex-backend.onrender.com/docs](https://yottaflex-backend.onrender.com/docs)
+- **System Health Diagnostics**: [https://yottaflex-backend.onrender.com/health](https://yottaflex-backend.onrender.com/health)
+
+---
+
+## Problem Statement & Solution
+
+### The Challenge
+Modern enterprise customer support teams handle thousands of complaints across disparate channels (Email, Web, Phone, Chat, Social Media). Common operational bottlenecks include:
+- Inconsistent and slow manual categorization.
+- Misassigned urgency levels, causing safety defects to languish without immediate attention.
+- Unmonitored SLA breaches that damage customer retention and regulatory compliance.
+- Fragmented customer histories and orphaned communication records.
+- Subtle data quality degradation (chronological timeline inversions, pause/resume clock corruption).
+
+### The Solution
+The **YottaFlex Complaint Intelligence Platform** provides an automated operational pipeline:
+1. **Intake & Auto-Classification**: Matches complaint subjects and descriptions against 10 domain categories using deterministic keyword and pattern classification rules.
+2. **Safety-First Priority Scoring**: Assigns priority tiers from **P1 (Critical)** to **P4 (Low)**, enforcing non-negotiable P1 safety overrides whenever hazardous product conditions are detected.
+3. **Automated SLA Countdown Tracking**: Enforces priority-dependent resolution deadlines (4h for P1, 12h for P2, 48h for P3, 72h for P4), tracking paused/running intervals and triggering automated escalation warnings.
+4. **Skill & Capacity Routing**: Routes cases to specialized squads and individual agents based on product category competency and concurrent active workload caps.
+5. **Continuous Quality & Anomaly Auditing**: Runs a 15-check validation suite across schema, chronology, arithmetic, and business rules, while auditing 6 distinct anomaly patterns against ground-truth datasets.
 
 ---
 
 ## Key Features
 
-- **End-to-End Complaint Lifecycle**: Tracks customer complaints from intake, order and product association, through priority triage, squad assignment, customer messaging, resolution recording, and post-resolution satisfaction surveys.
-- **Automated Classification & Priority Triage**: Classifies complaints across 10 business categories using deterministic rules and assigns priority tiers (**P1 Critical** to **P4 Low**) with absolute safety overrides for hazardous products.
-- **SLA Clock & Breach Tracking**: Calculates resolution deadlines (4h for P1, 12h for P2, 48h for P3, 72h for P4), tracks pause/resume intervals, and monitors breach and escalation states.
-- **Skill-Based Agent Assignment**: Routes complaints to eligible agents and specialized squads based on category expertise and active workload capacity.
-- **Data Validation Suite**: Runs 15 automated validation checks across referential integrity, timestamp chronology, arithmetic reconciliation, and business lifecycle rules.
-- **Anomaly Detection & Benchmark Evaluation**: Injects and detects 6 distinct operational anomalies (e.g., missing customer links, resolution before creation, SLA clock inconsistencies, safety priority mismatches) evaluated against an independent ground-truth dataset.
-- **Operations Dashboard**: Interactive dark-themed web interface displaying real-time complaint volumes, SLA compliance rates, status breakdowns, priority distributions, and trend analytics.
-- **Full Data Export & Reproducibility**: Exports complete baseline data to CSV, JSON, and portable SQL dumps, with SHA-256 manifest verification proving 100% bitwise reproducibility under fixed seeds.
+- **Executive Operations Dashboard**: Real-time KPI summaries for complaint volume, safety incidents, SLA compliance rates, average resolution times, CSAT scores, category breakdowns, priority distributions, and 30-day intake trends.
+- **Complaint Registry & Detail Views**: Full lifecycle management supporting status transitions (`open`, `in_progress`, `escalated`, `resolved`, `closed`, `reopened`), multi-threaded customer communications, and resolution logging.
+- **Customer Intelligence**: Comprehensive customer profiles tracking vulnerability flags, lifetime complaint counts, and tiered loyalty standings (**VIP**, **Premium**, **Standard**).
+- **Dual-Database Support**: Seamless operation on **Managed PostgreSQL** in production and zero-configuration **SQLite** for local development, with dynamic dialect detection.
+- **Deterministic Data Seeding**: Reproducible dataset generator (default seed: `20261022`) generating relational entities across all 18 tables with SHA-256 bitwise export manifests.
+- **Enterprise Concurrency Safety**: PostgreSQL advisory locks and database-backed run state tracking preventing duplicate or race-condition data generation across concurrent workers.
 
 ---
 
 ## Technology Stack
 
-- **Backend**: Python 3.11+ / 3.13, FastAPI, SQLAlchemy 2.x, Pydantic v2, Uvicorn, Click, Rich
-- **Frontend**: React 18, Vite, TypeScript, Tailwind CSS, Recharts, Lucide Icons, Axios
-- **Database**: SQLite (zero-configuration local default)
-- **Data & Testing**: Pandas, NumPy, Faker, Pytest, Pytest-Asyncio, HTTPX
+- **Backend**:
+  - Python 3.11 / 3.12 / 3.13
+  - FastAPI (REST API framework)
+  - SQLAlchemy 2.0 (ORM with dual PostgreSQL/SQLite dialect compatibility)
+  - Pydantic v2 (Schema validation and serialization)
+  - Uvicorn (ASGI web server)
+  - Psycopg2-binary (PostgreSQL database adapter)
+  - Click & Rich (Command-line interface and diagnostic tooling)
+- **Frontend**:
+  - React 18 & TypeScript
+  - Vite 5 (Build tool and development server)
+  - Recharts (Data visualizations and trend charts)
+  - Lucide React (System icons)
+  - Axios (HTTP client with cold-start retry interceptors)
+  - React Router v6 (Client-side routing with static rewrite support)
+- **Database**:
+  - Production: Managed PostgreSQL on Render
+  - Local / Testing: SQLite with WAL journaling and foreign key enforcement
+- **Testing & Quality**:
+  - Pytest & Pytest-Asyncio (136+ automated backend unit and integration tests)
+  - ESLint (TypeScript linting)
+
+---
+
+## Architecture Overview
+
+```
+                      ┌────────────────────────────────────────┐
+                      │            React 18 SPA                │
+                      │  (Vite + TypeScript + Recharts + CSS)  │
+                      └───────────────────┬────────────────────┘
+                                          │ REST / JSON (Axios)
+                                          ▼
+                      ┌────────────────────────────────────────┐
+                      │          FastAPI ASGI Server           │
+                      │   (Uvicorn + Pydantic v2 Validation)   │
+                      └─────┬──────────────┬─────────────┬─────┘
+                            │              │             │
+        ┌───────────────────┴──┐    ┌──────┴──────┐   ┌──┴──────────────────┐
+        │  Classification &    │    │ SLA Engine  │   │ Validation & Anomaly│
+        │   Priority Rules     │    │ & Routing   │   │  Detection Engine   │
+        └──────────────────────┘    └─────────────┘   └─────────────────────┘
+                                           │
+                                           │ SQLAlchemy 2.0 Core / ORM
+                                           ▼
+                      ┌────────────────────────────────────────┐
+                      │         Database Abstraction           │
+                      │  - Production: Managed PostgreSQL      │
+                      │  - Development / Testing: SQLite (WAL) │
+                      └────────────────────────────────────────┘
+```
+
+---
+
+## Project Structure
+
+```
+Complaint_Intelligence_Platform/
+├── backend/
+│   ├── app/
+│   │   ├── anomaly/          # Anomaly detection & ground-truth evaluation
+│   │   ├── api/v1/           # FastAPI REST endpoints (complaints, dashboard, etc.)
+│   │   ├── classifier/       # Keyword-based category classification engine
+│   │   ├── generator/        # Deterministic synthetic data generator & DB loader
+│   │   ├── ingestion/        # CSV/JSON ingestion pipeline & validation
+│   │   ├── models/           # 18 SQLAlchemy ORM models
+│   │   ├── priority/         # Priority assignment rules & safety overrides
+│   │   ├── schemas/          # Pydantic request/response schemas
+│   │   ├── sla/              # SLA deadline calculation & breach monitoring
+│   │   ├── validation/       # 15-check data quality validation engine
+│   │   ├── config.py         # Application settings & environment variables
+│   │   ├── database.py       # Engine creation, connection pooling & dialect detection
+│   │   └── main.py           # FastAPI application factory & health check
+│   ├── data/                 # Baseline dataset exports & anomaly benchmarks
+│   ├── scripts/              # Migration, verification & diagnostic scripts
+│   ├── tests/                # 136+ unit, integration & regression tests
+│   ├── cli.py                # Command-line interface
+│   └── requirements.txt      # Python dependencies
+├── frontend/
+│   ├── src/
+│   │   ├── pages/            # Dashboard, Complaints, Customers, Reports, etc.
+│   │   ├── api.ts            # Typed Axios client & endpoint wrappers
+│   │   ├── App.tsx           # Layout, navigation & dynamic DB dialect indicator
+│   │   └── main.tsx          # Application entry point
+│   ├── package.json          # Node.js dependencies & scripts
+│   └── vite.config.ts        # Vite build configuration
+├── render.yaml               # Render Infrastructure-as-Code Blueprint
+├── .gitignore                # Version control exclusions
+└── README.md                 # Project documentation
+```
 
 ---
 
 ## Prerequisites
 
-Ensure the following tools are installed on your system:
+Before setting up the project locally, verify that your development machine has the following tools installed:
 
 - **Git**: Version 2.30+ (`git --version`)
 - **Python**: Version 3.11, 3.12, or 3.13 (`python --version`)
-- **Node.js & npm**: Node.js 18+ and npm 9+ (`node -v` and `npm -v`)
+- **Node.js**: Version 18+ and npm 9+ (`node -v` and `npm -v`)
 
 ---
 
-## Clone the Repository
+## Local Setup & Installation
 
-Verify that Git is installed on your machine:
-
-```bash
-git --version
-```
-
-Clone the repository and navigate into the project directory:
+### 1. Clone the Repository
 
 ```bash
-# Replace <YOUR_USERNAME> and <YOUR_REPOSITORY> with your repository details
-git clone https://github.com/<YOUR_USERNAME>/<YOUR_REPOSITORY>.git
-cd <YOUR_REPOSITORY>
+git clone https://github.com/raghu-122/Complaint_Intelligence_Platform.git
+cd Complaint_Intelligence_Platform
 ```
 
-> **Note**: If you downloaded this repository as a ZIP archive or are working locally, open a terminal in the unpacked `Complaint_Intelligence_Platform` root folder.
+### 2. Backend Setup
 
----
+1. Navigate to the `backend/` directory:
+   ```bash
+   cd backend
+   ```
 
-## Installation and Setup
+2. Create and activate a virtual environment:
+   - **macOS / Linux**:
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     ```
+   - **Windows (PowerShell)**:
+     ```powershell
+     python -m venv venv
+     .\venv\Scripts\Activate.ps1
+     ```
 
-### 1. Backend Setup
+3. Install required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-Open a terminal in the repository root and navigate to `backend/`:
+4. Configure local environment variables:
+   ```bash
+   # Copy template
+   cp .env.example .env
+   ```
+   *Note: By default, `DATABASE_URL` is configured to use a local SQLite database (`sqlite:///./complaint_intelligence.db`). No cloud credentials are required for local development.*
 
-```bash
-cd backend
-```
+5. Seed initial data (using the deterministic canonical seed `20261022`):
+   ```bash
+   # Generates ~50 complaints for quick testing:
+   python cli.py generate --scale starter --seed 20261022 --clear
 
-Create and activate a Python virtual environment:
-
-- **macOS / Linux**:
-  ```bash
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-
-- **Windows (PowerShell)**:
-  ```powershell
-  python -m venv venv
-  .\venv\Scripts\Activate.ps1
-  ```
-
-- **Windows (Command Prompt)**:
-  ```cmd
-  python -m venv venv
-  .\venv\Scripts\activate.bat
-  ```
-
-Install Python dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Create your local environment configuration from `.env.example`:
-
-- **macOS / Linux**:
-  ```bash
-  cp .env.example .env
-  ```
-- **Windows (PowerShell)**:
-  ```powershell
-  Copy-Item .env.example .env
-  ```
-
-> **Note**: The default `.env` configuration uses a local SQLite database (`sqlite:///./complaint_intelligence.db`) and requires no external API keys or cloud services.
-
-### 2. Generate Initial Database & Baseline Data
-
-Run the CLI data generator to initialize SQLite tables and generate the baseline dataset with the canonical seed (`20261022`):
-
-```bash
-# Generate the full evaluation dataset (5,000 customers, 8,000 orders, 2,000 complaints, 6,000 messages)
-python cli.py generate --scale full --seed 20261022 --clear
-
-# Or for a quick lightweight developer dataset (~50 complaints):
-# python cli.py generate --scale starter --seed 20261022 --clear
-```
+   # Or generate the full dataset (2,000 complaints, 5,000 customers, 8,000 orders):
+   # python cli.py generate --scale full --seed 20261022 --clear
+   ```
 
 ### 3. Frontend Setup
 
-In a new terminal, navigate to the `frontend/` directory and install npm packages:
+1. Open a new terminal and navigate to the `frontend/` directory:
+   ```bash
+   cd frontend
+   ```
 
-```bash
-cd frontend
-npm install
-```
+2. Install Node dependencies:
+   ```bash
+   npm install
+   ```
 
 ---
 
-## Run the Application
-
-The platform runs as two local services: the FastAPI backend server and the Vite React frontend.
+## Running the Application Locally
 
 ### Step 1: Start the Backend Server
 
-In your backend terminal (with the virtual environment activated):
+From the `backend/` directory with your virtual environment activated:
 
 ```bash
-cd backend
 python cli.py server --port 8000
 ```
 
-The backend server will start at:
-- **API Server**: [http://localhost:8000](http://localhost:8000)
-- **Interactive API Documentation (Swagger)**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Health Check Endpoint**: [http://localhost:8000/health](http://localhost:8000/health)
+- **API Base**: [http://localhost:8000](http://localhost:8000)
+- **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **Health Diagnostics**: [http://localhost:8000/health](http://localhost:8000/health)
 
-Confirm the backend is running by visiting [http://localhost:8000/health](http://localhost:8000/health) in your browser. It should return:
-```json
-{"status": "healthy", "service": "complaint-intelligence-platform"}
-```
+### Step 2: Start the Frontend Development Server
 
-### Step 2: Start the Frontend Application
-
-In your frontend terminal:
+From the `frontend/` directory:
 
 ```bash
-cd frontend
 npm run dev
 ```
 
-The frontend development server will start at:
-- **Frontend Dashboard**: [http://localhost:5173](http://localhost:5173)
-
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
+Open [http://localhost:5173](http://localhost:5173) in your web browser. The dynamic topbar badge will display `DB SQLite` when running against your local database.
 
 ---
 
-## Basic Usage
+## Database Migration (SQLite to PostgreSQL)
 
-Follow this quick walkthrough to explore the primary workflows of the application:
+To migrate an existing SQLite database into a managed PostgreSQL instance (e.g., Render Managed PostgreSQL):
 
-1. **Dashboard (`/`)**: View executive KPIs including total active complaints, SLA compliance rates, average resolution times, category distribution, and priority breakdowns.
-2. **Complaints (`/complaints`)**: Browse the complete complaint registry. Use search, filter by priority (**P1–P4**), status (**Open, In Progress, Resolved, Closed**), category, or toggle **Safety Issues Only**. Click any complaint to view its full details, message history, assignment trail, and SLA clock.
-3. **Customers (`/customers`)**: View customer accounts, complaint frequencies, vulnerability indicators, and account tiers (**VIP, Premium, Standard**).
-4. **Validation Suite (`/validation`)**: Run the automated 15-check data quality suite. You can also run this via CLI:
-   ```bash
-   cd backend
-   python cli.py validate
+1. **Preflight Verification (Read-Only)**:
+   Confirms destination connectivity, ensures PostgreSQL tables exist, widens column definitions, and verifies the destination database is completely empty:
+   ```powershell
+   $env:DATABASE_URL = "postgresql://user:password@hostname:5432/dbname"
+   python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path backend/complaint_intelligence.db --preflight-only
    ```
-5. **Anomaly Detection (`/anomalies`)**: Test the anomaly engine. Inject test anomalies and run detection to compare flagged records against independent ground truth:
-   ```bash
-   cd backend
-   python cli.py inject-anomalies --count 6
-   python cli.py detect-anomalies
-   ```
-6. **Reports & Exports (`/reports`)**: Browse exported CSV, JSON, and SQL dumps. Download individual entity files directly through the UI, or verify baseline reproducibility:
-   ```bash
-   cd backend
-   python cli.py reproduce --scale full --seed 20261022
+
+2. **Execute Safe Live Migration**:
+   Migrates all 18 tables in topological foreign-key order inside a single atomic transaction, synchronizes serial primary-key sequences, and asserts exact source-vs-destination row count matches:
+   ```powershell
+   python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path backend/complaint_intelligence.db
    ```
 
 ---
 
-## Tests
+## Test Execution
 
-### Backend Automated Test Suite
-
-Run the full pytest suite from the `backend/` directory:
-
+### 1. Full Backend Test Suite
+Run the complete test suite (136+ unit and integration tests):
 ```bash
 cd backend
-pytest tests/ -q
+pytest
 ```
+*Expected output: `136 passed, 0 failures`.*
 
-- **Verified Result**: **112 passed** in ~10 seconds across 9 test modules covering APIs, generator logic, priority rules, SLA engine, validation, anomaly detection, exports, and reproducibility.
-
-### Frontend Production Build & Type Check
-
-Run TypeScript validation and the production bundle build from the `frontend/` directory:
-
-```bash
-cd frontend
-npm run build
-```
-
-- **Verified Result**: **Exit code 0**, 0 TypeScript errors. Assets compiled to `dist/`.
-
-### Live End-to-End Workflow Verification
-
-Execute the self-contained live API test script against an isolated test database:
-
+### 2. Live End-to-End Workflow Verification
+Execute the self-contained live verification script (creates an isolated database copy, verifies full complaint lifecycle, customer messaging, escalation, validation, and anomaly evaluation):
 ```bash
 cd backend
 python scripts/verify_e2e_live.py
 ```
+*Expected output: `12 PASSED | 0 FAILED`.*
 
-- **Verified Result**: **12 / 12 checks passed** (E2E lifecycle, CRUD persistence, and SLA validation).
+### 3. Frontend Lint & Production Build
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+*Expected output: Exit code 0, 0 ESLint errors, production bundle compiled to `dist/`.*
 
 ---
 
-## Troubleshooting
+## Security & Reliability Notes
 
-### 1. Python Virtual Environment Activation Error (Windows)
-- **Symptom**: PowerShell displays `cannot be loaded because running scripts is disabled on this system`.
-- **Fix**: Temporarily allow script execution in your PowerShell session:
-  ```powershell
-  Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-  .\venv\Scripts\Activate.ps1
-  ```
-
-### 2. Port 8000 or 5173 Already in Use
-- **Symptom**: `OSError: [Errno 10048] error while attempting to bind on address ('127.0.0.1', 8000)`.
-- **Fix**: Either terminate the existing process using the port, or run the backend on an alternate port:
-  ```bash
-  python cli.py server --port 8001
-  ```
-  If changing the backend port, set `VITE_API_URL=http://localhost:8001` in a `frontend/.env` file.
-
-### 3. SQLite Database Locked
-- **Symptom**: `sqlite3.OperationalError: database is locked`.
-- **Fix**: Ensure that the FastAPI backend server is stopped before running generator resets with `python cli.py generate --clear`.
-
-### 4. Missing Dependencies or Clean Reinstallation
-- **Backend Fix**:
-  ```bash
-  pip install --force-reinstall -r requirements.txt
-  ```
-- **Frontend Fix**:
-  ```bash
-  cd frontend
-  rm -rf node_modules package-lock.json
-  npm install
-  ```
+- **Zero Hardcoded Secrets**: All connection strings, credentials, and configuration flags are loaded via environment variables (`DATABASE_URL`, `APP_ENV`, `CORS_ORIGINS`).
+- **SQL Injection Prevention**: All queries utilize SQLAlchemy parameterized statements and ORM expressions. No dynamic string interpolation is executed.
+- **Connection Pool Tuning**: PostgreSQL engine connections use configured pool limits (`pool_size=5`, `max_overflow=10`, `pool_recycle=1800`) to prevent connection exhaustion on cloud database starter plans.
+- **Transactional Integrity**: Multi-table insertions and migrations operate within atomic transactions with automatic rollback on error.

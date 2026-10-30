@@ -52,7 +52,7 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
             func.count(Complaint.id).label("total"),
             func.sum(case((Complaint.status == "open", 1), else_=0)).label("open"),
             func.sum(case((Complaint.status == "in_progress", 1), else_=0)).label("in_progress"),
-            func.sum(case((Complaint.status.in_(["resolved", "closed"]), 1), else_=0)).label("resolved"),
+            func.sum(case((Complaint.status == "resolved", 1), else_=0)).label("resolved"),
             func.sum(case((Complaint.status == "closed", 1), else_=0)).label("closed"),
             func.sum(case((Complaint.is_escalated == True, 1), else_=0)).label("escalated"),
             func.sum(case((Complaint.is_reopened == True, 1), else_=0)).label("reopened"),

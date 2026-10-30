@@ -390,6 +390,32 @@ def test_dashboard_stats_all_kpi_fields(client: TestClient):
         assert field in stats, f"Missing field: {field}"
 
 
+def test_dashboard_stats_status_reconciliation(client: TestClient):
+    """Verify that mutually exclusive status counts reconcile exactly to total_complaints.
+
+    Regression test for discrepancy where resolved counted resolved+closed.
+    Mutually exclusive complaint statuses: open + in_progress + escalated + resolved + closed + reopened == total.
+    """
+    response = client.get("/api/v1/dashboard/stats")
+    assert response.status_code == 200
+    stats = response.json()
+
+    status_sum = (
+        stats["open_complaints"]
+        + stats["in_progress_complaints"]
+        + stats["escalated_complaints"]
+        + stats["resolved_complaints"]
+        + stats["closed_complaints"]
+        + stats["reopened_complaints"]
+    )
+    assert status_sum == stats["total_complaints"], (
+        f"Status sum ({status_sum}) does not match total_complaints ({stats['total_complaints']}): "
+        f"open={stats['open_complaints']}, in_progress={stats['in_progress_complaints']}, "
+        f"escalated={stats['escalated_complaints']}, resolved={stats['resolved_complaints']}, "
+        f"closed={stats['closed_complaints']}, reopened={stats['reopened_complaints']}"
+    )
+
+
 def test_full_complaint_lifecycle(client: TestClient):
     """End-to-end complaint lifecycle test:
 
