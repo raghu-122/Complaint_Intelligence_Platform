@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
 from app.generator.orchestrator import DataGenerator
 from app.generator.loader import load_all
@@ -30,6 +31,13 @@ def trigger_generation(
     db: Session = Depends(get_db),
 ):
     """Trigger synthetic dataset generation, persist to DB, and optionally update baseline exports."""
+    # Guard against accidental destructive data resets in production
+    if settings.app_env == "production" and request.clear_existing:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Destructive dataset reset (clear_existing=True) is forbidden in production environment.",
+        )
+
     if not _generation_lock.acquire(blocking=False):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

@@ -544,3 +544,16 @@ def test_sqlite_to_pg_migration_dry_run():
         assert counts["complaints"] > 0
         assert counts["customers"] > 0
         assert counts["orders"] > 0
+
+
+def test_generate_endpoint_production_guard(client: TestClient, monkeypatch):
+    """Verify that in production environment (APP_ENV=production), clear_existing=True is rejected with 403."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "app_env", "production")
+
+    response = client.post(
+        "/api/v1/generate",
+        json={"scale": "starter", "seed": 20261022, "clear_existing": True},
+    )
+    assert response.status_code == 403
+    assert "forbidden" in response.json()["detail"].lower()

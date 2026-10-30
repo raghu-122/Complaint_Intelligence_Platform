@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     # Application
     app_name: str = "YottaFlex Complaint Intelligence Platform"
     app_version: str = "1.0.0"
+    app_env: str = "development"
     debug: bool = False
 
     # Database
@@ -55,3 +56,6 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()
+
+
+settings = get_settings()

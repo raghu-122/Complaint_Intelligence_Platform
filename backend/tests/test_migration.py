@@ -419,3 +419,32 @@ def test_dashboard_charts_dialect_awareness():
     )
     compiled_sqlite = str(q_monthly_sqlite.compile(dialect=sqlite.dialect()))
     assert "strftime(" in compiled_sqlite
+
+
+def test_migration_with_clean_destination_for_restore(source_sqlite_db, clean_dest_db):
+    """Verify that clean_destination=True safely clears existing destination rows
+    before migrating the source database.
+    """
+    dest_url = f"sqlite:///{clean_dest_db}"
+    dest_engine = create_engine(dest_url)
+    Base.metadata.create_all(bind=dest_engine)
+
+    # Insert a dummy record in categories to make destination non-empty
+    with dest_engine.connect() as conn:
+        conn.execute(
+            text(
+                "INSERT INTO categories (code, name, keywords, safety_risk, is_active, config_version, created_at) "
+                "VALUES ('DUMMY', 'Dummy Cat', '[]', 0, 1, '1.0', '2026-01-01 00:00:00')"
+            )
+        )
+        conn.commit()
+
+    # Without clean_destination, preflight must fail
+    with pytest.raises(MigrationPreflightError):
+        migrate(sqlite_path=source_sqlite_db, pg_url=dest_url, preflight_only=True)
+
+    # With clean_destination=True, it clears the destination and migrates successfully
+    counts = migrate(sqlite_path=source_sqlite_db, pg_url=dest_url, clean_destination=True)
+    assert counts["complaints"] == 50
+    assert counts["customers"] == 50
+    dest_engine.dispose()

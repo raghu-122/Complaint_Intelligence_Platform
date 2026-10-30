@@ -102,7 +102,7 @@ export default function Dashboard() {
     setGenerating(true);
     setGenerateMsg(null);
     try {
-      const res = await apiClient.generateData({ scale, seed: 20261022, clear_existing: true, export_baseline: true });
+      const res = await apiClient.generateData({ scale, seed: 20261022, clear_existing: false, export_baseline: false });
       setGenerateMsg(`✅ Generated ${res.data.counts.complaints || 0} complaints in ${res.data.duration_seconds.toFixed(1)}s (scale: ${scale})`);
       await fetchData();
     } catch (err: unknown) {
@@ -126,8 +126,8 @@ export default function Dashboard() {
 
   return (
     <div>
-      {/* Generate Banner */}
-      {isEmpty && (
+      {/* Generate Banner (only displayed in development mode when DB is unseeded) */}
+      {isEmpty && import.meta.env.DEV && (
         <div className="generate-banner">
           <div className="generate-banner-text">
             <h3>🚀 No data yet — generate synthetic dataset</h3>

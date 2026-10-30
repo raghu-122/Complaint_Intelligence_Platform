@@ -190,12 +190,26 @@ def preflight_verify(
     return source_counts
 
 
+def _clean_destination_tables(pg_engine: Engine) -> None:
+    """Safely clear destination tables in reverse dependency order for database restore."""
+    reverse_tables = list(reversed(TABLE_MIGRATION_ORDER))
+    with pg_engine.connect() as conn:
+        for tbl in reverse_tables:
+            try:
+                conn.execute(text(f"DELETE FROM {tbl}"))
+                logger.info("Cleared destination table '%s' for restore.", tbl)
+            except Exception as e:
+                logger.warning("Could not clear table '%s': %s", tbl, e)
+        conn.commit()
+
+
 def migrate(
     sqlite_path: str,
     pg_url: str,
     batch_size: int = 500,
     dry_run: bool = False,
     preflight_only: bool = False,
+    clean_destination: bool = False,
 ) -> Dict[str, int]:
     """Execute production-safe migration from SQLite to PostgreSQL with atomic rollback and count assertions."""
     sqlite_file = Path(sqlite_path).resolve()
@@ -209,7 +223,12 @@ def migrate(
     logger.info("Source SQLite: %s", sqlite_file)
     logger.info("Target Dialect: %s (%s)", pg_engine.dialect.name, norm_pg_url.split("@")[-1])
 
-    # 1. Dry-run mode: read-only inspection of source
+    # 1. Clean destination tables if explicitly requested for restore
+    if clean_destination and not dry_run:
+        logger.info("Cleaning destination tables in reverse dependency order before restore...")
+        _clean_destination_tables(pg_engine)
+
+    # 2. Dry-run mode: read-only inspection of source
     if dry_run:
         logger.info("Executing DRY-RUN inspection (read-only)...")
         source_counts: Dict[str, int] = {}
@@ -328,6 +347,11 @@ def main():
     parser.add_argument("--batch-size", type=int, default=500, help="Batch size for bulk inserts")
     parser.add_argument("--dry-run", action="store_true", help="Analyze and check source counts without writing")
     parser.add_argument("--preflight-only", action="store_true", help="Run preflight checks only without migrating")
+    parser.add_argument(
+        "--clean-destination-for-restore",
+        action="store_true",
+        help="Safely clear destination tables in reverse dependency order before restoring from backup",
+    )
 
     args = parser.parse_args()
 
@@ -342,6 +366,7 @@ def main():
             batch_size=args.batch_size,
             dry_run=args.dry_run,
             preflight_only=args.preflight_only,
+            clean_destination=args.clean_destination_for_restore,
         )
         mode = "DRY-RUN INSPECTION" if args.dry_run else ("PREFLIGHT CHECK" if args.preflight_only else "MIGRATION SUMMARY")
         print(f"\n=== {mode} ===")
