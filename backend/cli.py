@@ -63,6 +63,13 @@ def cli():
 )
 def generate(scale: str, seed: int, clear: bool, export: bool):
     """Run data generation, persist to SQLite, and export baseline files."""
+    settings = get_settings()
+    if settings.app_env == "production" and clear:
+        console.print("[bold red]ERROR: Destructive dataset reset (--clear) is forbidden in production environment.[/bold red]")
+        console.print("[yellow]To restore production data, use the approved administrative migration procedure:[/yellow]")
+        console.print("[cyan]python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path <backup.db> --pg-url <URL> --clean-destination-for-restore[/cyan]")
+        sys.exit(1)
+
     init_db()
     console.print(
         f"[bold cyan]YottaFlex Data Generator[/bold cyan] (Scale: [yellow]{scale}[/yellow], Seed: [yellow]{seed}[/yellow])"

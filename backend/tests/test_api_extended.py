@@ -557,3 +557,18 @@ def test_generate_endpoint_production_guard(client: TestClient, monkeypatch):
     )
     assert response.status_code == 403
     assert "forbidden" in response.json()["detail"].lower()
+
+
+def test_cli_generate_production_guard(monkeypatch):
+    """Verify that cli.py generate --clear exits with error in production environment."""
+    from click.testing import CliRunner
+    from cli import cli
+    from app.config import get_settings
+
+    runner = CliRunner()
+    settings = get_settings()
+    monkeypatch.setattr(settings, "app_env", "production")
+
+    result = runner.invoke(cli, ["generate", "--scale", "starter", "--clear"])
+    assert result.exit_code != 0
+    assert "forbidden in production" in result.output.lower()

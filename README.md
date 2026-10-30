@@ -189,14 +189,15 @@ cd Complaint_Intelligence_Platform
    ```
    *Note: By default, `DATABASE_URL` is configured to use a local SQLite database (`sqlite:///./complaint_intelligence.db`). No cloud credentials are required for local development.*
 
-5. Seed initial data (using the deterministic canonical seed `20261022`):
+5. Seed initial data for local development (using the deterministic canonical seed `20261022`):
    ```bash
-   # Generates ~50 complaints for quick testing:
+   # Generates ~50 complaints for local development (SQLite only):
    python cli.py generate --scale starter --seed 20261022 --clear
 
-   # Or generate the full dataset (2,000 complaints, 5,000 customers, 8,000 orders):
+   # Or generate the full dataset for local testing:
    # python cli.py generate --scale full --seed 20261022 --clear
    ```
+   *Note: Destructive `--clear` commands are strictly restricted to local development environments and are rejected by production server guards. Production dataset restoration must use the administrative migration procedure below.*
 
 ### 3. Frontend Setup
 
@@ -253,6 +254,12 @@ To migrate an existing SQLite database into a managed PostgreSQL instance (e.g.,
    Migrates all 18 tables in topological foreign-key order inside a single atomic transaction, synchronizes serial primary-key sequences, and asserts exact source-vs-destination row count matches:
    ```powershell
    python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path backend/complaint_intelligence.db
+   ```
+
+3. **Production Dataset Restoration (Approved Administrative Procedure)**:
+   Restoring an existing production PostgreSQL database from a verified backup must never use synthetic data generators. Restorations must use the administrative restoration flag `--clean-destination-for-restore`. This purges tables in exact reverse foreign-key dependency order, streams and loads all 18 tables from backup, synchronizes auto-increment sequences, and asserts 100% row-count equality within a **single atomic transaction** (rolling back both deletions and insertions on any failure):
+   ```powershell
+   python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path backend/complaint_intelligence_backup_20261030_063936.db --pg-url "postgresql://user:password@hostname:5432/dbname" --clean-destination-for-restore
    ```
 
 ---

@@ -77,6 +77,10 @@ export default function Reports() {
   };
 
   const generateAndExport = async (scale: 'starter' | 'full') => {
+    if (!import.meta.env.DEV) {
+      setGenMsg('❌ Dataset generation is disabled in production to protect existing records.');
+      return;
+    }
     setGenerating(true);
     setGenMsg(null);
     try {
@@ -110,22 +114,34 @@ export default function Reports() {
         >
           ↻ Refresh
         </button>
-        <button
-          id="generate-starter-btn"
-          className="btn btn-secondary"
-          onClick={() => generateAndExport('starter')}
-          disabled={generating}
-        >
-          {generating ? '⏳ Generating…' : '🔄 Regenerate Starter'}
-        </button>
-        <button
-          id="generate-full-btn"
-          className="btn btn-primary"
-          onClick={() => generateAndExport('full')}
-          disabled={generating}
-        >
-          {generating ? '⏳ Generating…' : '🚀 Generate Full Dataset'}
-        </button>
+        {import.meta.env.DEV ? (
+          <>
+            <button
+              id="generate-starter-btn"
+              className="btn btn-secondary"
+              onClick={() => generateAndExport('starter')}
+              disabled={generating}
+            >
+              {generating ? '⏳ Generating…' : '🔄 Regenerate Starter'}
+            </button>
+            <button
+              id="generate-full-btn"
+              className="btn btn-primary"
+              onClick={() => generateAndExport('full')}
+              disabled={generating}
+            >
+              {generating ? '⏳ Generating…' : '🚀 Generate Full Dataset'}
+            </button>
+          </>
+        ) : (
+          <div
+            className="topbar-chip"
+            style={{ fontSize: 11, color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            title="Dataset generation is restricted to local development to protect production data."
+          >
+            🛡️ Production Mode (Dataset Protected)
+          </div>
+        )}
         {reports?.baseline_dir && (
           <div className="topbar-chip" style={{ marginLeft: 'auto' }}>
             <span>Output</span>
@@ -369,33 +385,97 @@ export default function Reports() {
       {/* CLI Reference */}
       <div className="card">
         <div className="card-header">
-          <div className="card-title">⌨️ CLI Reference</div>
-          <div className="card-subtitle">Run from the backend/ directory</div>
+          <div className="card-title">⌨️ CLI & Operations Reference</div>
+          <div className="card-subtitle">Commands run from the backend/ directory</div>
         </div>
-        <div className="card-body">
-          {[
-            { cmd: 'python cli.py generate --scale starter --clear', desc: 'Generate ~50 complaints (starter scale)' },
-            { cmd: 'python cli.py generate --scale full --clear --export', desc: 'Generate 2000 complaints + export baseline' },
-            { cmd: 'python cli.py validate', desc: 'Run all 5 validation domains' },
-            { cmd: 'python cli.py detect-anomalies', desc: 'Run anomaly detection + metrics' },
-            { cmd: 'python cli.py inject-anomalies --count 6', desc: 'Inject test anomaly scenarios' },
-            { cmd: 'python cli.py reproduce --run-id <RUN_ID>', desc: 'Verify dataset reproducibility' },
-            { cmd: 'python cli.py export --format both --output-dir ./exports', desc: 'Export all data as CSV + JSON' },
-            { cmd: 'python cli.py server --reload', desc: 'Start FastAPI development server' },
-          ].map(({ cmd, desc }) => (
-            <div key={cmd} style={{
-              display: 'flex', gap: 16, alignItems: 'flex-start',
-              padding: '10px 0', borderBottom: '1px solid var(--border)',
-            }}>
-              <code style={{
-                fontFamily: 'var(--font-mono)', fontSize: 12,
-                background: 'var(--bg-surface)', border: '1px solid var(--border)',
-                borderRadius: 6, padding: '4px 8px', color: 'var(--accent-primary)',
-                whiteSpace: 'nowrap', flexShrink: 0,
-              }}>{cmd}</code>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', paddingTop: 4 }}>{desc}</span>
+        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {/* Section 1: Local Development Seeding */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span className="badge badge-warning" style={{ fontSize: 10, textTransform: 'uppercase' }}>Local Dev Only</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Synthetic Dataset Seeding</span>
             </div>
-          ))}
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+              Destructive <code style={{ color: 'var(--accent-warning)' }}>--clear</code> resets are strictly restricted to local SQLite development. They are blocked by production guards.
+            </p>
+            {[
+              { cmd: 'python cli.py generate --scale starter --clear', desc: 'Seed local SQLite with ~50 starter complaints' },
+              { cmd: 'python cli.py generate --scale full --clear --export', desc: 'Seed local SQLite with 2,000 complaints & export baseline files' },
+              { cmd: 'python cli.py server --reload', desc: 'Start FastAPI local development server with auto-reload' },
+              { cmd: 'python cli.py inject-anomalies --count 6', desc: 'Inject test anomaly patterns into local database' },
+            ].map(({ cmd, desc }) => (
+              <div key={cmd} style={{
+                display: 'flex', gap: 16, alignItems: 'flex-start',
+                padding: '8px 0', borderBottom: '1px solid var(--border)',
+              }}>
+                <code style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 12,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '3px 8px', color: 'var(--accent-primary)',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}>{cmd}</code>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', paddingTop: 3 }}>{desc}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Section 2: Safe Environment-Agnostic Commands */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span className="badge badge-info" style={{ fontSize: 10, textTransform: 'uppercase' }}>Operational</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Validation, Analytics & Reporting</span>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+              Safe read-only and analytical commands suitable for both local development and active environments.
+            </p>
+            {[
+              { cmd: 'python cli.py validate', desc: 'Run all 5 validation domains (integrity, SLA, sentiment, priority, anomaly)' },
+              { cmd: 'python cli.py detect-anomalies', desc: 'Run statistical anomaly detection & report precision/recall metrics' },
+              { cmd: 'python cli.py reproduce --run-id <RUN_ID>', desc: 'Verify deterministic reproducibility against canonical baseline' },
+              { cmd: 'python cli.py export --format both --output-dir ./exports', desc: 'Export active database tables as CSV and JSON' },
+            ].map(({ cmd, desc }) => (
+              <div key={cmd} style={{
+                display: 'flex', gap: 16, alignItems: 'flex-start',
+                padding: '8px 0', borderBottom: '1px solid var(--border)',
+              }}>
+                <code style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 12,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '3px 8px', color: 'var(--accent-primary)',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}>{cmd}</code>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', paddingTop: 3 }}>{desc}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Section 3: Production Administration & Restoration */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span className="badge badge-success" style={{ fontSize: 10, textTransform: 'uppercase' }}>Production</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>Administrative Migration & Restoration</span>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 10px 0' }}>
+              Production dataset restoration never uses synthetic generators. Restorations must be performed using the verified administrative migration utility with atomic transaction rollback and count verification.
+            </p>
+            {[
+              { cmd: 'python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path <backup.db> --dry-run', desc: 'Read-only inspection of source backup tables and counts' },
+              { cmd: 'python backend/scripts/migrate_sqlite_to_pg.py --sqlite-path <backup.db> --pg-url <URL> --clean-destination-for-restore', desc: 'Execute atomic restore: clears destination in reverse FK order, restores all 18 tables, syncs sequences, and validates 100% row counts' },
+            ].map(({ cmd, desc }) => (
+              <div key={cmd} style={{
+                display: 'flex', gap: 16, alignItems: 'flex-start',
+                padding: '8px 0', borderBottom: '1px solid var(--border)',
+              }}>
+                <code style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 11,
+                  background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '3px 8px', color: 'var(--accent-success)',
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                }}>{cmd}</code>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)', paddingTop: 3 }}>{desc}</span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
